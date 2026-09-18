@@ -97,7 +97,7 @@ export interface ToolItem {
   category: ToolCategory;
   description: string;
   iconName: string;
-  badge?: 'Popular' | 'New' | 'Featured' | 'AI';
+  badge?: 'Popular' | 'New' | 'Featured' | 'AI' | 'Experimental' | 'Smart' | 'Multilingual';
   isFlagship?: boolean;
   clientSide: boolean;
   supportedInputTypes: string[]; // e.g. ['.pdf'], ['.jpg', '.png']

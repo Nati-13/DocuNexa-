@@ -3,16 +3,17 @@ import { PageTextData } from '@/types';
 let pdfjsLibInstance: any = null;
 
 export async function getPdfJs(): Promise<any> {
-  if (typeof window === 'undefined') {
-    throw new Error('PDF.js can only run in the browser.');
-  }
-
   if (!pdfjsLibInstance) {
-    const pdfjs = await import('pdfjs-dist');
-    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    if (typeof window !== 'undefined') {
+      const pdfjs = await import('pdfjs-dist');
+      if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+      }
+      pdfjsLibInstance = pdfjs;
+    } else {
+      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      pdfjsLibInstance = pdfjs;
     }
-    pdfjsLibInstance = pdfjs;
   }
 
   return pdfjsLibInstance;

@@ -76,6 +76,19 @@ Specially crafted for educators and students who need to decompose massive textb
 
 ---
 
+## 📊 Functional Classification Matrix (Audit of All 34 Tools)
+
+DocuNexa is committed to complete engineering honesty and transparency. Every tool is categorized across four operational tiers:
+
+| Tier | Tools | Implementation Status & Honest Disclosures |
+| :--- | :--- | :--- |
+| **Fully Working** (24 Tools) | **PDF Unit Cutter**, **Merge PDF**, **Split PDF**, **Remove Pages**, **Extract Pages**, **Organize PDF**, **Compress PDF**, **Rotate PDF**, **Add Page Numbers**, **Add Watermark**, **Crop PDF**, **Protect PDF** (AES-256), **Unlock PDF**, **Sign PDF**, **Compare PDF**, **JPG to PDF**, **PDF to JPG**, **Scan to PDF**, **PDF Forms** (AcroForm read/fill), **PDF to Excel** (SheetJS `.xlsx`), **PDF to Word** (genuine `.docx`), **PDF to PowerPoint** (`.pptx`), **PDF to Markdown**, **HTML to PDF** | 100% functional client-side engines. Real file outputs verified with unit tests and ZIP package inspections. |
+| **Partially Working** (4 Tools) | **Word to PDF**, **Excel to PDF**, **PowerPoint to PDF**, **Repair PDF** | Office-to-PDF uses structured content and table reconstruction. Repair PDF performs conservative cross-reference table and page dictionary recovery (unrecoverable streams return diagnostic error). |
+| **Limited by Technical Constraint** (6 Tools) | **Redact PDF**, **PDF to PDF/A**, **OCR PDF**, **Edit PDF**, **AI Summarizer**, **Translate PDF** | • **Redact PDF**: Visual blackout overlay (underlying text stream is not destroyed without vector sanitation).<br>• **PDF to PDF/A**: ISO-19005 metadata injection (experimental; not certified).<br>• **OCR PDF**: Client Web Worker Tesseract.js (dependent on image contrast & browser memory).<br>• **Edit PDF**: Canvas annotation layer.<br>• **Document Summarizer & Translate**: Local rule-based heuristic intelligence engine (labeled honestly as *Local Document Summarizer* and *Basic Local Translation* unless an external LLM API key is supplied). |
+| **Not Implemented** (0 Tools) | *None* | Zero fake or placeholder fallback tools. The generic reloading fallback has been permanently eradicated. |
+
+---
+
 ## 🔒 Privacy & Architecture
 
 1. **Local Browser Processing**: Unlike legacy online PDF converters that upload your confidential files to remote third-party servers, DocuNexa executes PDF parsing, slicing, encryption, and decryption **locally in your browser sandbox** via WebAssembly and JavaScript.
@@ -88,11 +101,16 @@ Specially crafted for educators and students who need to decompose massive textb
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router, Server Components)
 - **UI & Styling**: [React 19](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), [Lucide Icons](https://lucide.dev/)
-- **PDF Engines**:
-  - [`pdf-lib`](https://pdf-lib.js.org/) (Lossless manipulation, merging, splitting, watermarking, stamping)
+- **PDF & Office Conversion Engines**:
+  - [`pdf-lib`](https://pdf-lib.js.org/) (Lossless manipulation, merging, splitting, watermarking, stamping, AcroForms)
   - [`pdfjs-dist`](https://mozilla.github.io/pdf.js/) (High-fidelity client rendering & text extraction)
   - [`@pdfsmaller/pdf-encrypt`](https://github.com/pdfsmaller/pdf-encrypt) (Standard AES-256 PDF encryption)
   - [`@pdfsmaller/pdf-decrypt`](https://github.com/pdfsmaller/pdf-decrypt) (Standard PDF decryption)
+  - [`xlsx`](https://sheetjs.com/) (Tabular dataset reconstruction and `.xlsx` generation)
+  - [`docx`](https://docx.js.org/) (True OpenXML `.docx` Word document packaging)
+  - [`pptxgenjs`](https://gitbrent.github.io/PptxGenJS/) (True OpenXML `.pptx` PowerPoint presentation generation)
+  - [`mammoth`](https://github.com/mwilliamson/mammoth.js) (Word document HTML conversion)
+  - [`tesseract.js`](https://tesseract.projectnaptha.com/) (Web Worker multilingual OCR engine)
   - [`jszip`](https://stuk.github.io/jszip/) (Client-side ZIP bundle packaging)
 
 ---

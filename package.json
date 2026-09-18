@@ -8,24 +8,30 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/test-encrypt-decrypt.ts && tsx test/unit-detector.test.ts && tsx test/full-tool-audit.test.ts",
+    "test": "tsx test/test-encrypt-decrypt.ts && tsx test/unit-detector.test.ts && tsx test/full-tool-audit.test.ts && tsx test/test-conversions.test.ts",
     "test:security": "tsx test/test-encrypt-decrypt.ts",
     "test:detector": "tsx test/unit-detector.test.ts",
     "test:audit": "tsx test/full-tool-audit.test.ts",
+    "test:conversions": "tsx test/test-conversions.test.ts",
     "test:sample": "tsx test/generate-sample-pdf.ts"
   },
   "dependencies": {
     "@pdfsmaller/pdf-decrypt": "^1.0.1",
     "@pdfsmaller/pdf-encrypt": "^1.2.0",
     "clsx": "^2.1.1",
+    "docx": "^9.7.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.475.0",
+    "mammoth": "^1.12.3",
     "next": "^15.1.7",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.10.38",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "tesseract.js": "^7.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",

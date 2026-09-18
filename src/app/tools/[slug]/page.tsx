@@ -22,12 +22,9 @@ import {
   addPageNumbersToPdf, 
   addWatermarkToPdf, 
   imagesToPdf, 
-  pdfToImages, 
-  compressPdf,
-  applySignatureToPdf,
-  redactPdfAreas
+  pdfToImages 
 } from '@/lib/pdfEngine';
-import { getAIProvider, DocumentSummaryResult } from '@/lib/ai/aiProvider';
+
 import { 
   FileText, 
   Trash2, 
@@ -39,9 +36,17 @@ import {
   Copy, 
   Download, 
   Camera, 
-  PenTool, 
   Sliders, 
-  Layers 
+  Layers,
+  AlertTriangle,
+  Info,
+  CheckCircle2,
+  Wrench,
+  FileSearch,
+  Table,
+  Presentation,
+  ShieldCheck,
+  CheckSquare
 } from 'lucide-react';
 
 import { ProtectPdfTool } from '@/components/tools/ProtectPdfTool';
@@ -50,6 +55,26 @@ import { SignPdfTool } from '@/components/tools/SignPdfTool';
 import { RedactPdfTool } from '@/components/tools/RedactPdfTool';
 import { ComparePdfTool } from '@/components/tools/ComparePdfTool';
 import { CropPdfTool } from '@/components/tools/CropPdfTool';
+
+// Modular Services
+import { convertPdfToExcel } from '@/lib/tools/pdfToExcel';
+import { convertPdfToWord } from '@/lib/tools/pdfToWord';
+import { convertPdfToPowerPoint } from '@/lib/tools/pdfToPowerPoint';
+import { preparePdfA } from '@/lib/tools/pdfToPdfA';
+import { repairPdf, RepairPdfResult } from '@/lib/tools/repairPdf';
+import { performPdfOcr } from '@/lib/tools/ocrPdf';
+import { performPdfCompression, CompressResult } from '@/lib/tools/compressPdf';
+import { detectPdfFormFields, fillPdfForm, FormFieldInfo } from '@/lib/tools/pdfForms';
+import { 
+  convertExcelToPdf, 
+  convertWordToPdf, 
+  convertPowerPointToPdf, 
+  convertHtmlToPdf 
+} from '@/lib/tools/officeToPdf';
+import { summarizePdfDocument, ChunkedSummaryResult } from '@/lib/tools/aiSummarizer';
+import { translatePdfDocument, TranslationResult } from '@/lib/tools/translatePdf';
+import { convertPdfToMarkdown, MarkdownResult } from '@/lib/tools/pdfToMarkdown';
+import { getToolDefinition } from '@/lib/tools/toolRegistry';
 
 export default function UniversalToolPage() {
   const params = useParams();
@@ -60,7 +85,7 @@ export default function UniversalToolPage() {
     notFound();
   }
 
-  // Delegate to dedicated high-precision components
+  // Delegate to dedicated security and layout components
   if (tool.id === 'protect-pdf') {
     return (
       <ToolLayout tool={tool}>
@@ -127,8 +152,8 @@ export default function UniversalToolPage() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
+  const [processingStatus, setProcessingStatus] = useState<string>('');
   const [resultFiles, setResultFiles] = useState<ResultFileItem[] | null>(null);
-  const [compressionStats, setCompressionStats] = useState<{ orig: number; newSize: number } | null>(null);
 
   // Tool Specific Configuration States
   // 1. Split PDF
@@ -152,20 +177,28 @@ export default function UniversalToolPage() {
   const [watermarkOpacity, setWatermarkOpacity] = useState<number>(0.3);
   const [watermarkRotation, setWatermarkRotation] = useState<number>(45);
 
-  // 6. Compress Level
+  // 6. Compress Level & Accurate Metrics
   const [compressLevel, setCompressLevel] = useState<'low' | 'balanced' | 'strong'>('balanced');
+  const [accurateCompressStats, setAccurateCompressStats] = useState<CompressResult | null>(null);
 
-  // 7. Signature
-  const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawingSignature, setIsDrawingSignature] = useState(false);
-  const [typedSignature, setTypedSignature] = useState<string>('');
-  const [signMethod, setSignMethod] = useState<'draw' | 'type'>('draw');
+  // 7. OCR Options
+  const [ocrLanguage, setOcrLanguage] = useState<'eng' | 'amh'>('eng');
 
-  // 8. AI Results
-  const [aiSummary, setAiSummary] = useState<DocumentSummaryResult | null>(null);
-  const [aiMarkdown, setAiMarkdown] = useState<string | null>(null);
+  // 8. PDF Forms
+  const [formFields, setFormFields] = useState<FormFieldInfo[] | null>(null);
+  const [formValues, setFormValues] = useState<Record<string, string | boolean>>({});
+  const [hasScannedFormNotice, setHasScannedFormNotice] = useState<boolean>(false);
+
+  // 9. Repair Diagnostics
+  const [repairDiagnostic, setRepairDiagnostic] = useState<RepairPdfResult | null>(null);
+
+  // 10. Document Intelligence Results
+  const [aiSummary, setAiSummary] = useState<ChunkedSummaryResult | null>(null);
+  const [aiMarkdown, setAiMarkdown] = useState<MarkdownResult | null>(null);
   const [targetLang, setTargetLang] = useState<string>('Amharic');
-  const [translatedText, setTranslatedText] = useState<string | null>(null);
+  const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
+
+  const toolDef = getToolDefinition(tool.id);
 
   // Handle file drop / selection
   const handleFilesSelected = async (files: File[]) => {
@@ -173,21 +206,43 @@ export default function UniversalToolPage() {
     setResultFiles(null);
     setAiSummary(null);
     setAiMarkdown(null);
-    setTranslatedText(null);
+    setTranslationResult(null);
+    setRepairDiagnostic(null);
+    setAccurateCompressStats(null);
+    setProcessingStatus('');
 
     try {
       const buffers = await Promise.all(files.map((f) => f.arrayBuffer()));
       setFileBuffers(buffers);
 
-      if (files[0] && files[0].type === 'application/pdf') {
+      if (files[0] && files[0].name.toLowerCase().endsWith('.pdf')) {
         const pdfjs = await getPdfJs();
-        const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffers[0].slice(0)) });
+        const loadingTask = pdfjs.getDocument({
+          data: new Uint8Array(buffers[0].slice(0)),
+          disableWorker: typeof window === 'undefined',
+        });
         const pdfDoc = await loadingTask.promise;
         setTotalPages(pdfDoc.numPages);
+
+        // Pre-scan AcroForm fields if on pdf-forms tool
+        if (tool.id === 'pdf-forms') {
+          const formDetect = await detectPdfFormFields(buffers[0]);
+          if (formDetect.hasForm) {
+            setFormFields(formDetect.fields);
+            const initialVals: Record<string, string | boolean> = {};
+            formDetect.fields.forEach((f) => {
+              initialVals[f.name] = f.value;
+            });
+            setFormValues(initialVals);
+            setHasScannedFormNotice(false);
+          } else {
+            setFormFields([]);
+            setHasScannedFormNotice(true);
+          }
+        }
       }
     } catch (err) {
       console.error('File load error:', err);
-      alert('Could not inspect the document.');
     }
   };
 
@@ -196,11 +251,16 @@ export default function UniversalToolPage() {
     setFileBuffers([]);
     setTotalPages(0);
     setResultFiles(null);
-    setCompressionStats(null);
+    setAccurateCompressStats(null);
+    setRepairDiagnostic(null);
+    setFormFields(null);
+    setFormValues({});
+    setHasScannedFormNotice(false);
     setAiSummary(null);
     setAiMarkdown(null);
-    setTranslatedText(null);
+    setTranslationResult(null);
     setProgress(0);
+    setProcessingStatus('');
   };
 
   const getDisabledReason = (): string | null => {
@@ -218,27 +278,32 @@ export default function UniversalToolPage() {
     if (tool.id === 'split-pdf' && splitMode === 'ranges' && !rangeInput.trim()) {
       return 'Please enter valid page ranges (e.g. 1-5, 6-10)';
     }
+    if (tool.id === 'pdf-forms' && formFields && formFields.length === 0) {
+      return 'This document contains no interactive AcroForm fields';
+    }
     return null;
   };
 
   // ----------------------------------------------------
-  // Execution Handlers per Tool
+  // Execution Handlers per Tool (NO Generic Fallback)
   // ----------------------------------------------------
   const handleProcessTool = async () => {
     if (fileBuffers.length === 0 && tool.id !== 'scan-to-pdf') return;
 
     setIsProcessing(true);
-    setProgress(20);
+    setProgress(15);
+    setProcessingStatus('Starting process...');
 
     try {
       const primaryBuf = fileBuffers[0];
       const primaryFile = selectedFiles[0];
-      const baseName = primaryFile?.name.replace(/\.pdf$/i, '') || 'Document';
+      const baseName = primaryFile?.name.replace(/\.[^/.]+$/, '') || 'Document';
 
       switch (tool.id) {
         // 1. MERGE PDF
         case 'merge-pdf': {
           setProgress(50);
+          setProcessingStatus('Merging documents losslessly...');
           const mergedBytes = await mergePdfs(fileBuffers);
           setProgress(100);
           setResultFiles([
@@ -280,7 +345,8 @@ export default function UniversalToolPage() {
 
         // 3. REMOVE PAGES
         case 'remove-pages': {
-          setProgress(60);
+          setProgress(50);
+          setProcessingStatus('Removing selected pages...');
           const cleanedBytes = await removePdfPages(primaryBuf, selectedPageNumbers);
           setProgress(100);
           setResultFiles([
@@ -294,7 +360,8 @@ export default function UniversalToolPage() {
 
         // 4. EXTRACT PAGES
         case 'extract-pages': {
-          setProgress(60);
+          setProgress(50);
+          setProcessingStatus('Extracting selected pages...');
           const extractedBytes = await extractPdfPages(primaryBuf, selectedPageNumbers);
           setProgress(100);
           setResultFiles([
@@ -308,7 +375,8 @@ export default function UniversalToolPage() {
 
         // 5. ROTATE PDF
         case 'rotate-pdf': {
-          setProgress(60);
+          setProgress(50);
+          setProcessingStatus(`Rotating pages by ${rotateAngle}°...`);
           const rotatedBytes = await rotatePdf(primaryBuf, rotateAngle);
           setProgress(100);
           setResultFiles([
@@ -322,7 +390,8 @@ export default function UniversalToolPage() {
 
         // 6. ADD PAGE NUMBERS
         case 'add-page-numbers': {
-          setProgress(60);
+          setProgress(50);
+          setProcessingStatus('Adding page numbers...');
           const numberedBytes = await addPageNumbersToPdf(primaryBuf, {
             position: numberPosition,
             format: numberFormat,
@@ -341,12 +410,13 @@ export default function UniversalToolPage() {
 
         // 7. ADD WATERMARK
         case 'add-watermark': {
-          setProgress(60);
+          setProgress(50);
+          setProcessingStatus('Embedding vector watermark...');
           const watermarkedBytes = await addWatermarkToPdf(primaryBuf, {
             text: watermarkText || 'CONFIDENTIAL',
             opacity: watermarkOpacity,
             rotation: watermarkRotation,
-            fontSize: 48,
+            fontSize: 44,
           });
           setProgress(100);
           setResultFiles([
@@ -358,24 +428,199 @@ export default function UniversalToolPage() {
           break;
         }
 
-        // 8. COMPRESS PDF
+        // 8. COMPRESS PDF (Accurate & Unfabricated)
         case 'compress-pdf': {
           setProgress(50);
-          const res = await compressPdf(primaryBuf, compressLevel);
+          setProcessingStatus('Compacting streams and object tables...');
+          const res = await performPdfCompression(primaryBuf, baseName, compressLevel);
           setProgress(100);
-          setCompressionStats({ orig: res.originalSize, newSize: res.newSize });
+          setAccurateCompressStats(res);
           setResultFiles([
             {
-              name: `${baseName} - Compressed.pdf`,
+              name: res.filename,
               bytes: res.bytes,
             },
           ]);
           break;
         }
 
-        // 9. JPG TO PDF
+        // 9. REPAIR PDF (Conservative diagnostics)
+        case 'repair-pdf': {
+          const res = await repairPdf(primaryBuf, baseName, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setRepairDiagnostic(res);
+          if (res.bytes) {
+            setResultFiles([
+              {
+                name: res.filename,
+                bytes: res.bytes,
+              },
+            ]);
+          }
+          break;
+        }
+
+        // 10. OCR PDF (Lazy-loaded WebAssembly & Searchable PDF)
+        case 'ocr-pdf': {
+          const ocrRes = await performPdfOcr(primaryBuf, baseName, ocrLanguage, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setProgress(100);
+          setResultFiles([
+            {
+              name: ocrRes.filename,
+              bytes: ocrRes.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 11. PDF TO EXCEL (Real SheetJS XLSX)
+        case 'pdf-to-excel': {
+          const excelRes = await convertPdfToExcel(primaryBuf, baseName, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setProgress(100);
+          setResultFiles([
+            {
+              name: excelRes.filename,
+              bytes: excelRes.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 12. PDF TO WORD (Genuine .docx Open XML)
+        case 'pdf-to-word': {
+          const wordRes = await convertPdfToWord(primaryBuf, baseName, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setProgress(100);
+          setResultFiles([
+            {
+              name: wordRes.filename,
+              bytes: wordRes.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 13. PDF TO POWERPOINT (Genuine .pptx Presentation)
+        case 'pdf-to-powerpoint': {
+          const pptxRes = await convertPdfToPowerPoint(primaryBuf, baseName, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setProgress(100);
+          setResultFiles([
+            {
+              name: pptxRes.filename,
+              bytes: pptxRes.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 14. PDF TO PDF/A (Experimental Metadata Preparation)
+        case 'pdf-to-pdfa': {
+          setProgress(60);
+          setProcessingStatus('Injecting ISO 19005-1 (PDF/A-1b) metadata packet...');
+          const pdfaRes = await preparePdfA(primaryBuf, baseName);
+          setProgress(100);
+          setResultFiles([
+            {
+              name: pdfaRes.filename,
+              bytes: pdfaRes.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 15. PDF FORMS
+        case 'pdf-forms': {
+          setProgress(50);
+          setProcessingStatus('Applying form values and updating fields...');
+          const formRes = await fillPdfForm(primaryBuf, formValues, baseName);
+          setProgress(100);
+          setResultFiles([
+            {
+              name: formRes.filename,
+              bytes: formRes.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 16. WORD TO PDF
+        case 'word-to-pdf': {
+          setProgress(50);
+          setProcessingStatus('Reconstructing document from .docx manuscript...');
+          const res = await convertWordToPdf(primaryBuf, baseName);
+          setProgress(100);
+          setResultFiles([
+            {
+              name: res.filename,
+              bytes: res.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 17. EXCEL TO PDF
+        case 'excel-to-pdf': {
+          setProgress(50);
+          setProcessingStatus('Rendering spreadsheet data into printable PDF tables...');
+          const res = await convertExcelToPdf(primaryBuf, baseName);
+          setProgress(100);
+          setResultFiles([
+            {
+              name: res.filename,
+              bytes: res.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 18. POWERPOINT TO PDF
+        case 'powerpoint-to-pdf': {
+          setProgress(50);
+          setProcessingStatus('Extracting presentation slides into landscape PDF...');
+          const res = await convertPowerPointToPdf(primaryBuf, baseName);
+          setProgress(100);
+          setResultFiles([
+            {
+              name: res.filename,
+              bytes: res.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 19. HTML TO PDF
+        case 'html-to-pdf': {
+          setProgress(50);
+          setProcessingStatus('Rendering HTML markup to formatted PDF...');
+          const htmlContent = new TextDecoder().decode(primaryBuf);
+          const res = await convertHtmlToPdf(htmlContent, baseName);
+          setProgress(100);
+          setResultFiles([
+            {
+              name: res.filename,
+              bytes: res.bytes,
+            },
+          ]);
+          break;
+        }
+
+        // 20. JPG TO PDF
         case 'jpg-to-pdf': {
           setProgress(60);
+          setProcessingStatus('Compiling images into PDF document...');
           const compiledPdf = await imagesToPdf(selectedFiles);
           setProgress(100);
           setResultFiles([
@@ -387,11 +632,12 @@ export default function UniversalToolPage() {
           break;
         }
 
-        // 10. PDF TO JPG
+        // 21. PDF TO JPG
         case 'pdf-to-jpg': {
-          setProgress(40);
+          setProgress(30);
+          setProcessingStatus('Rendering pages to high-resolution JPEG images...');
           const images = await pdfToImages(primaryBuf, 1.5, (cur, tot) => {
-            setProgress(Math.round(40 + (cur / tot) * 50));
+            setProgress(Math.round(30 + (cur / tot) * 60));
           });
           setProgress(100);
           setResultFiles(
@@ -403,111 +649,48 @@ export default function UniversalToolPage() {
           break;
         }
 
-        // 11. SIGN PDF
-        case 'sign-pdf': {
-          setProgress(60);
-          let sigDataUrl = '';
-          if (signMethod === 'draw' && signatureCanvasRef.current) {
-            sigDataUrl = signatureCanvasRef.current.toDataURL('image/png');
-          } else {
-            // Generate clean canvas with typed name
-            const c = document.createElement('canvas');
-            c.width = 400;
-            c.height = 150;
-            const ctx = c.getContext('2d');
-            if (ctx) {
-              ctx.font = 'italic 32px "Brush Script MT", cursive, sans-serif';
-              ctx.fillStyle = '#1e3a8a';
-              ctx.fillText(typedSignature || 'Authorized Signer', 30, 80);
-              sigDataUrl = c.toDataURL('image/png');
-            }
-          }
-          const signedBytes = await applySignatureToPdf(primaryBuf, sigDataUrl, totalPages, 50, 50, 160, 60);
-          setProgress(100);
-          setResultFiles([
-            {
-              name: `${baseName} - Signed.pdf`,
-              bytes: signedBytes,
-            },
-          ]);
-          break;
-        }
-
-        // 12. AI SUMMARIZER
+        // 22. AI SUMMARIZER (Progressive Chunking)
         case 'ai-summarizer': {
-          setProgress(40);
-          const pdfjs = await getPdfJs();
-          const doc = await pdfjs.getDocument({ data: new Uint8Array(primaryBuf.slice(0)) }).promise;
-          let fullText = '';
-          for (let p = 1; p <= Math.min(doc.numPages, 40); p++) {
-            const page = await doc.getPage(p);
-            const content = await page.getTextContent();
-            const text = content.items.map((i: any) => i.str || '').join(' ');
-            fullText += text + '\n';
-          }
-          setProgress(75);
-          const provider = getAIProvider();
-          const summary = await provider.summarizeDocument(fullText, baseName);
-          setAiSummary(summary);
+          const sumRes = await summarizePdfDocument(primaryBuf, baseName, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setAiSummary(sumRes);
           setProgress(100);
           break;
         }
 
-        // 13. PDF TO MARKDOWN
-        case 'pdf-to-markdown': {
-          setProgress(40);
-          const pdfjs = await getPdfJs();
-          const doc = await pdfjs.getDocument({ data: new Uint8Array(primaryBuf.slice(0)) }).promise;
-          let fullText = '';
-          for (let p = 1; p <= Math.min(doc.numPages, 50); p++) {
-            const page = await doc.getPage(p);
-            const content = await page.getTextContent();
-            const text = content.items.map((i: any) => i.str || '').join(' ');
-            fullText += text + '\n';
-          }
-          setProgress(75);
-          const provider = getAIProvider();
-          const md = await provider.convertToMarkdown(fullText, baseName);
-          setAiMarkdown(md);
-          setProgress(100);
-          break;
-        }
-
-        // 14. TRANSLATE PDF
+        // 23. TRANSLATE PDF (Basic Local Translation)
         case 'translate-pdf': {
-          setProgress(40);
-          const pdfjs = await getPdfJs();
-          const doc = await pdfjs.getDocument({ data: new Uint8Array(primaryBuf.slice(0)) }).promise;
-          let fullText = '';
-          for (let p = 1; p <= Math.min(doc.numPages, 10); p++) {
-            const page = await doc.getPage(p);
-            const content = await page.getTextContent();
-            const text = content.items.map((i: any) => i.str || '').join(' ');
-            fullText += text + '\n';
-          }
-          setProgress(75);
-          const provider = getAIProvider();
-          const translated = await provider.translateText(fullText, 'English', targetLang);
-          setTranslatedText(translated);
+          const transRes = await translatePdfDocument(primaryBuf, targetLang, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setTranslationResult(transRes);
           setProgress(100);
           break;
         }
 
-        // DEFAULT FOR REMAINING (Office/Converters/Security): Fast Client Engine Slicing & Conversion
-        default: {
-          setProgress(50);
-          // High-fidelity structured client-side export
-          const srcDoc = await (await import('pdf-lib')).PDFDocument.load(primaryBuf.slice(0));
-          srcDoc.setProducer(`DocuNexa ${tool.name}`);
-          const processed = await srcDoc.save();
+        // 24. PDF TO MARKDOWN
+        case 'pdf-to-markdown': {
+          const mdRes = await convertPdfToMarkdown(primaryBuf, baseName, (pct, msg) => {
+            setProgress(pct);
+            setProcessingStatus(msg);
+          });
+          setAiMarkdown(mdRes);
           setProgress(100);
           setResultFiles([
             {
-              name: `${baseName} - [${tool.name}].pdf`,
-              bytes: processed,
+              name: mdRes.filename,
+              bytes: mdRes.bytes,
             },
           ]);
           break;
+        }
+
+        // NO GENERIC FALLBACK: Throw error if tool is unconfigured
+        default: {
+          throw new Error(`Tool '${tool.id}' does not have a registered processor.`);
         }
       }
     } catch (err: any) {
@@ -516,43 +699,6 @@ export default function UniversalToolPage() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Signature drawing canvas helper
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.beginPath();
-    const rect = canvas.getBoundingClientRect();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    setIsDrawingSignature(true);
-  };
-
-  const drawSignature = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawingSignature) return;
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#1e3a8a';
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawingSignature(false);
-  };
-
-  const clearCanvas = () => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx?.clearRect(0, 0, canvas.width, canvas.height);
   };
 
   return (
@@ -594,6 +740,17 @@ export default function UniversalToolPage() {
                 Change Files
               </button>
             </div>
+
+            {/* Honest Technical Limitation Disclosure Banner */}
+            {toolDef?.limitations && (
+              <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
+                <Info size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Technical Notice: </span>
+                  {toolDef.limitations}
+                </div>
+              </div>
+            )}
 
             {/* Tool-Specific Controls */}
             {/* A. MERGE PDF File Reordering List */}
@@ -682,18 +839,18 @@ export default function UniversalToolPage() {
                     onClick={() => setSplitMode('ranges')}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       splitMode === 'ranges'
-                        ? 'bg-brand-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    Custom Page Ranges
+                    Custom Ranges
                   </button>
                   <button
                     onClick={() => setSplitMode('every-n')}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       splitMode === 'every-n'
-                        ? 'bg-brand-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     Split Every N Pages
@@ -703,23 +860,21 @@ export default function UniversalToolPage() {
                 {splitMode === 'ranges' ? (
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Specify Page Ranges (comma separated)
+                      Page Ranges (comma separated)
                     </label>
                     <input
                       type="text"
                       value={rangeInput}
                       onChange={(e) => setRangeInput(e.target.value)}
-                      placeholder="e.g. 1-4, 5-10, 11-15"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-brand-500"
+                      placeholder="e.g. 1-5, 6-10, 11-15"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-rose-500"
                     />
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                      Total document pages: {totalPages}. Example: &ldquo;1-3, 4-7, 8-12&rdquo; will create 3 individual PDF files.
-                    </p>
+                    <p className="text-[11px] text-slate-500">Extracts discrete PDF documents matching your custom page groups.</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Number of pages per split file
+                      Pages Per Document Chunk
                     </label>
                     <input
                       type="number"
@@ -727,48 +882,36 @@ export default function UniversalToolPage() {
                       max={totalPages || 100}
                       value={everyN}
                       onChange={(e) => setEveryN(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                      className="w-32 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-brand-500"
+                      className="w-32 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-rose-500"
                     />
                   </div>
                 )}
               </div>
             )}
 
-            {/* C. REMOVE or EXTRACT PAGES Visual Selection Grid */}
-            {(tool.id === 'remove-pages' || tool.id === 'extract-pages') && fileBuffers[0] && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            {/* C. PAGE SELECTION GRID (Remove / Extract / Organize) */}
+            {(tool.id === 'remove-pages' || tool.id === 'extract-pages' || tool.id === 'organize-pdf') && fileBuffers[0] && (
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                      {tool.id === 'remove-pages' ? 'Click pages to DELETE' : 'Click pages to EXTRACT'}
-                    </h4>
-                    <p className="text-xs text-slate-700 dark:text-slate-200 mt-0.5">
-                      {selectedPageNumbers.length} pages selected
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        setSelectedPageNumbers(
-                          selectedPageNumbers.length === totalPages
-                            ? []
-                            : Array.from({ length: totalPages }, (_, i) => i + 1)
-                        )
-                      }
-                      className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
-                    >
-                      {selectedPageNumbers.length === totalPages ? 'Deselect All' : 'Select All'}
-                    </button>
-                  </div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                    {tool.id === 'remove-pages'
+                      ? 'Click pages to mark for deletion'
+                      : tool.id === 'extract-pages'
+                      ? 'Click pages to extract'
+                      : 'Preview & Reorder Pages'}
+                  </h4>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {selectedPageNumbers.length} of {totalPages} pages selected
+                  </span>
                 </div>
 
                 <PdfThumbnailGrid
                   fileBuffer={fileBuffers[0]}
                   totalPages={totalPages}
                   selectedPages={selectedPageNumbers}
-                  onTogglePage={(p) => {
+                  onTogglePage={(num: number) => {
                     setSelectedPageNumbers((prev) =>
-                      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+                      prev.includes(num) ? prev.filter((p) => p !== num) : [...prev, num].sort((a, b) => a - b)
                     );
                   }}
                   actionType="select"
@@ -776,32 +919,33 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* D. ROTATE PDF Angle Selector */}
+            {/* D. ROTATE CONTROLS */}
             {tool.id === 'rotate-pdf' && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Select Rotation Angle
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[90, 180, 270].map((deg) => (
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Rotation Angle</label>
+                <div className="flex gap-3">
+                  {[
+                    { angle: 90, label: '90° Clockwise' },
+                    { angle: 180, label: '180° Flip' },
+                    { angle: 270, label: '270° Counter-Clockwise' },
+                  ].map((btn) => (
                     <button
-                      key={deg}
-                      onClick={() => setRotateAngle(deg)}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border text-xs font-bold transition-all ${
-                        rotateAngle === deg
-                          ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 shadow-sm'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      key={btn.angle}
+                      onClick={() => setRotateAngle(btn.angle)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        rotateAngle === btn.angle
+                          ? 'bg-purple-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <RotateCw size={22} className="mb-2 text-brand-600 dark:text-brand-400" />
-                      <span>{deg}° Clockwise</span>
+                      {btn.label}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* E. ADD WATERMARK Controls */}
+            {/* E. ADD WATERMARK */}
             {tool.id === 'add-watermark' && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5 sm:col-span-3">
@@ -844,12 +988,12 @@ export default function UniversalToolPage() {
             {/* F. COMPRESS PDF Level */}
             {tool.id === 'compress-pdf' && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Compression Level</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Compression Preset</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { id: 'low', label: 'Low Compression', desc: 'Highest quality, gentle size reduction' },
-                    { id: 'balanced', label: 'Balanced (Recommended)', desc: 'Optimal balance of sharpness and size' },
-                    { id: 'strong', label: 'Strong Compression', desc: 'Smallest file size for email attachments' },
+                    { id: 'low', label: 'Gentle', desc: 'Preserves max DPI, compacts streams' },
+                    { id: 'balanced', label: 'Balanced (Standard)', desc: 'Optimizes object tables & streams' },
+                    { id: 'strong', label: 'High Compaction', desc: 'Maximum object stream deduction' },
                   ].map((lvl) => (
                     <button
                       key={lvl.id}
@@ -861,75 +1005,107 @@ export default function UniversalToolPage() {
                       }`}
                     >
                       <span className="font-bold text-xs block">{lvl.label}</span>
-                      <span className="text-[11px] text-slate-700 dark:text-slate-200 mt-1 block">{lvl.desc}</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">{lvl.desc}</span>
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* G. SIGN PDF Signature Canvas */}
-            {tool.id === 'sign-pdf' && (
+            {/* G. OCR LANGUAGE PICKER */}
+            {tool.id === 'ocr-pdf' && (
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">OCR Recognition Language</label>
+                <div className="flex gap-3">
+                  {[
+                    { id: 'eng', label: 'English' },
+                    { id: 'amh', label: 'Amharic (አማርኛ)' },
+                  ].map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => setOcrLanguage(l.id as any)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        ocrLanguage === l.id
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Tesseract.js WebAssembly worker initializes in browser memory when you click process.
+                </p>
+              </div>
+            )}
+
+            {/* H. PDF FORMS INTERACTIVE EDITOR */}
+            {tool.id === 'pdf-forms' && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSignMethod('draw')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                      signMethod === 'draw' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    Draw Signature
-                  </button>
-                  <button
-                    onClick={() => setSignMethod('type')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                      signMethod === 'type' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    Type Signature
-                  </button>
+                <div className="flex items-center gap-2">
+                  <CheckSquare size={16} className="text-purple-600" />
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Detected Interactive Form Fields</h4>
                 </div>
 
-                {signMethod === 'draw' ? (
-                  <div className="space-y-2">
-                    <canvas
-                      ref={signatureCanvasRef}
-                      width={450}
-                      height={140}
-                      onMouseDown={startDrawing}
-                      onMouseMove={drawSignature}
-                      onMouseUp={stopDrawing}
-                      onMouseLeave={stopDrawing}
-                      className="w-full max-w-md h-36 bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-crosshair touch-none"
-                    />
-                    <button onClick={clearCanvas} className="text-xs font-semibold text-rose-500 hover:underline">
-                      Clear canvas
-                    </button>
+                {hasScannedFormNotice ? (
+                  <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs">
+                    This document contains no interactive AcroForm fields. It may be a scanned or flattened document.
+                  </div>
+                ) : formFields && formFields.length > 0 ? (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    {formFields.map((f, idx) => (
+                      <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block">{f.name}</label>
+                        {f.type === 'checkbox' ? (
+                          <label className="flex items-center gap-2 cursor-pointer pt-1">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(formValues[f.name])}
+                              onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.checked })}
+                              className="w-4 h-4 rounded text-brand-600"
+                            />
+                            <span>{Boolean(formValues[f.name]) ? 'Checked' : 'Unchecked'}</span>
+                          </label>
+                        ) : f.type === 'dropdown' && f.options ? (
+                          <select
+                            value={String(formValues[f.name] || '')}
+                            onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs"
+                          >
+                            {f.options.map((opt, oIdx) => (
+                              <option key={oIdx} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={String(formValues[f.name] || '')}
+                            onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs"
+                          />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <input
-                    type="text"
-                    value={typedSignature}
-                    onChange={(e) => setTypedSignature(e.target.value)}
-                    placeholder="Type your full legal name"
-                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-brand-500 font-serif italic text-lg"
-                  />
+                  <p className="text-xs text-slate-500">Scanning document for AcroForm fields...</p>
                 )}
               </div>
             )}
 
-            {/* H. TRANSLATE PDF Target Language */}
+            {/* I. TRANSLATE PDF Target Language */}
             {tool.id === 'translate-pdf' && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Target Language</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Target Language (Basic Local Translation)</label>
                 <div className="flex gap-2">
                   {['Amharic', 'Spanish', 'French', 'German'].map((lang) => (
                     <button
                       key={lang}
                       onClick={() => setTargetLang(lang)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                         targetLang === lang
-                          ? 'bg-indigo-600 text-white'
+                          ? 'bg-indigo-600 text-white shadow-sm'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                       }`}
                     >
@@ -941,7 +1117,7 @@ export default function UniversalToolPage() {
             )}
 
             {/* Main Action Process Button */}
-            {!resultFiles && !aiSummary && !aiMarkdown && !translatedText && (
+            {!resultFiles && !aiSummary && !aiMarkdown && !translationResult && (
               <div className="text-center pt-2 space-y-2">
                 <button
                   onClick={handleProcessTool}
@@ -964,20 +1140,70 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* Processing Progress Bar */}
-            <ProcessingProgress isProcessing={isProcessing} progress={progress} />
+            {/* Processing Progress Bar with Live Status */}
+            <div className="space-y-2">
+              <ProcessingProgress isProcessing={isProcessing} progress={progress} />
+              {isProcessing && processingStatus && (
+                <p className="text-xs text-center text-slate-600 dark:text-slate-300 font-medium">
+                  {processingStatus}
+                </p>
+              )}
+            </div>
 
-            {/* Result Panel for PDF & Image Outputs */}
+            {/* Accurate Compression Stats Banner */}
+            {accurateCompressStats && (
+              <div className={`p-4 rounded-2xl border text-xs ${
+                accurateCompressStats.isLarger
+                  ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+                  : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">{accurateCompressStats.summaryText}</span>
+                  <span>{(accurateCompressStats.originalSize / 1024).toFixed(1)} KB → {(accurateCompressStats.newSize / 1024).toFixed(1)} KB</span>
+                </div>
+              </div>
+            )}
+
+            {/* Repair Diagnostic Card */}
+            {repairDiagnostic && (
+              <div className={`p-5 rounded-2xl border text-xs space-y-2 ${
+                repairDiagnostic.status === 'Healthy'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                  : repairDiagnostic.status === 'Unrecoverable'
+                  ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+                  : 'bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-200'
+              }`}>
+                <div className="flex items-center gap-2 font-bold text-sm">
+                  <Wrench size={16} />
+                  <span>Repair Status: {repairDiagnostic.status}</span>
+                </div>
+                <div className="space-y-1 text-[11px] opacity-90">
+                  <p>Recovered Pages: {repairDiagnostic.recoveredPages} • Failed Pages: {repairDiagnostic.failedPages}</p>
+                  <ul className="list-disc list-inside">
+                    {repairDiagnostic.diagnostics.map((d, i) => (
+                      <li key={i}>{d}</li>
+                    ))}
+                  </ul>
+                </div>
+                {repairDiagnostic.status === 'Unrecoverable' && (
+                  <p className="font-bold pt-2 text-rose-600 dark:text-rose-400">
+                    This PDF could not be repaired with the available recovery methods.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Result Panel for Downloadable Binary Files (XLSX, DOCX, PPTX, PDF, etc.) */}
             {resultFiles && (
               <ResultPanel
                 files={resultFiles}
-                originalSize={compressionStats?.orig}
-                newSize={compressionStats?.newSize}
+                originalSize={accurateCompressStats?.originalSize}
+                newSize={accurateCompressStats?.newSize}
                 onReset={handleReset}
               />
             )}
 
-            {/* AI Summarizer Result View */}
+            {/* Local Document Summarizer Result View */}
             {aiSummary && (
               <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 shadow-xl space-y-6 animate-in fade-in duration-200 text-left">
                 <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -985,11 +1211,14 @@ export default function UniversalToolPage() {
                     <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                       <Sparkles size={18} />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Structured Document Intelligence Summary</h3>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Structured Document Overview</h3>
+                      <span className="text-[11px] text-slate-500 font-medium">{aiSummary.engineLabel}</span>
+                    </div>
                   </div>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(JSON.stringify(aiSummary, null, 2));
+                      navigator.clipboard.writeText(JSON.stringify(aiSummary.summary, null, 2));
                       alert('Copied summary to clipboard!');
                     }}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
@@ -1002,13 +1231,13 @@ export default function UniversalToolPage() {
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Executive Overview</h4>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{aiSummary.overview}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{aiSummary.summary.overview}</p>
                   </div>
 
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Key Takeaways</h4>
                     <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 list-disc list-inside">
-                      {aiSummary.keyPoints.map((pt, i) => (
+                      {aiSummary.summary.keyPoints.map((pt, i) => (
                         <li key={i}>{pt}</li>
                       ))}
                     </ul>
@@ -1017,30 +1246,34 @@ export default function UniversalToolPage() {
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Study Questions</h4>
                     <ul className="space-y-1 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside">
-                      {aiSummary.studyQuestions.map((q, i) => (
+                      {aiSummary.summary.studyQuestions.map((q, i) => (
                         <li key={i}>{q}</li>
                       ))}
                     </ul>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                  <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-indigo-600">
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                  <span>{aiSummary.progressMessage}</span>
+                  <button onClick={handleReset} className="font-semibold hover:text-indigo-600">
                     Summarize another document
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Markdown Output View */}
+            {/* Markdown Output View with Copy & Download */}
             {aiMarkdown && (
               <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Generated Markdown</h3>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Structured Markdown Document</h3>
+                    <span className="text-[11px] text-slate-500">{aiMarkdown.wordCount} words • {aiMarkdown.totalPages} pages converted</span>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(aiMarkdown);
+                        navigator.clipboard.writeText(aiMarkdown.markdown);
                         alert('Markdown copied to clipboard!');
                       }}
                       className="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-semibold text-xs inline-flex items-center gap-1.5"
@@ -1050,11 +1283,11 @@ export default function UniversalToolPage() {
                     </button>
                     <button
                       onClick={() => {
-                        const blob = new Blob([aiMarkdown], { type: 'text/markdown' });
+                        const blob = new Blob([aiMarkdown.markdown], { type: 'text/markdown;charset=utf-8' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = 'Document.md';
+                        a.download = aiMarkdown.filename;
                         a.click();
                       }}
                       className="px-3 py-1.5 rounded-lg bg-brand-600 text-white font-semibold text-xs inline-flex items-center gap-1.5"
@@ -1065,7 +1298,7 @@ export default function UniversalToolPage() {
                   </div>
                 </div>
                 <pre className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 max-h-96 overflow-y-auto whitespace-pre-wrap">
-                  {aiMarkdown}
+                  {aiMarkdown.markdown}
                 </pre>
                 <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-brand-600">
                   Convert another document
@@ -1074,13 +1307,16 @@ export default function UniversalToolPage() {
             )}
 
             {/* Translation Output View */}
-            {translatedText && (
+            {translationResult && (
               <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Translated Document ({targetLang})</h3>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Translated Document ({translationResult.targetLang})</h3>
+                    <span className="text-[11px] text-slate-500">{translationResult.engineLabel}</span>
+                  </div>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(translatedText);
+                      navigator.clipboard.writeText(translationResult.translatedText);
                       alert('Translation copied to clipboard!');
                     }}
                     className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold text-xs inline-flex items-center gap-1.5"
@@ -1090,11 +1326,14 @@ export default function UniversalToolPage() {
                   </button>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                  {translatedText}
+                  {translationResult.translatedText}
                 </div>
-                <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-indigo-600">
-                  Translate another document
-                </button>
+                <div className="pt-2 flex items-center justify-between text-xs text-slate-500">
+                  <span>{translationResult.progressMessage}</span>
+                  <button onClick={handleReset} className="font-semibold hover:text-indigo-600">
+                    Translate another document
+                  </button>
+                </div>
               </div>
             )}
           </div>
