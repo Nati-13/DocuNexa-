@@ -20,6 +20,44 @@ export async function getPdfJs(): Promise<any> {
 }
 
 /**
+ * Shared standard font data URL configuration for PDF.js across browser and Node/SSR.
+ * In browser: '/standard_fonts/' (statically served by Next.js from public/standard_fonts)
+ * In Node / test runner: './public/standard_fonts/' (local relative path for fs.readFile)
+ */
+export function getStandardFontDataUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/standard_fonts/';
+  }
+  return './public/standard_fonts/';
+}
+
+/**
+ * Shared parameter builder for pdfjs.getDocument().
+ * Universally provides:
+ * 1. Safe sliced Uint8Array preventing detachment of the caller's buffer.
+ * 2. Valid standardFontDataUrl (resolves "Ensure that the `standardFontDataUrl` API parameter is provided").
+ * 3. cMapUrl and cMapPacked configuration.
+ * 4. disableWorker in Node.js / SSR environments.
+ */
+export function getPdfJsDocumentParams(
+  data: Uint8Array | ArrayBuffer,
+  extraOptions: Record<string, any> = {}
+): Record<string, any> {
+  const safeData =
+    data instanceof Uint8Array
+      ? new Uint8Array(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength))
+      : new Uint8Array(data.slice(0));
+
+  return {
+    data: safeData,
+    standardFontDataUrl: getStandardFontDataUrl(),
+    cMapPacked: true,
+    ...(typeof window === 'undefined' ? { disableWorker: true } : {}),
+    ...extraOptions,
+  };
+}
+
+/**
  * Loads a PDF document and extracts text page by page, checking for scanned status
  */
 export async function extractPdfTextPages(
@@ -33,12 +71,13 @@ export async function extractPdfTextPages(
 }> {
   const pdfjs = await getPdfJs();
 
-  // Slice buffer so PDF.js worker transfer does not detach the original ArrayBuffer
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(arrayBuffer.slice(0)),
-    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-    cMapPacked: true,
-  });
+  // Slice buffer and configure standardFontDataUrl & cMapUrl
+  const loadingTask = pdfjs.getDocument(
+    getPdfJsDocumentParams(arrayBuffer, {
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+      cMapPacked: true,
+    })
+  );
 
   const pdfDoc = await loadingTask.promise;
   const totalPages = pdfDoc.numPages;
@@ -128,10 +167,7 @@ export async function renderPdfPageToCanvas(
   scale = 1.2
 ): Promise<void> {
   const pdfjs = await getPdfJs();
-  // Slice buffer so PDF.js worker transfer does not detach the original ArrayBuffer
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(arrayBuffer.slice(0)),
-  });
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(arrayBuffer));
 
   const pdfDoc = await loadingTask.promise;
   const page = await pdfDoc.getPage(pageNumber);

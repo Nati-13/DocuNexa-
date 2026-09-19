@@ -24,7 +24,7 @@ import {
   CutProgressState, 
   CutProgressItem 
 } from '@/types';
-import { extractPdfTextPages, getPdfJs } from '@/lib/pdfReader';
+import { extractPdfTextPages, getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { detectDocumentUnits } from '@/lib/detector';
 import { validateParts, sanitizeFilename } from '@/lib/validator';
 import { 
@@ -131,7 +131,7 @@ export default function PdfUnitCutterPage() {
       setFileBuffer(buffer);
 
       const pdfjs = await getPdfJs();
-      const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer.slice(0)) });
+      const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(buffer));
       const pdfDoc = await loadingTask.promise;
       const totalPages = pdfDoc.numPages;
 

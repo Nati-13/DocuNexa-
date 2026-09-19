@@ -25,7 +25,7 @@ export const DocuNexaLogo: React.FC<LogoProps> = ({
   };
 
   return (
-    <Link href="/" className={`inline-flex items-center gap-3 group select-none ${className}`}>
+    <Link href="/" aria-label="DocuNexa" className={`inline-flex items-center gap-3 group select-none ${className}`}>
       {/* Brand Icon */}
       <div className={`relative flex items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-rose-500 p-0.5 shadow-md shadow-brand-500/20 transition-all duration-300 group-hover:shadow-brand-500/35 group-hover:scale-105 ${iconSizes[size]}`}>
         <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[10px] flex items-center justify-center p-1.5">
@@ -41,10 +41,12 @@ export const DocuNexaLogo: React.FC<LogoProps> = ({
             {/* Document sheet with smart layered fold */}
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
             <polyline points="14 2 14 8 20 8" />
-            {/* Nexa precision node symbol inside */}
-            <path d="M9 13h6" strokeWidth="2" />
-            <path d="M9 17h3" strokeWidth="2" />
-            <circle cx="15" cy="17" r="1" fill="currentColor" />
+            {/* Stylized geometric 'N' brand mark inside */}
+            <path
+              d="M 8.5 11.5 H 10.5 L 14.5 17.5 V 11.5 H 16.5 V 19.5 H 14.5 L 10.5 13.5 V 19.5 H 8.5 Z"
+              fill="currentColor"
+              stroke="none"
+            />
           </svg>
         </div>
       </div>

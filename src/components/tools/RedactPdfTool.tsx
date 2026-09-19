@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { PdfDropzone } from '@/components/common/PdfDropzone';
 import { ProcessingProgress } from '@/components/common/ProcessingProgress';
 import { ResultPanel, ResultFileItem } from '@/components/common/ResultPanel';
-import { getPdfJs } from '@/lib/pdfReader';
+import { getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { redactPdfAreas } from '@/lib/pdfEngine';
 import { PDFDocument } from 'pdf-lib';
 import { 
@@ -62,7 +62,7 @@ export function RedactPdfTool() {
     try {
       const buffer = await selected.arrayBuffer();
       const pdfjs = await getPdfJs();
-      const task = pdfjs.getDocument({ data: new Uint8Array(buffer.slice(0)) });
+      const task = pdfjs.getDocument(getPdfJsDocumentParams(buffer));
       const doc = await task.promise;
 
       setFile(selected);

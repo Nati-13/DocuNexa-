@@ -1,5 +1,5 @@
-import { getPdfJs } from '../pdfReader';
-import { getAIProvider } from '../ai/aiProvider';
+import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
+import { getTranslationProvider } from './translationProvider';
 
 export interface TranslationResult {
   engineLabel: string;
@@ -9,25 +9,25 @@ export interface TranslationResult {
   totalPages: number;
   pagesTranslated: number;
   isScannedWarning: boolean;
+  isSupported: boolean;
+  unsupportedMessage?: string;
   progressMessage: string;
 }
 
 /**
  * Performs progressive text extraction and translation across document pages.
  * Honestly labeled as Basic Local Translation.
+ * Strictly verifies language support; unsupported languages return clear status without fake translation.
  */
 export async function translatePdfDocument(
   pdfBuffer: ArrayBuffer,
   targetLang: string,
   onProgress?: (percent: number, status: string) => void
 ): Promise<TranslationResult> {
-  onProgress?.(5, 'Opening PDF for translation...');
+  onProgress?.(5, 'Opening PDF for translation analysis...');
 
   const pdfjs = await getPdfJs();
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(pdfBuffer.slice(0)),
-    disableWorker: typeof window === 'undefined',
-  });
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(pdfBuffer));
   const doc = await loadingTask.promise;
   const totalPages = doc.numPages;
 
@@ -42,13 +42,13 @@ export async function translatePdfDocument(
     try {
       const page = await doc.getPage(p);
       const textContent = await page.getTextContent();
-      const pageStr = textContent.items.map((it: any) => it.str || '').join(' ').trim();
+      const pageStr = (textContent.items || []).map((it: any) => it.str || '').join(' ').trim();
       if (pageStr) {
         extractedText += `\n--- Page ${p} ---\n` + pageStr;
         pagesWithText++;
       }
     } catch {
-      // Ignore single page read error
+      // Continue with remaining pages if single page extraction fails
     }
   }
 
@@ -59,29 +59,34 @@ export async function translatePdfDocument(
       engineLabel: 'Basic Local Translation (Glossary & Phrase Transformation)',
       sourceLang: 'English',
       targetLang,
-      translatedText: 'This PDF appears to be scanned or contains only images. No selectable text could be extracted. Please run OCR PDF first to generate a searchable text layer before translating.',
+      translatedText: '',
       totalPages,
       pagesTranslated: 0,
       isScannedWarning: true,
+      isSupported: true,
       progressMessage: '0 selectable text pages detected. OCR required.',
     };
   }
 
-  onProgress?.(75, `Translating extracted text into ${targetLang}...`);
+  onProgress?.(75, `Applying translation engine for ${targetLang}...`);
 
-  const provider = getAIProvider();
-  const translated = await provider.translateText(extractedText, 'English', targetLang);
+  const provider = getTranslationProvider();
+  const transPayload = await provider.translateText(extractedText, 'English', targetLang);
 
-  onProgress?.(100, `Pages translated: ${pagesWithText} / ${totalPages}`);
+  onProgress?.(100, `Pages analyzed: ${pagesWithText} / ${totalPages}`);
 
   return {
-    engineLabel: 'Basic Local Translation (Glossary & Phrase Transformation)',
+    engineLabel: transPayload.engineLabel,
     sourceLang: 'English',
     targetLang,
-    translatedText: translated,
+    translatedText: transPayload.translatedText,
     totalPages,
     pagesTranslated: pagesWithText,
     isScannedWarning: false,
-    progressMessage: `Pages translated: ${pagesWithText} / ${totalPages}`,
+    isSupported: transPayload.isSupported,
+    unsupportedMessage: transPayload.unsupportedMessage,
+    progressMessage: transPayload.isSupported
+      ? `Pages translated: ${pagesWithText} / ${totalPages}`
+      : 'Target language requires an external Translation Provider.',
   };
 }

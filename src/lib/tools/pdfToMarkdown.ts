@@ -1,4 +1,4 @@
-import { getPdfJs } from '../pdfReader';
+import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
 
 export interface MarkdownResult {
   filename: string;
@@ -20,10 +20,7 @@ export async function convertPdfToMarkdown(
   onProgress?.(10, 'Opening PDF for structural analysis...');
 
   const pdfjs = await getPdfJs();
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(pdfBuffer.slice(0)),
-    disableWorker: typeof window === 'undefined',
-  });
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(pdfBuffer));
   const doc = await loadingTask.promise;
   const totalPages = doc.numPages;
 

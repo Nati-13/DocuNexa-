@@ -38,7 +38,19 @@ export async function extractPdfRange(
  * Triggers a native browser file download for a Uint8Array or Blob
  */
 export function downloadFile(bytes: Uint8Array | Blob, filename: string): void {
-  const blob = bytes instanceof Blob ? bytes : new Blob([bytes as BlobPart], { type: 'application/pdf' });
+  let mimeType = 'application/octet-stream';
+  const lower = filename.toLowerCase();
+  if (lower.endsWith('.pdf')) mimeType = 'application/pdf';
+  else if (lower.endsWith('.xlsx')) mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  else if (lower.endsWith('.docx')) mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  else if (lower.endsWith('.pptx')) mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+  else if (lower.endsWith('.zip')) mimeType = 'application/zip';
+  else if (lower.endsWith('.md')) mimeType = 'text/markdown;charset=utf-8';
+  else if (lower.endsWith('.txt')) mimeType = 'text/plain;charset=utf-8';
+  else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) mimeType = 'image/jpeg';
+  else if (lower.endsWith('.png')) mimeType = 'image/png';
+
+  const blob = bytes instanceof Blob ? bytes : new Blob([bytes as BlobPart], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;

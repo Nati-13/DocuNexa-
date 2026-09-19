@@ -17,6 +17,7 @@ import {
   Clock, 
   CheckCircle2 
 } from 'lucide-react';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 export default function ToolsDirectoryPage() {
   const [searchQuery, setSearchQuery] = useState('');

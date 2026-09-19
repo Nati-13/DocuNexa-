@@ -38,6 +38,7 @@ import {
 import { DynamicIcon } from '@/components/common/DynamicIcon';
 import { ToolCategory, ToolItem } from '@/types';
 import { createSampleTextbookPdf } from '@/lib/sampleGenerator';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 export default function HomePage() {
   const router = useRouter();
@@ -515,6 +516,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Advertisement Banner - Pre-Tools */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdSlot slotId="home-mid-banner" format="horizontal" />
+      </div>
+
       {/* ============================================================ */}
       {/* 5. ALL PDF TOOLS (Searchable & Filterable) */}
       {/* ============================================================ */}
@@ -659,10 +665,10 @@ export default function HomePage() {
                 <span>Document Intelligence</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                Understand your documents with AI
+                Understand your documents locally
               </h2>
               <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-                Extract structured outlines, generate study guides, translate text into Amharic or other languages, and export clean Markdown.
+                Extract structured outlines, generate study guides, translate text locally, and export clean Markdown.
               </p>
             </div>
 
@@ -670,7 +676,7 @@ export default function HomePage() {
               href="/tools/ai-summarizer"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/25 transition-all self-start md:self-auto shrink-0"
             >
-              <span>Launch AI Summarizer</span>
+              <span>Launch Document Summarizer</span>
               <ArrowRight size={15} />
             </Link>
           </div>
@@ -678,7 +684,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
-                title: 'AI Document Summarizer',
+                title: 'Document Summarizer',
                 desc: 'Synthesize 50-page reports into executive summaries, key terms, and active recall study questions.',
                 slug: 'ai-summarizer',
                 icon: Sparkles,
@@ -717,6 +723,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Advertisement Banner - Section Divider */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdSlot slotId="home-footer-banner" format="horizontal" />
+      </div>
 
       {/* ============================================================ */}
       {/* 7. WHY DOCUNEXA (Privacy & Architecture) */}

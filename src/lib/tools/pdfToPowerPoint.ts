@@ -1,4 +1,4 @@
-import { getPdfJs } from '../pdfReader';
+import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
 import JSZip from 'jszip';
 
 export interface PowerPointConversionResult {
@@ -19,10 +19,7 @@ export async function convertPdfToPowerPoint(
   onProgress?.(10, 'Initializing PDF slide renderer...');
 
   const pdfjs = await getPdfJs();
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(pdfBuffer.slice(0)),
-    disableWorker: typeof window === 'undefined',
-  });
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(pdfBuffer));
   const doc = await loadingTask.promise;
   const totalPages = doc.numPages;
 

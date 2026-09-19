@@ -58,7 +58,7 @@ export const TOOL_CATEGORIES: ToolCategoryInfo[] = [
   {
     id: 'intelligence',
     name: 'PDF Intelligence',
-    tagline: 'AI document summaries, translation, and Markdown exports',
+    tagline: 'Local document summaries, translation, and Markdown exports',
     accentColor: 'indigo',
     accentBg: 'bg-indigo-50 dark:bg-indigo-950/30',
     accentBorder: 'border-indigo-200 dark:border-indigo-800/50',

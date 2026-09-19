@@ -1,4 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
+import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
 
 export interface CompressResult {
   filename: string;
@@ -9,22 +10,29 @@ export interface CompressResult {
   deltaPercent: number; // positive = saved %, negative = grew %
   isLarger: boolean;
   summaryText: string;
+  dualParserVerified?: boolean;
 }
 
 /**
  * Optimizes PDF streams and object dictionaries without fabricating compression statistics.
- * Accurately reports byte difference and warns if the re-serialized file is larger.
+ * Accurately reports byte difference, warns if the re-serialized file is larger,
+ * and performs dual-parser verification (pdf-lib + PDF.js) before reporting success.
  */
 export async function performPdfCompression(
   pdfBuffer: ArrayBuffer,
   baseName: string,
-  level: 'balanced' | 'strong' | 'low' = 'balanced'
+  level: 'balanced' | 'strong' | 'low' = 'balanced',
+  onProgress?: (percent: number, status: string) => void
 ): Promise<CompressResult> {
+  onProgress?.(10, 'Loading original PDF bytes...');
+
   const originalBytes = new Uint8Array(pdfBuffer.slice(0));
   const originalSize = originalBytes.byteLength;
 
   // Use pdf-lib with stream reconstruction
   const doc = await PDFDocument.load(originalBytes, { ignoreEncryption: true });
+
+  onProgress?.(45, 'Compacting object streams and dictionary references...');
 
   // Stream compaction options
   const newBytes = await doc.save({
@@ -45,6 +53,29 @@ export async function performPdfCompression(
     summaryText = `Saved ${deltaPercent}% (${Math.round(byteDelta / 1024)} KB reduction).`;
   }
 
+  // STRICT DUAL-PARSER VERIFICATION:
+  // Reopen with both pdf-lib and PDF.js before confirming success
+  onProgress?.(80, 'Verifying compressed PDF structure with dual parsers...');
+  try {
+    // 1. pdf-lib verification
+    const verifyDoc = await PDFDocument.load(newBytes, { ignoreEncryption: true });
+    if (verifyDoc.getPageCount() === 0) {
+      throw new Error('Compressed PDF contains 0 pages in pdf-lib.');
+    }
+
+    // 2. PDF.js verification
+    const pdfjs = await getPdfJs();
+    const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(newBytes));
+    const pdfjsDoc = await loadingTask.promise;
+    if (pdfjsDoc.numPages === 0) {
+      throw new Error('Compressed PDF failed verification in PDF.js.');
+    }
+  } catch (err: any) {
+    throw new Error(`Compression verification failed: Output file could not be parsed: ${err.message || err}`);
+  }
+
+  onProgress?.(100, 'Compression complete and verified!');
+
   return {
     filename: `${baseName} - (Compressed).pdf`,
     bytes: newBytes,
@@ -54,5 +85,6 @@ export async function performPdfCompression(
     deltaPercent: isLarger ? -deltaPercent : deltaPercent,
     isLarger,
     summaryText,
+    dualParserVerified: true,
   };
 }

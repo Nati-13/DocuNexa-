@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { getPdfJs } from '@/lib/pdfReader';
+import { getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { Check, RotateCw, Trash2 } from 'lucide-react';
 
 interface PageThumbnailItem {
@@ -37,8 +37,7 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
     async function loadThumbnails() {
       try {
         const pdfjs = await getPdfJs();
-        // Safe slice to prevent detachment
-        const loadingTask = pdfjs.getDocument({ data: new Uint8Array(fileBuffer.slice(0)) });
+        const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(fileBuffer));
         const pdfDoc = await loadingTask.promise;
 
         const maxPages = Math.min(totalPages, 50); // limit batch rendering for speed

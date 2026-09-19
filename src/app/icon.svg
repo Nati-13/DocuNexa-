@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#3730A3"/>
+    </linearGradient>
+    <linearGradient id="foldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A5B4FC"/>
+      <stop offset="100%" stop-color="#818CF8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Document Sheet with Folded Top-Right Corner -->
+  <path
+    d="M 7 2
+       H 20
+       L 28 10
+       V 27
+       A 3 3 0 0 1 25 30
+       H 7
+       A 3 3 0 0 1 4 27
+       V 5
+       A 3 3 0 0 1 7 2
+       Z"
+    fill="url(#docGrad)"
+  />
+
+  <!-- Top-Right Fold Flap -->
+  <path
+    d="M 20 2
+       L 20 8
+       A 2 2 0 0 0 22 10
+       L 28 10
+       Z"
+    fill="url(#foldGrad)"
+  />
+
+  <!-- Stylized Geometric 'N' -->
+  <path
+    d="M 8.5 11
+       H 11.5
+       L 20.5 20.5
+       V 11
+       H 23.5
+       V 25
+       H 20.5
+       L 11.5 15.5
+       V 25
+       H 8.5
+       Z"
+    fill="#FFFFFF"
+  />
+</svg>

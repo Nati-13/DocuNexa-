@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
 import JSZip from 'jszip';
-import { getPdfJs } from './pdfReader';
+import { getPdfJs, getPdfJsDocumentParams } from './pdfReader';
 import { encryptPDF, EncryptPDFOptions } from '@pdfsmaller/pdf-encrypt';
 import { decryptPDF, isEncrypted } from '@pdfsmaller/pdf-decrypt';
 
@@ -331,7 +331,7 @@ export async function pdfToImages(
   onProgress?: (current: number, total: number) => void
 ): Promise<{ pageNumber: number; blob: Blob; dataUrl: string }[]> {
   const pdfjs = await getPdfJs();
-  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(toSafeBuffer(buffer)) });
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(toSafeBuffer(buffer)));
   const pdfDoc = await loadingTask.promise;
   const totalPages = pdfDoc.numPages;
   const images: { pageNumber: number; blob: Blob; dataUrl: string }[] = [];
@@ -613,10 +613,10 @@ export async function comparePdfs(
 
   const pdfjs = await getPdfJs();
 
-  const taskA = pdfjs.getDocument({ data: new Uint8Array(toSafeBuffer(bufferA)) });
+  const taskA = pdfjs.getDocument(getPdfJsDocumentParams(toSafeBuffer(bufferA)));
   const docA = await taskA.promise;
 
-  const taskB = pdfjs.getDocument({ data: new Uint8Array(toSafeBuffer(bufferB)) });
+  const taskB = pdfjs.getDocument(getPdfJsDocumentParams(toSafeBuffer(bufferB)));
   const docB = await taskB.promise;
 
   const maxPages = Math.max(docA.numPages, docB.numPages);
