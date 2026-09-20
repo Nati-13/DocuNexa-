@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/test-encrypt-decrypt.ts && tsx test/unit-detector.test.ts && tsx test/full-tool-audit.test.ts && tsx test/test-conversions.test.ts && tsx test/test-runtime-fixes.test.ts && tsx test/test-browser-handoff.test.ts && tsx test/test-download-contract.test.ts && tsx test/test-visual-workspace.test.ts && tsx test/verify-step4-report.ts",
+    "test": "tsx test/test-encrypt-decrypt.ts && tsx test/unit-detector.test.ts && tsx test/full-tool-audit.test.ts && tsx test/test-conversions.test.ts && tsx test/test-runtime-fixes.test.ts && tsx test/test-browser-handoff.test.ts && tsx test/test-download-contract.test.ts && tsx test/test-visual-workspace.test.ts && tsx test/test-unit-cutter-2.test.ts && tsx test/verify-step4-report.ts",
     "test:security": "tsx test/test-encrypt-decrypt.ts",
     "test:detector": "tsx test/unit-detector.test.ts",
     "test:audit": "tsx test/full-tool-audit.test.ts",

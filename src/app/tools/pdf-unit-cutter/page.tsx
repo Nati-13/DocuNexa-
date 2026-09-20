@@ -44,6 +44,9 @@ import { ProgressModal } from '@/components/ProgressModal';
 import { CompletionModal } from '@/components/CompletionModal';
 import { ToolLayout } from '@/components/tools/ToolLayout';
 import { getToolBySlug } from '@/config/tools';
+import { detectDocumentStructure } from '@/lib/structureDetector';
+import { UnitCutterWorkspace } from '@/components/tools/UnitCutterWorkspace';
+import { DocumentStructure, DocumentSection } from '@/types/structure';
 
 export default function PdfUnitCutterPage() {
   const tool = getToolBySlug('pdf-unit-cutter')!;
@@ -61,6 +64,8 @@ export default function PdfUnitCutterPage() {
   const [splitMode, setSplitMode] = useState<'auto' | 'manual'>('auto');
   const [parts, setParts] = useState<DetectedPart[]>([]);
   const [originalParts, setOriginalParts] = useState<DetectedPart[]>([]);
+  const [structure, setStructure] = useState<DocumentStructure | null>(null);
+  const [activeView, setActiveView] = useState<'workspace' | 'table'>('workspace');
 
   // Front matter suggestions
   const [hasFrontMatter, setHasFrontMatter] = useState<boolean>(false);
@@ -147,6 +152,8 @@ export default function PdfUnitCutterPage() {
 
       setParts([]);
       setOriginalParts([]);
+      setStructure(null);
+      setActiveView('workspace');
       setHasFrontMatter(false);
       setFrontMatterRange(undefined);
       setCompletionItems(null);
@@ -172,12 +179,14 @@ export default function PdfUnitCutterPage() {
     setFileBuffer(null);
     setParts([]);
     setOriginalParts([]);
+    setStructure(null);
+    setActiveView('workspace');
     setHasFrontMatter(false);
     setFrontMatterRange(undefined);
     setCompletionItems(null);
   };
 
-  // Analyze PDF Page-by-Page
+  // Analyze PDF Structure using Multi-Stage Structure Detector
   const handleAnalyze = async () => {
     if (!fileInfo) return;
     const activeBuf = await getActiveBuffer();
@@ -187,35 +196,35 @@ export default function PdfUnitCutterPage() {
     }
 
     setIsAnalyzing(true);
-    setAnalysisProgress({ current: 0, total: fileInfo.totalPages });
+    setAnalysisProgress({ current: 0, total: 100 });
 
     try {
-      const { pages, isScanned, avgCharsPerPage } = await extractPdfTextPages(
-        activeBuf,
-        (current, total) => setAnalysisProgress({ current, total })
-      );
+      const docStruct = await detectDocumentStructure(activeBuf, (current, msg) => {
+        setAnalysisProgress({ current, total: 100 });
+      });
 
-      setFileInfo((prev) =>
-        prev
-          ? {
-              ...prev,
-              isScanned,
-              avgCharsPerPage,
-            }
-          : null
-      );
+      setStructure(docStruct);
 
-      const { parts: detected, hasFrontMatter: fmDetected, frontMatterRange: fmRange } =
-        detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name);
+      // Convert detected sections to parts for execution
+      const baseName = fileInfo.name.replace(/\.[^/.]+$/, '');
+      const detectedParts: DetectedPart[] = docStruct.sections.map((s) => ({
+        id: s.id,
+        title: s.title,
+        startPage: s.startPage,
+        endPage: s.endPage,
+        filename: sanitizeFilename(`${baseName} - ${s.title}.pdf`),
+        confidence: s.confidence >= 90 ? 'High' : s.confidence >= 70 ? 'Medium' : 'Low',
+        source: s.source === 'outline' ? 'heading' : s.source === 'toc' ? 'toc' : 'manual',
+        originalHeading: s.title,
+      }));
 
-      setParts(detected);
-      setOriginalParts(JSON.parse(JSON.stringify(detected)));
-      setHasFrontMatter(fmDetected);
-      setFrontMatterRange(fmRange);
+      setParts(detectedParts);
+      setOriginalParts(JSON.parse(JSON.stringify(detectedParts)));
       setSplitMode('auto');
+      setActiveView('workspace');
     } catch (err: any) {
       console.error('Analysis error:', err);
-      alert(`Analysis encountered an error: ${err.message || 'Unable to parse PDF text.'}`);
+      alert(`Analysis encountered an error: ${err.message || 'Unable to parse PDF structure.'}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -605,8 +614,60 @@ export default function PdfUnitCutterPage() {
               </div>
             )}
 
-            {/* Step 3: Detected Units & Parts Table */}
-            {parts.length > 0 && (
+            {/* Step 3: View Toggle & Workspace / Table Rendering */}
+            {structure && parts.length > 0 && (
+              <div className="flex items-center justify-between p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('workspace')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeView === 'workspace'
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    Visual Structure Workspace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('table')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeView === 'table'
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    Review Table & Split Settings
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeView === 'workspace' && structure && fileBuffer ? (
+              <UnitCutterWorkspace
+                structure={structure}
+                pdfBuffer={fileBuffer}
+                filename={fileInfo.name}
+                totalPages={fileInfo.totalPages}
+                onReset={handleRemoveFile}
+                onProceedToCut={(updatedSections) => {
+                  const baseName = fileInfo.name.replace(/\.[^/.]+$/, '');
+                  const updatedParts: DetectedPart[] = updatedSections.map((s) => ({
+                    id: s.id,
+                    title: s.title,
+                    startPage: s.startPage,
+                    endPage: s.endPage,
+                    filename: sanitizeFilename(`${baseName} - ${s.title}.pdf`),
+                    confidence: s.confidence >= 90 ? 'High' : s.confidence >= 70 ? 'Medium' : 'Low',
+                    source: s.source === 'outline' ? 'heading' : s.source === 'toc' ? 'toc' : 'manual',
+                    originalHeading: s.title,
+                  }));
+                  setParts(updatedParts);
+                  setActiveView('table');
+                }}
+              />
+            ) : parts.length > 0 ? (
               <PartsTable
                 parts={parts}
                 originalParts={originalParts}
@@ -634,7 +695,7 @@ export default function PdfUnitCutterPage() {
                 onSaveProject={handleExportProject}
                 onLoadProject={handleImportProjectClick}
               />
-            )}
+            ) : null}
           </div>
         )}
 

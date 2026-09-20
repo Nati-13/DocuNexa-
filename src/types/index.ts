@@ -122,3 +122,5 @@ export interface UserHistoryItem {
   timestamp: number;
   status: 'success' | 'cancelled' | 'error';
 }
+
+export * from './structure';
