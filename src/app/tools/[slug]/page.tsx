@@ -62,6 +62,11 @@ import { SignPdfTool } from '@/components/tools/SignPdfTool';
 import { RedactPdfTool } from '@/components/tools/RedactPdfTool';
 import { ComparePdfTool } from '@/components/tools/ComparePdfTool';
 import { CropPdfTool } from '@/components/tools/CropPdfTool';
+import { WatermarkPdfTool } from '@/components/tools/WatermarkPdfTool';
+import { RotatePdfTool } from '@/components/tools/RotatePdfTool';
+import { PageNumbersTool } from '@/components/tools/PageNumbersTool';
+import { PdfFormsTool } from '@/components/tools/PdfFormsTool';
+import { EditPdfTool } from '@/components/tools/EditPdfTool';
 
 // Modular Services
 import { convertPdfToExcel, ExcelConversionResult } from '@/lib/tools/pdfToExcel';
@@ -207,6 +212,66 @@ export default function UniversalToolPage() {
         <div className="max-w-4xl mx-auto space-y-6">
           <AdSlot placement="banner" className="mb-2" />
           <CropPdfTool />
+          <AdSlot placement="banner" className="mt-6" />
+        </div>
+      </ToolLayout>
+    );
+  }
+
+  if (tool.id === 'add-watermark') {
+    return (
+      <ToolLayout tool={tool}>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <AdSlot placement="banner" className="mb-2" />
+          <WatermarkPdfTool />
+          <AdSlot placement="banner" className="mt-6" />
+        </div>
+      </ToolLayout>
+    );
+  }
+
+  if (tool.id === 'rotate-pdf') {
+    return (
+      <ToolLayout tool={tool}>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <AdSlot placement="banner" className="mb-2" />
+          <RotatePdfTool />
+          <AdSlot placement="banner" className="mt-6" />
+        </div>
+      </ToolLayout>
+    );
+  }
+
+  if (tool.id === 'add-page-numbers') {
+    return (
+      <ToolLayout tool={tool}>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <AdSlot placement="banner" className="mb-2" />
+          <PageNumbersTool />
+          <AdSlot placement="banner" className="mt-6" />
+        </div>
+      </ToolLayout>
+    );
+  }
+
+  if (tool.id === 'pdf-forms') {
+    return (
+      <ToolLayout tool={tool}>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <AdSlot placement="banner" className="mb-2" />
+          <PdfFormsTool />
+          <AdSlot placement="banner" className="mt-6" />
+        </div>
+      </ToolLayout>
+    );
+  }
+
+  if (tool.id === 'edit-pdf') {
+    return (
+      <ToolLayout tool={tool}>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <AdSlot placement="banner" className="mb-2" />
+          <EditPdfTool />
           <AdSlot placement="banner" className="mt-6" />
         </div>
       </ToolLayout>

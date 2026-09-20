@@ -192,11 +192,11 @@ export async function organizePdfPages(
 }
 
 // ----------------------------------------------------------------------
-// 6. ROTATE PDF (All or selected pages)
+// 6. ROTATE PDF (All, selected pages, or per-page rotation map)
 // ----------------------------------------------------------------------
 export async function rotatePdf(
   buffer: ArrayBuffer,
-  degreesDelta: number,
+  degreesDelta: number | Record<number, number>,
   targetPages?: number[]
 ): Promise<Uint8Array> {
   const srcDoc = await PDFDocument.load(toSafeBuffer(buffer));
@@ -205,9 +205,19 @@ export async function rotatePdf(
 
   pages.forEach((page, idx) => {
     const pageNum = idx + 1;
-    if (!targetSet || targetSet.has(pageNum)) {
+    let delta = 0;
+    if (typeof degreesDelta === 'number') {
+      if (!targetSet || targetSet.has(pageNum)) {
+        delta = degreesDelta;
+      }
+    } else if (degreesDelta && typeof degreesDelta === 'object') {
+      if (pageNum in degreesDelta) {
+        delta = degreesDelta[pageNum];
+      }
+    }
+    if (delta !== 0) {
       const current = page.getRotation().angle;
-      page.setRotation(degrees((current + degreesDelta) % 360));
+      page.setRotation(degrees((current + delta + 360) % 360));
     }
   });
 
@@ -218,10 +228,12 @@ export async function rotatePdf(
 // 7. ADD PAGE NUMBERS
 // ----------------------------------------------------------------------
 export interface PageNumberOptions {
-  position: 'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-right' | 'top-center';
+  position: 'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-right' | 'top-center' | 'top-left';
   startNumber: number;
   format: 'number' | 'page-of-total' | 'roman';
   fontSize: number;
+  colorHex?: string;
+  margin?: number;
 }
 
 export async function addPageNumbersToPdf(
@@ -233,6 +245,16 @@ export async function addPageNumbersToPdf(
   const pages = srcDoc.getPages();
   const total = pages.length;
   const fontSize = options.fontSize || 10;
+  const margin = options.margin ?? 30;
+
+  // Parse color if provided
+  let color = rgb(0.3, 0.3, 0.3);
+  if (options.colorHex && /^#([0-9a-f]{6})$/i.test(options.colorHex)) {
+    const r = parseInt(options.colorHex.slice(1, 3), 16) / 255;
+    const g = parseInt(options.colorHex.slice(3, 5), 16) / 255;
+    const b = parseInt(options.colorHex.slice(5, 7), 16) / 255;
+    color = rgb(r, g, b);
+  }
 
   pages.forEach((page, idx) => {
     const currentNum = options.startNumber + idx;
@@ -240,41 +262,60 @@ export async function addPageNumbersToPdf(
     let text = `${currentNum}`;
     if (options.format === 'page-of-total') {
       text = `Page ${currentNum} of ${total}`;
+    } else if (options.format === 'roman') {
+      const romanNumerals = [
+        { v: 1000, s: 'M' }, { v: 900, s: 'CM' }, { v: 500, s: 'D' }, { v: 400, s: 'CD' },
+        { v: 100, s: 'C' }, { v: 90, s: 'XC' }, { v: 50, s: 'L' }, { v: 40, s: 'XL' },
+        { v: 10, s: 'X' }, { v: 9, s: 'IX' }, { v: 5, s: 'V' }, { v: 4, s: 'IV' }, { v: 1, s: 'I' }
+      ];
+      let num = currentNum;
+      let roman = '';
+      for (const { v, s } of romanNumerals) {
+        while (num >= v) {
+          roman += s;
+          num -= v;
+        }
+      }
+      text = roman || `${currentNum}`;
     }
 
     const textWidth = font.widthOfTextAtSize(text, fontSize);
     let x = width / 2 - textWidth / 2;
-    let y = 30;
+    let y = margin;
 
     switch (options.position) {
       case 'bottom-center':
         x = width / 2 - textWidth / 2;
-        y = 25;
+        y = margin;
         break;
       case 'bottom-right':
-        x = width - textWidth - 35;
-        y = 25;
+        x = width - textWidth - margin;
+        y = margin;
         break;
       case 'bottom-left':
-        x = 35;
-        y = 25;
+        x = margin;
+        y = margin;
+        break;
+      case 'top-left':
+        x = margin;
+        y = height - margin;
         break;
       case 'top-right':
-        x = width - textWidth - 35;
-        y = height - 30;
+        x = width - textWidth - margin;
+        y = height - margin;
         break;
       case 'top-center':
         x = width / 2 - textWidth / 2;
-        y = height - 30;
+        y = height - margin;
         break;
     }
 
     page.drawText(text, {
       x,
       y,
-      size: options.fontSize,
+      size: fontSize,
       font,
-      color: rgb(0.3, 0.3, 0.3),
+      color,
     });
   });
 
@@ -290,6 +331,10 @@ export interface WatermarkOptions {
   rotation: number;
   fontSize: number;
   colorHex?: string;
+  color?: { r: number; g: number; b: number };
+  x?: number; // In PDF points from bottom-left
+  y?: number; // In PDF points from bottom-left
+  targetPages?: number[]; // Specific 1-indexed pages, or all if undefined
 }
 
 export async function addWatermarkToPdf(
@@ -307,9 +352,11 @@ export async function addWatermarkToPdf(
   // Sanitize text to ASCII/WinAnsi characters to ensure reliable embedding
   const safeText = options.text.replace(/[^\x20-\x7E]/g, ' ').trim() || 'CONFIDENTIAL';
 
-  // Parse color if hex is provided
+  // Parse color if rgb object or hex is provided
   let color = rgb(0.6, 0.6, 0.6);
-  if (options.colorHex && /^#([0-9a-f]{6})$/i.test(options.colorHex)) {
+  if (options.color) {
+    color = rgb(options.color.r, options.color.g, options.color.b);
+  } else if (options.colorHex && /^#([0-9a-f]{6})$/i.test(options.colorHex)) {
     const r = parseInt(options.colorHex.slice(1, 3), 16) / 255;
     const g = parseInt(options.colorHex.slice(3, 5), 16) / 255;
     const b = parseInt(options.colorHex.slice(5, 7), 16) / 255;
@@ -318,13 +365,31 @@ export async function addWatermarkToPdf(
 
   const safeOpacity = Math.max(0.05, Math.min(1, options.opacity || 0.3));
   const safeFontSize = Math.max(8, Math.min(120, options.fontSize || 36));
+  const targetSet = options.targetPages && options.targetPages.length > 0 ? new Set(options.targetPages) : null;
 
-  pages.forEach((page) => {
+  pages.forEach((page, idx) => {
+    const pageNum = idx + 1;
+    if (targetSet && !targetSet.has(pageNum)) {
+      return;
+    }
+
     const { width, height } = page.getSize();
     const textWidth = font.widthOfTextAtSize(safeText, safeFontSize);
+
+    let drawX: number;
+    let drawY: number;
+
+    if (options.x !== undefined && options.y !== undefined) {
+      drawX = options.x;
+      drawY = options.y;
+    } else {
+      drawX = Math.max(10, width / 2 - textWidth / 2);
+      drawY = height / 2;
+    }
+
     page.drawText(safeText, {
-      x: Math.max(10, width / 2 - textWidth / 2),
-      y: height / 2,
+      x: drawX,
+      y: drawY,
       size: safeFontSize,
       font,
       color,
