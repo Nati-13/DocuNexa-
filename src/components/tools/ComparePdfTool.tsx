@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { PdfDropzone } from '@/components/common/PdfDropzone';
 import { ProcessingProgress } from '@/components/common/ProcessingProgress';
 import { comparePdfs, PdfComparisonResult } from '@/lib/pdfEngine';
+import { downloadFile } from '@/lib/cutter';
+import { sanitizeDownloadFilename } from '@/lib/downloadContract';
 import { 
   GitCompare, 
   FileText, 
@@ -105,13 +107,11 @@ export function ComparePdfTool() {
       ),
     ];
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DocuNexa-Comparison-Report-${Date.now()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      new TextEncoder().encode(lines.join('\n')),
+      sanitizeDownloadFilename(`DocuNexa-Comparison-Report-${Date.now()}`, 'md'),
+      'md'
+    );
   };
 
   const resetAll = () => {

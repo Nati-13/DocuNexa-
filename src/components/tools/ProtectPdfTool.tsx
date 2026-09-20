@@ -6,6 +6,7 @@ import { ProcessingProgress } from '@/components/common/ProcessingProgress';
 import { ResultPanel, ResultFileItem } from '@/components/common/ResultPanel';
 import { getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { encryptPdfFile } from '@/lib/pdfEngine';
+import { sanitizeDownloadFilename } from '@/lib/downloadContract';
 import { PDFDocument } from 'pdf-lib';
 import { 
   Lock, 
@@ -115,7 +116,7 @@ export function ProtectPdfTool() {
       setProgressStatus('PDF protected successfully!');
       await new Promise((r) => setTimeout(r, 200));
 
-      const outputFilename = `${file.name.replace(/\.pdf$/i, '')}-protected.pdf`;
+      const outputFilename = sanitizeDownloadFilename(file.name, 'pdf', 'protected');
 
       setResultFiles([
         {

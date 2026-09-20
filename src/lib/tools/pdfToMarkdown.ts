@@ -1,4 +1,5 @@
 import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
+import { sanitizeDownloadFilename } from '../downloadContract';
 
 export interface MarkdownResult {
   filename: string;
@@ -89,7 +90,7 @@ export async function convertPdfToMarkdown(
   onProgress?.(100, 'Markdown conversion complete!');
 
   return {
-    filename: `${baseName}.md`,
+    filename: sanitizeDownloadFilename(baseName, 'md'),
     markdown: mdOutput,
     bytes,
     totalPages,

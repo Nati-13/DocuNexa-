@@ -1,5 +1,6 @@
 import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
 import JSZip from 'jszip';
+import { sanitizeDownloadFilename } from '../downloadContract';
 
 export interface PowerPointConversionResult {
   filename: string;
@@ -95,7 +96,7 @@ export async function convertPdfToPowerPoint(
   onProgress?.(100, 'PowerPoint conversion complete!');
 
   return {
-    filename: `${baseName}.pptx`,
+    filename: sanitizeDownloadFilename(baseName, 'pptx'),
     bytes: outputBytes,
     slideCount: totalPages,
   };

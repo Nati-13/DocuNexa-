@@ -1,5 +1,7 @@
 import { DetectedPart, ProjectData } from '@/types';
 import { sanitizeFilename } from './validator';
+import { sanitizeBaseName, sanitizeDownloadFilename } from './downloadContract';
+import { downloadFile } from './cutter';
 
 /**
  * Creates a downloadable .project.json file containing parts configuration
@@ -21,19 +23,10 @@ export function exportProjectFile(
   };
 
   const jsonString = JSON.stringify(project, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const baseName = sanitizeBaseName(originalFileName, 'Document');
+  const downloadName = `${baseName}.project.json`;
 
-  const baseName = originalFileName.replace(/\.pdf$/i, '').trim() || 'Document';
-  const downloadName = `${sanitizeFilename(baseName)}.project.json`;
-
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = downloadName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile(new TextEncoder().encode(jsonString), downloadName, 'json');
 }
 
 /**

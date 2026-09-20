@@ -12,6 +12,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { downloadFile, isFileSystemAccessSupported, createZipBundle } from '@/lib/cutter';
+import { CANONICAL_FORMATS, resolveFormat } from '@/lib/downloadContract';
 
 export interface ResultFileItem {
   name: string;
@@ -136,9 +137,14 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
           <div key={idx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <FileText size={16} className="text-brand-600 dark:text-brand-400 shrink-0" />
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                {file.name}
-              </span>
+              <div className="min-w-0">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
+                  {file.name}
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium block">
+                  {CANONICAL_FORMATS[resolveFormat(file.name)]?.label || 'File'}
+                </span>
+              </div>
             </div>
             <button
               onClick={() => handleDownloadSingle(file)}
@@ -179,15 +185,10 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
           >
             <Download size={18} />
             <span>
-              {files[0]?.name.toLowerCase().endsWith('.docx')
-                ? 'Download Word Document (.docx)'
-                : files[0]?.name.toLowerCase().endsWith('.pptx')
-                ? 'Download PowerPoint (.pptx)'
-                : files[0]?.name.toLowerCase().endsWith('.xlsx')
-                ? 'Download Excel (.xlsx)'
-                : files[0]?.name.toLowerCase().endsWith('.zip')
-                ? 'Download ZIP Archive'
-                : 'Download PDF'}
+              {(() => {
+                const fmt = resolveFormat(files[0]?.name);
+                return CANONICAL_FORMATS[fmt]?.actionLabel || 'Download File';
+              })()}
             </span>
           </button>
         )}

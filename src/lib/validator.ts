@@ -11,25 +11,34 @@ export function sanitizeFilename(input: string, fallback = 'output.pdf'): string
 
   let cleaned = input.trim();
 
-  // Replace invalid characters with an underscore or remove
+  // Replace invalid characters with a hyphen
   cleaned = cleaned.replace(/[<>:"/\\|?*\x00-\x1F]/g, '-');
 
   // Collapse multiple hyphens or underscores
   cleaned = cleaned.replace(/[-_]+/g, '-');
 
   // Strip leading/trailing dots and spaces
-  cleaned = cleaned.replace(/^[.\s]+|[.\s]+$/g, '');
+  cleaned = cleaned.replace(/^[.\s-]+|[.\s-]+$/g, '');
 
   if (!cleaned) {
     cleaned = 'document';
   }
 
-  // Ensure it ends with .pdf (case-insensitive)
-  if (!cleaned.toLowerCase().endsWith('.pdf')) {
-    cleaned = `${cleaned}.pdf`;
+  // Remove stacked extensions if present (e.g. file.docx.pdf -> file.docx, file.xlsx.pdf -> file.xlsx)
+  const stackedMatch = cleaned.match(/^(.+?\.(docx|pptx|xlsx|png|jpe?g|txt|md|zip|json))\.pdf$/i);
+  if (stackedMatch) {
+    cleaned = stackedMatch[1];
   }
 
-  return cleaned;
+  // If it already ends with a known canonical extension, do not append anything
+  const hasKnownExt = /\.(pdf|docx|pptx|xlsx|png|jpe?g|txt|md|zip|json)$/i.test(cleaned);
+  if (hasKnownExt) {
+    return cleaned;
+  }
+
+  // If no known extension, append fallback extension
+  const fallbackExt = fallback.match(/\.[^.]+$/)?.[0] || '.pdf';
+  return `${cleaned}${fallbackExt}`;
 }
 
 /**

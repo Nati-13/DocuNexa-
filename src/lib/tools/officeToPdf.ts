@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import JSZip from 'jszip';
+import { sanitizeDownloadFilename } from '../downloadContract';
 
 export interface OfficeConversionResult {
   filename: string;
@@ -104,7 +105,7 @@ export async function convertExcelToPdf(
 
   const outputBytes = await doc.save();
   return {
-    filename: `${baseName}.pdf`,
+    filename: sanitizeDownloadFilename(baseName, 'pdf'),
     bytes: outputBytes,
     pageCount: doc.getPageCount(),
     disclaimer: 'Table layout reconstructed from spreadsheet data.',
@@ -315,7 +316,7 @@ export async function convertWordToPdf(
   }
 
   return {
-    filename: `${baseName}.pdf`,
+    filename: sanitizeDownloadFilename(baseName, 'pdf'),
     bytes: outputBytes,
     pageCount: verifyDoc.getPageCount(),
     disclaimer: 'Content faithfully reconstructed from Word OpenXML manuscript.',
@@ -506,7 +507,7 @@ export async function convertPowerPointToPdf(
   }
 
   return {
-    filename: `${baseName}.pdf`,
+    filename: sanitizeDownloadFilename(baseName, 'pdf'),
     bytes: outputBytes,
     pageCount: verifyDoc.getPageCount(),
     disclaimer: 'Slide deck reconstructed from PowerPoint structure. Visual elements may vary.',
@@ -565,7 +566,7 @@ export async function convertHtmlToPdf(
 
   const outputBytes = await doc.save();
   return {
-    filename: `${baseName}.pdf`,
+    filename: sanitizeDownloadFilename(baseName, 'pdf'),
     bytes: outputBytes,
     pageCount: doc.getPageCount(),
     disclaimer: 'HTML document rendered into structured printable PDF.',

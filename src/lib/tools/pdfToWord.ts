@@ -1,5 +1,6 @@
 import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
 import JSZip from 'jszip';
+import { sanitizeDownloadFilename } from '../downloadContract';
 
 export interface WordConversionResult {
   filename: string;
@@ -174,7 +175,7 @@ export async function convertPdfToWord(
   onProgress?.(100, 'Word conversion complete!');
 
   return {
-    filename: `${baseName}.docx`,
+    filename: sanitizeDownloadFilename(baseName, 'docx'),
     bytes: outputBytes,
     paragraphCount: totalParagraphs,
     headingsCount: totalHeadings,

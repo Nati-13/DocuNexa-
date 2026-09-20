@@ -15,6 +15,7 @@ import { PdfThumbnailGrid } from '@/components/common/PdfThumbnailGrid';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { downloadFile } from '@/lib/cutter';
+import { sanitizeBaseName, sanitizeDownloadFilename } from '@/lib/downloadContract';
 import {
   mergePdfs,
   splitPdfByRanges,
@@ -387,7 +388,7 @@ export default function UniversalToolPage() {
         })
       );
       const primaryBuf = freshBuffers[0];
-      const baseName = selectedFiles[0].name.replace(/\.[^/.]+$/, '');
+      const baseName = sanitizeBaseName(selectedFiles[0]?.name || 'document');
 
       switch (tool.id) {
         // 1. MERGE PDF
@@ -1424,7 +1425,7 @@ export default function UniversalToolPage() {
                   </div>
 
                   <button
-                    onClick={() => excelResult.bytes && downloadFile(excelResult.bytes, excelResult.filename)}
+                    onClick={() => excelResult.bytes && downloadFile(excelResult.bytes, excelResult.filename, 'xlsx')}
                     className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-emerald-600/20"
                   >
                     <Download size={15} />
@@ -1512,7 +1513,7 @@ export default function UniversalToolPage() {
                     ← Convert another document
                   </button>
                   <button
-                    onClick={() => excelResult.bytes && downloadFile(excelResult.bytes, excelResult.filename)}
+                    onClick={() => excelResult.bytes && downloadFile(excelResult.bytes, excelResult.filename, 'xlsx')}
                     className="text-xs font-bold text-emerald-600 hover:underline inline-flex items-center gap-1"
                   >
                     <Download size={13} />
@@ -1610,7 +1611,11 @@ export default function UniversalToolPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
-                        downloadFile(new TextEncoder().encode(ocrResult.transcriptText), ocrResult.transcriptFilename)
+                        downloadFile(
+                          new TextEncoder().encode(ocrResult.transcriptText),
+                          sanitizeDownloadFilename(ocrResult.transcriptFilename, 'txt'),
+                          'txt'
+                        )
                       }
                       className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold text-xs inline-flex items-center gap-1.5"
                     >
@@ -1618,7 +1623,7 @@ export default function UniversalToolPage() {
                       <span>Download Transcript (.txt)</span>
                     </button>
                     <button
-                      onClick={() => downloadFile(ocrResult.bytes!, ocrResult.filename)}
+                      onClick={() => downloadFile(ocrResult.bytes!, sanitizeDownloadFilename(ocrResult.filename, 'pdf'), 'pdf')}
                       className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm"
                     >
                       <Download size={14} />
@@ -1702,8 +1707,13 @@ export default function UniversalToolPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        const mdContent = formatSummaryAsMarkdown(aiSummary, selectedFiles[0]?.name || 'Document');
-                        downloadFile(new TextEncoder().encode(mdContent), `${selectedFiles[0]?.name || 'Document'} - Summary.md`);
+                        const cleanBase = sanitizeBaseName(selectedFiles[0]?.name || 'Document');
+                        const mdContent = formatSummaryAsMarkdown(aiSummary, cleanBase);
+                        downloadFile(
+                          new TextEncoder().encode(mdContent),
+                          sanitizeDownloadFilename(cleanBase, 'md', 'Summary'),
+                          'md'
+                        );
                       }}
                       className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold text-xs inline-flex items-center gap-1 hover:bg-indigo-100"
                     >
@@ -1712,8 +1722,13 @@ export default function UniversalToolPage() {
                     </button>
                     <button
                       onClick={() => {
-                        const txtContent = formatSummaryAsPlainText(aiSummary, selectedFiles[0]?.name || 'Document');
-                        downloadFile(new TextEncoder().encode(txtContent), `${selectedFiles[0]?.name || 'Document'} - Summary.txt`);
+                        const cleanBase = sanitizeBaseName(selectedFiles[0]?.name || 'Document');
+                        const txtContent = formatSummaryAsPlainText(aiSummary, cleanBase);
+                        downloadFile(
+                          new TextEncoder().encode(txtContent),
+                          sanitizeDownloadFilename(cleanBase, 'txt', 'Summary'),
+                          'txt'
+                        );
                       }}
                       className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs inline-flex items-center gap-1 hover:bg-slate-200"
                     >
@@ -1809,9 +1824,11 @@ export default function UniversalToolPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
+                          const cleanBase = sanitizeBaseName(selectedFiles[0]?.name || 'Document');
                           downloadFile(
                             new TextEncoder().encode(translationResult.translatedText),
-                            `${selectedFiles[0]?.name || 'Document'} - Translated.txt`
+                            sanitizeDownloadFilename(cleanBase, 'txt', 'Translated'),
+                            'txt'
                           );
                         }}
                         className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold text-xs inline-flex items-center gap-1.5"

@@ -1,4 +1,5 @@
 import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
+import { sanitizeDownloadFilename } from '../downloadContract';
 
 export interface ExcelConversionResult {
   success: boolean;
@@ -211,7 +212,7 @@ export async function convertPdfToExcel(
 
     return {
       success: false,
-      filename: `${baseName}.xlsx`,
+      filename: sanitizeDownloadFilename(baseName, 'xlsx'),
       bytes: null,
       pagesProcessed: totalPages,
       sheetCount: 0,
@@ -264,7 +265,7 @@ export async function convertPdfToExcel(
 
   return {
     success: true,
-    filename: `${baseName}.xlsx`,
+    filename: sanitizeDownloadFilename(baseName, 'xlsx'),
     bytes: outputBytes,
     pagesProcessed: totalPages,
     sheetCount: workbook.SheetNames.length, // Exactly equals number of worksheets generated with content

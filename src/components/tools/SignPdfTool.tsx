@@ -6,6 +6,7 @@ import { ProcessingProgress } from '@/components/common/ProcessingProgress';
 import { ResultPanel, ResultFileItem } from '@/components/common/ResultPanel';
 import { getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { applySignatureToPdf } from '@/lib/pdfEngine';
+import { sanitizeDownloadFilename } from '@/lib/downloadContract';
 import { PDFDocument } from 'pdf-lib';
 import { 
   PenTool, 
@@ -225,7 +226,7 @@ export function SignPdfTool() {
       setProgress(100);
       await new Promise((r) => setTimeout(r, 150));
 
-      const outputFilename = `${file.name.replace(/\.pdf$/i, '')}-signed.pdf`;
+      const outputFilename = sanitizeDownloadFilename(file.name, 'pdf', 'signed');
 
       setResultFiles([
         {

@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { getPdfJs, getPdfJsDocumentParams } from './pdfReader';
 import { encryptPDF, EncryptPDFOptions } from '@pdfsmaller/pdf-encrypt';
 import { decryptPDF, isEncrypted } from '@pdfsmaller/pdf-decrypt';
+import { sanitizeBaseName, sanitizeDownloadFilename } from './downloadContract';
 
 /**
  * Ensures safe non-detached ArrayBuffer slice, strips leading preamble / BOM bytes if present,
@@ -91,6 +92,7 @@ export async function splitPdfEveryNPages(
   const totalPages = srcDoc.getPageCount();
   const results: { name: string; bytes: Uint8Array }[] = [];
   const safeN = Math.max(1, n);
+  const cleanBase = sanitizeBaseName(baseFilename, 'document');
 
   let chunkIndex = 1;
   for (let start = 1; start <= totalPages; start += safeN) {
@@ -105,7 +107,7 @@ export async function splitPdfEveryNPages(
     copied.forEach((p) => subDoc.addPage(p));
     const bytes = await subDoc.save();
 
-    const name = `${baseFilename.replace(/\.pdf$/i, '')} - Part ${chunkIndex} (pages ${start}-${end}).pdf`;
+    const name = sanitizeDownloadFilename(`${cleanBase} - Part ${chunkIndex} (pages ${start}-${end})`, 'pdf');
     results.push({ name, bytes });
     chunkIndex++;
   }
@@ -230,6 +232,7 @@ export async function addPageNumbersToPdf(
   const font = await srcDoc.embedFont(StandardFonts.Helvetica);
   const pages = srcDoc.getPages();
   const total = pages.length;
+  const fontSize = options.fontSize || 10;
 
   pages.forEach((page, idx) => {
     const currentNum = options.startNumber + idx;
@@ -239,7 +242,7 @@ export async function addPageNumbersToPdf(
       text = `Page ${currentNum} of ${total}`;
     }
 
-    const textWidth = font.widthOfTextAtSize(text, options.fontSize);
+    const textWidth = font.widthOfTextAtSize(text, fontSize);
     let x = width / 2 - textWidth / 2;
     let y = 30;
 

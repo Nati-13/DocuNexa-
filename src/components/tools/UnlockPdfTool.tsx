@@ -5,6 +5,7 @@ import { PdfDropzone } from '@/components/common/PdfDropzone';
 import { ProcessingProgress } from '@/components/common/ProcessingProgress';
 import { ResultPanel, ResultFileItem } from '@/components/common/ResultPanel';
 import { decryptPdfFile, checkPdfIsEncrypted } from '@/lib/pdfEngine';
+import { sanitizeDownloadFilename } from '@/lib/downloadContract';
 import { PDFDocument } from 'pdf-lib';
 import { 
   Unlock, 
@@ -98,7 +99,7 @@ export function UnlockPdfTool() {
       setProgressStatus('Document unlocked successfully!');
       await new Promise((r) => setTimeout(r, 150));
 
-      const outputFilename = `${file.name.replace(/-protected/i, '').replace(/\.pdf$/i, '')}-unlocked.pdf`;
+      const outputFilename = sanitizeDownloadFilename(file.name, 'pdf', 'unlocked');
 
       setResultFiles([
         {

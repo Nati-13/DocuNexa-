@@ -36,6 +36,7 @@ import {
   executeCutPlan 
 } from '@/lib/cutter';
 import { exportProjectFile, importProjectFile } from '@/lib/project';
+import { sanitizeDownloadFilename } from '@/lib/downloadContract';
 import { createSampleTextbookPdf } from '@/lib/sampleGenerator';
 import { PartsTable } from '@/components/PartsTable';
 import { PdfPreviewModal } from '@/components/PdfPreviewModal';
@@ -336,7 +337,7 @@ export default function PdfUnitCutterPage() {
     }
     try {
       const singleBytes = await extractPdfRange(activeBuf, part.startPage, part.endPage);
-      downloadFile(singleBytes, part.filename);
+      downloadFile(singleBytes, sanitizeDownloadFilename(part.filename, 'pdf'), 'pdf');
     } catch (err: any) {
       alert(`Failed to extract "${part.filename}": ${err.message || err}`);
     }
@@ -394,7 +395,7 @@ export default function PdfUnitCutterPage() {
     completed.forEach((item, index) => {
       setTimeout(() => {
         if (item.bytes) {
-          downloadFile(item.bytes, item.filename);
+          downloadFile(item.bytes, sanitizeDownloadFilename(item.filename, 'pdf'), 'pdf');
         }
       }, index * 250);
     });
@@ -407,12 +408,12 @@ export default function PdfUnitCutterPage() {
 
     try {
       const items = completed.map((i) => ({
-        filename: i.filename,
+        filename: sanitizeDownloadFilename(i.filename, 'pdf'),
         bytes: i.bytes!,
       }));
       const zipBlob = await createZipBundle(items);
-      const zipName = `${fileInfo.name.replace(/\.pdf$/i, '')} - Units.zip`;
-      downloadFile(zipBlob, zipName);
+      const zipName = sanitizeDownloadFilename(fileInfo.name, 'zip', 'Units');
+      downloadFile(zipBlob, zipName, 'zip');
     } catch (err: any) {
       alert(`Failed to create ZIP: ${err.message || err}`);
     }
