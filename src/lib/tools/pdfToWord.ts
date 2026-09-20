@@ -41,30 +41,51 @@ export async function convertPdfToWord(
     if (!items || items.length === 0) continue;
 
     // Group items by Y coordinate into lines
-    const lineBuckets: { y: number; fontSize: number; text: string }[] = [];
+    interface LineItem {
+      x: number;
+      width: number;
+      text: string;
+    }
+    const lineBuckets: { y: number; fontSize: number; items: LineItem[] }[] = [];
     const yTolerance = 5;
 
     for (const it of items) {
       const text = (it.str || '').trim();
       if (!text) continue;
+      const x = Math.round(it.transform[4] || 0);
       const y = Math.round(it.transform[5] || 0);
+      const width = Math.round(it.width || 0);
       const fontSize = Math.round(Math.hypot(it.transform[0] || 12, it.transform[1] || 0));
 
       const existing = lineBuckets.find((b) => Math.abs(b.y - y) <= yTolerance);
       if (existing) {
-        existing.text += ' ' + text;
+        existing.items.push({ x, width, text });
         if (fontSize > existing.fontSize) existing.fontSize = fontSize;
       } else {
-        lineBuckets.push({ y, fontSize, text });
+        lineBuckets.push({ y, fontSize, items: [{ x, width, text }] });
       }
     }
 
     // Sort lines top to bottom
     lineBuckets.sort((a, b) => b.y - a.y);
 
-    // Analyze lines and generate docx elements
+    // Analyze lines and generate docx elements with left-to-right ordering
     for (const line of lineBuckets) {
-      const text = line.text.trim();
+      line.items.sort((a, b) => a.x - b.x);
+
+      let lineText = '';
+      for (let i = 0; i < line.items.length; i++) {
+        const item = line.items[i];
+        if (i === 0) {
+          lineText = item.text;
+        } else {
+          const prev = line.items[i - 1];
+          const gap = item.x - (prev.x + prev.width);
+          lineText += (gap > 22 ? '    ' : ' ') + item.text;
+        }
+      }
+
+      const text = lineText.trim();
       if (!text) continue;
 
       totalParagraphs++;
@@ -131,9 +152,9 @@ export async function convertPdfToWord(
     ],
   });
 
-  // Pack to buffer
-  const buffer = await Packer.toBuffer(docxDoc);
-  const outputBytes = new Uint8Array(buffer);
+  // Pack to arrayBuffer (browser-safe, does not require Node.js Buffer)
+  const docxArrayBuffer = await Packer.toArrayBuffer(docxDoc);
+  const outputBytes = new Uint8Array(docxArrayBuffer);
 
   // 4. STRICT VERIFICATION: Verify valid PK ZIP and word/document.xml
   onProgress?.(92, 'Verifying Word package structure...');

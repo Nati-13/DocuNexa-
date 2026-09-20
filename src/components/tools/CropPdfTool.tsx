@@ -7,6 +7,7 @@ import { ResultPanel, ResultFileItem } from '@/components/common/ResultPanel';
 import { getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { cropPdf } from '@/lib/pdfEngine';
 import { PDFDocument } from 'pdf-lib';
+import { normalizePdfInput } from '@/lib/pdfInputNormalizer';
 import { 
   Crop, 
   FileText, 
@@ -38,17 +39,17 @@ export function CropPdfTool() {
     setResultFiles(null);
 
     try {
-      const buffer = await selected.arrayBuffer();
+      const norm = await normalizePdfInput(selected, { toolName: 'Crop PDF' });
       const pdfjs = await getPdfJs();
-      const task = pdfjs.getDocument(getPdfJsDocumentParams(buffer));
+      const task = pdfjs.getDocument(getPdfJsDocumentParams(norm.uint8Array.slice(0)));
       const doc = await task.promise;
 
       setFile(selected);
-      setFileBuffer(buffer);
+      setFileBuffer(norm.arrayBuffer);
       setTotalPages(doc.numPages);
     } catch (err: any) {
       console.error('Failed to load PDF for cropping:', err);
-      setErrorMessage('The selected file could not be read or is corrupted.');
+      setErrorMessage(err.message || 'The selected file could not be read or is corrupted.');
     }
   };
 
@@ -62,36 +63,26 @@ export function CropPdfTool() {
     setErrorMessage(null);
 
     try {
-      const srcDoc = await PDFDocument.load(fileBuffer.slice(0));
-      const firstPage = srcDoc.getPages()[0];
-      const { width, height } = firstPage.getSize();
+      const norm = await normalizePdfInput(file, { toolName: 'Crop PDF' });
 
-      let cropBox = { x: 0, y: 0, width, height };
-
+      let cropInput: any;
       if (cropPreset === 'trim-margins') {
+        cropInput = { marginPercent: marginPct };
+      } else if (cropPreset === 'trim-header') {
+        cropInput = { trimTopPercent: 12 };
+      } else if (cropPreset === 'trim-footer') {
+        cropInput = { trimBottomPercent: 10 };
+      } else {
+        const srcDoc = await PDFDocument.load(norm.uint8Array.slice(0));
+        const firstPage = srcDoc.getPages()[0];
+        const { width, height } = firstPage.getSize();
         const mx = width * (marginPct / 100);
         const my = height * (marginPct / 100);
-        cropBox = {
+        cropInput = {
           x: mx,
           y: my,
-          width: width - 2 * mx,
-          height: height - 2 * my,
-        };
-      } else if (cropPreset === 'trim-header') {
-        const trimTop = height * 0.12; // trim top 12%
-        cropBox = {
-          x: 0,
-          y: 0,
-          width,
-          height: height - trimTop,
-        };
-      } else if (cropPreset === 'trim-footer') {
-        const trimBottom = height * 0.10; // trim bottom 10%
-        cropBox = {
-          x: 0,
-          y: trimBottom,
-          width,
-          height: height - trimBottom,
+          width: Math.max(10, width - 2 * mx),
+          height: Math.max(10, height - 2 * my),
         };
       }
 
@@ -103,12 +94,19 @@ export function CropPdfTool() {
           : [totalPages];
 
       setProgress(60);
-      const croppedBytes = await cropPdf(fileBuffer, cropBox, targetPages);
+      const croppedBytes = await cropPdf(norm.arrayBuffer, cropInput, targetPages);
 
       setProgress(85);
-      const verifiedDoc = await PDFDocument.load(croppedBytes);
+      const verifiedDoc = await PDFDocument.load(croppedBytes.slice(0));
       if (verifiedDoc.getPageCount() === 0) {
         throw new Error('Verification failed: Cropped PDF produced 0 pages.');
+      }
+
+      const pdfjs = await getPdfJs();
+      const task = pdfjs.getDocument(getPdfJsDocumentParams(croppedBytes.slice(0)));
+      const vDoc = await task.promise;
+      if (vDoc.numPages === 0) {
+        throw new Error('Verification failed: Cropped PDF could not be opened by PDF.js.');
       }
 
       setProgress(100);

@@ -12,7 +12,8 @@ export interface ChunkedSummaryResult {
 
 /**
  * Progressively extracts and summarizes text from PDF documents in batches.
- * Honestly labeled as Local Document Summarizer unless an external model is configured.
+ * Honestly labeled as Local Document Summarizer (Rule-Based Heuristics).
+ * For scanned PDFs, strictly avoids fabricating summaries and recommends OCR PDF first.
  */
 export async function summarizePdfDocument(
   pdfBuffer: ArrayBuffer,
@@ -23,35 +24,46 @@ export async function summarizePdfDocument(
 
   const pdfjs = await getPdfJs();
   const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(pdfBuffer));
-  const doc = await loadingTask.promise;
-  const totalPages = doc.numPages;
 
+  let doc: any;
+  try {
+    doc = await loadingTask.promise;
+  } catch (err: any) {
+    loadingTask.destroy();
+    throw new Error(`Failed to parse PDF document for summarization: ${err.message || err}`);
+  }
+
+  const totalPages = doc.numPages;
   const chunkSize = 10;
   const totalChunks = Math.ceil(totalPages / chunkSize);
   let aggregatedText = '';
   let pagesAnalyzed = 0;
 
-  for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
-    const startPage = chunkIdx * chunkSize + 1;
-    const endPage = Math.min(totalPages, (chunkIdx + 1) * chunkSize);
-    const progressStatus = `Analyzing pages ${startPage}–${endPage} of ${totalPages}...`;
-    const pct = Math.round(10 + (chunkIdx / totalChunks) * 70);
+  try {
+    for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+      const startPage = chunkIdx * chunkSize + 1;
+      const endPage = Math.min(totalPages, (chunkIdx + 1) * chunkSize);
+      const progressStatus = `Analyzing pages ${startPage}–${endPage} of ${totalPages}...`;
+      const pct = Math.round(10 + (chunkIdx / totalChunks) * 70);
 
-    onProgress?.(pct, progressStatus);
+      onProgress?.(pct, progressStatus);
 
-    for (let p = startPage; p <= endPage; p++) {
-      try {
-        const page = await doc.getPage(p);
-        const textContent = await page.getTextContent();
-        const pageStr = (textContent.items || []).map((it: any) => it.str || '').join(' ').trim();
-        if (pageStr) {
-          aggregatedText += `\n[Page ${p}]\n` + pageStr;
-          pagesAnalyzed++;
+      for (let p = startPage; p <= endPage; p++) {
+        try {
+          const page = await doc.getPage(p);
+          const textContent = await page.getTextContent();
+          const pageStr = (textContent.items || []).map((it: any) => it.str || '').join(' ').trim();
+          if (pageStr) {
+            aggregatedText += `\n[Page ${p}]\n` + pageStr;
+            pagesAnalyzed++;
+          }
+        } catch {
+          // Continue with remaining pages if one fails
         }
-      } catch {
-        // Continue with remaining pages if one fails
       }
     }
+  } finally {
+    loadingTask.destroy();
   }
 
   const isScannedWarning = aggregatedText.trim().length === 0;
@@ -59,10 +71,11 @@ export async function summarizePdfDocument(
   if (isScannedWarning) {
     onProgress?.(100, 'Scan analysis complete (No selectable text).');
     return {
-      engineLabel: 'Local Document Summarizer (Rule-Based & Heuristic Extraction)',
+      engineLabel: 'Local Document Summarizer (Rule-Based Heuristics)',
       summary: {
-        overview: 'This document appears to be scanned or contains only images. No selectable text could be extracted. Please run OCR PDF first to generate a searchable text layer before summarizing.',
-        keyPoints: ['No extractable text layer detected in document streams.'],
+        overview:
+          'This document contains zero selectable text across all analyzed pages. Because it consists of scanned images, please run OCR PDF first to recognize and extract text before generating an executive summary.',
+        keyPoints: [],
         sectionSummaries: [],
         keyDefinitions: [],
         studyQuestions: [],
@@ -82,7 +95,7 @@ export async function summarizePdfDocument(
   onProgress?.(100, `Pages analyzed: ${pagesAnalyzed} / ${totalPages}`);
 
   return {
-    engineLabel: 'Local Document Summarizer (Rule-Based & Heuristic Extraction)',
+    engineLabel: 'Local Document Summarizer (Rule-Based Heuristics)',
     summary,
     totalPages,
     pagesAnalyzed,

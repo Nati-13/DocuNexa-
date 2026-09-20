@@ -89,6 +89,7 @@ import {
 } from '@/lib/tools/translationProvider';
 import { convertPdfToMarkdown, MarkdownResult } from '@/lib/tools/pdfToMarkdown';
 import { getToolDefinition } from '@/lib/tools/toolRegistry';
+import { normalizePdfInput } from '@/lib/pdfInputNormalizer';
 
 export default function UniversalToolPage() {
   const params = useParams();
@@ -126,6 +127,7 @@ export default function UniversalToolPage() {
   const [formFields, setFormFields] = useState<FormFieldInfo[] | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string | boolean>>({});
   const [hasScannedFormNotice, setHasScannedFormNotice] = useState<boolean>(false);
+  const [xfaNotice, setXfaNotice] = useState<string | null>(null);
   const [repairDiagnostic, setRepairDiagnostic] = useState<RepairPdfResult | null>(null);
   const [aiSummary, setAiSummary] = useState<ChunkedSummaryResult | null>(null);
   const [aiMarkdown, setAiMarkdown] = useState<MarkdownResult | null>(null);
@@ -230,30 +232,73 @@ export default function UniversalToolPage() {
       setFileBuffers(buffers);
 
       if (files[0] && files[0].name.toLowerCase().endsWith('.pdf')) {
-        const pdfjs = await getPdfJs();
-        const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(buffers[0]));
-        const pdfDoc = await loadingTask.promise;
-        setTotalPages(pdfDoc.numPages);
+        try {
+          const pdfjs = await getPdfJs();
+          const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(buffers[0].slice(0)));
+          const pdfDoc = await loadingTask.promise;
+          setTotalPages(pdfDoc.numPages);
+        } catch (previewErr) {
+          // If the tool is repair-pdf or file is damaged, don't crash preview initialization
+          if (tool.id !== 'repair-pdf') {
+            console.warn('PDF preview parser notice:', previewErr);
+          }
+        }
 
         // Pre-scan AcroForm fields if on pdf-forms tool
         if (tool.id === 'pdf-forms') {
-          const formDetect = await detectPdfFormFields(buffers[0]);
-          if (formDetect.hasForm) {
-            setFormFields(formDetect.fields);
-            const initialVals: Record<string, string | boolean> = {};
-            formDetect.fields.forEach((f) => {
-              initialVals[f.name] = f.value;
-            });
-            setFormValues(initialVals);
-            setHasScannedFormNotice(false);
-          } else {
+          try {
+            const formDetect = await detectPdfFormFields(buffers[0].slice(0));
+            if (formDetect.isXfa) {
+              setFormFields([]);
+              setHasScannedFormNotice(false);
+              setXfaNotice(formDetect.xfaNotice || 'Adobe XFA proprietary forms are not supported client-side.');
+            } else if (formDetect.hasForm) {
+              setFormFields(formDetect.fields);
+              const initialVals: Record<string, string | boolean> = {};
+              formDetect.fields.forEach((f) => {
+                initialVals[f.name] = f.value;
+              });
+              setFormValues(initialVals);
+              setHasScannedFormNotice(false);
+              setXfaNotice(null);
+            } else {
+              setFormFields([]);
+              setHasScannedFormNotice(true);
+              setXfaNotice(null);
+            }
+          } catch {
             setFormFields([]);
             setHasScannedFormNotice(true);
           }
         }
+      } else if (files[0] && tool.id === 'powerpoint-to-pdf' && files[0].name.toLowerCase().endsWith('.pptx')) {
+        try {
+          const JSZip = (await import('jszip')).default;
+          const zip = await JSZip.loadAsync(buffers[0].slice(0));
+          const slides = Object.keys(zip.files).filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f));
+          setTotalPages(slides.length);
+        } catch {}
+      } else if (files[0] && tool.id === 'word-to-pdf' && files[0].name.toLowerCase().endsWith('.docx')) {
+        try {
+          const JSZip = (await import('jszip')).default;
+          const zip = await JSZip.loadAsync(buffers[0].slice(0));
+          if (zip.files['word/document.xml']) {
+            const xml = await zip.files['word/document.xml'].async('string');
+            const pCount = (xml.match(/<w:p[\s>]/g) || []).length;
+            setTotalPages(Math.max(1, Math.ceil(pCount / 35)));
+          }
+        } catch {}
+      } else if (
+        files[0] &&
+        (tool.id === 'scan-to-pdf' ||
+          tool.id === 'jpg-to-pdf' ||
+          files[0].type.startsWith('image/') ||
+          /\.(jpe?g|png|webp|bmp|gif)$/i.test(files[0].name))
+      ) {
+        setTotalPages(files.length);
       }
     } catch (err) {
-      console.error('File load error:', err);
+      console.error('File read error:', err);
     }
   };
 
@@ -269,6 +314,7 @@ export default function UniversalToolPage() {
     setFormFields(null);
     setFormValues({});
     setHasScannedFormNotice(false);
+    setXfaNotice(null);
     setAiSummary(null);
     setAiMarkdown(null);
     setTranslationResult(null);
@@ -291,8 +337,20 @@ export default function UniversalToolPage() {
     if (tool.id === 'split-pdf' && splitMode === 'ranges' && !rangeInput.trim()) {
       return 'Please enter valid page ranges (e.g. 1-5, 6-10)';
     }
-    if (tool.id === 'pdf-forms' && formFields && formFields.length === 0) {
-      return 'This document contains no interactive AcroForm fields';
+    if (tool.id === 'pdf-forms') {
+      if (xfaNotice) {
+        return 'Unsupported Form Technology (Adobe XFA)';
+      }
+      if (formFields && formFields.length === 0) {
+        return 'This document contains no interactive AcroForm fields';
+      }
+      if (formFields === null) {
+        return 'Scanning document for interactive form fields...';
+      }
+      const editableFields = formFields.filter((f) => !f.isReadOnly);
+      if (editableFields.length === 0) {
+        return 'All form fields in this document are read-only';
+      }
     }
     return null;
   };
@@ -308,7 +366,27 @@ export default function UniversalToolPage() {
     setProcessingStatus('Preparing document processor...');
 
     try {
-      const primaryBuf = fileBuffers[0];
+      const isNonPdfInputTool = [
+        'word-to-pdf',
+        'powerpoint-to-pdf',
+        'excel-to-pdf',
+        'jpg-to-pdf',
+        'html-to-pdf',
+        'scan-to-pdf',
+        'repair-pdf',
+        'ocr-pdf',
+      ].includes(tool.id);
+
+      const freshBuffers = await Promise.all(
+        selectedFiles.map(async (f) => {
+          const norm = await normalizePdfInput(f, {
+            requirePdfHeader: !isNonPdfInputTool,
+            toolName: tool.name,
+          });
+          return norm.arrayBuffer;
+        })
+      );
+      const primaryBuf = freshBuffers[0];
       const baseName = selectedFiles[0].name.replace(/\.[^/.]+$/, '');
 
       switch (tool.id) {
@@ -316,7 +394,7 @@ export default function UniversalToolPage() {
         case 'merge-pdf': {
           setProgress(30);
           setProcessingStatus('Merging documents in selected sequence...');
-          const mergedBytes = await mergePdfs(fileBuffers);
+          const mergedBytes = await mergePdfs(freshBuffers);
           setProgress(100);
           setResultFiles([
             {
@@ -502,6 +580,8 @@ export default function UniversalToolPage() {
                 bytes: repRes.bytes,
               },
             ]);
+          } else {
+            setResultFiles(null);
           }
           break;
         }
@@ -582,12 +662,16 @@ export default function UniversalToolPage() {
           });
           setProgress(100);
           setOcrResult(ocrRes);
-          setResultFiles([
-            {
-              name: ocrRes.filename,
-              bytes: ocrRes.bytes,
-            },
-          ]);
+          if (ocrRes.hasReadableText && ocrRes.bytes) {
+            setResultFiles([
+              {
+                name: ocrRes.filename,
+                bytes: ocrRes.bytes,
+              },
+            ]);
+          } else {
+            setResultFiles(null);
+          }
           break;
         }
 
@@ -738,6 +822,51 @@ export default function UniversalToolPage() {
           break;
         }
 
+        // 26. SCAN TO PDF (Compile camera / scanner images into PDF)
+        case 'scan-to-pdf': {
+          setProgress(40);
+          setProcessingStatus('Converting scan captures into PDF document...');
+          const isAllImages = selectedFiles.every((f) =>
+            f.type.startsWith('image/') || /\.(jpe?g|png|webp|bmp|gif|tiff?)$/i.test(f.name)
+          );
+          let resultBytes: Uint8Array;
+          if (isAllImages) {
+            resultBytes = await imagesToPdf(selectedFiles, (cur, tot) => {
+              setProgress(Math.round(20 + (cur / tot) * 75));
+            });
+          } else {
+            resultBytes = await mergePdfs(freshBuffers);
+          }
+          setProgress(100);
+          setResultFiles([
+            {
+              name: `${baseName} - Scanned.pdf`,
+              bytes: resultBytes,
+            },
+          ]);
+          break;
+        }
+
+        // 27. EDIT PDF (Annotate and stamp PDF document)
+        case 'edit-pdf': {
+          setProgress(50);
+          setProcessingStatus('Embedding text annotations into PDF document...');
+          const annotatedBytes = await addWatermarkToPdf(primaryBuf, {
+            text: watermarkText || 'DocuNexa Annotations',
+            opacity: watermarkOpacity || 0.4,
+            rotation: 0,
+            fontSize: 28,
+          });
+          setProgress(100);
+          setResultFiles([
+            {
+              name: `${baseName} - Edited.pdf`,
+              bytes: annotatedBytes,
+            },
+          ]);
+          break;
+        }
+
         default: {
           throw new Error(`Tool '${tool.id}' does not have a registered processor.`);
         }
@@ -761,7 +890,7 @@ export default function UniversalToolPage() {
         {/* Step 1: File Dropzone (if no files chosen) */}
         {selectedFiles.length === 0 ? (
           <PdfDropzone
-            multiple={tool.id === 'merge-pdf' || tool.id === 'jpg-to-pdf'}
+            multiple={tool.id === 'merge-pdf' || tool.id === 'jpg-to-pdf' || tool.id === 'scan-to-pdf'}
             accept={tool.supportedInputTypes.join(',')}
             title={`Select or drop ${tool.supportedInputTypes.includes('.pdf') ? 'PDF document' : 'files'}`}
             subtitle={`Choose files from your device to begin ${tool.name.toLowerCase()}`}
@@ -806,13 +935,16 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* Tool-Specific Controls */}
-            {/* A. MERGE PDF File Reordering List */}
-            {tool.id === 'merge-pdf' && (
+            {/* A. MERGE PDF, SCAN TO PDF & JPG TO PDF File Reordering List */}
+            {(tool.id === 'merge-pdf' || tool.id === 'scan-to-pdf' || tool.id === 'jpg-to-pdf') && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Arrange Merge Order</h4>
-                  <span className="text-xs text-slate-500">{selectedFiles.length} documents</span>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                    {tool.id === 'merge-pdf' ? 'Arrange Merge Order' : 'Arrange Page Sequence'}
+                  </h4>
+                  <span className="text-xs text-slate-500">
+                    {selectedFiles.length} {tool.id === 'merge-pdf' ? 'documents' : 'pages'}
+                  </span>
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                   {selectedFiles.map((file, idx) => (
@@ -978,16 +1110,19 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* E. WATERMARK CONTROLS */}
-            {tool.id === 'add-watermark' && (
+            {/* E. WATERMARK & ANNOTATION CONTROLS */}
+            {(tool.id === 'add-watermark' || tool.id === 'edit-pdf') && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Watermark Text</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    {tool.id === 'edit-pdf' ? 'Annotation / Header Text' : 'Watermark Text'}
+                  </label>
                   <input
                     type="text"
                     value={watermarkText}
                     onChange={(e) => setWatermarkText(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold"
+                    placeholder="Enter text to stamp on pages..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -1004,6 +1139,37 @@ export default function UniversalToolPage() {
                     className="w-full"
                   />
                 </div>
+              </div>
+            )}
+
+            {/* SCAN TO PDF Controls */}
+            {tool.id === 'scan-to-pdf' && (
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Scanned Pages ({selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''})
+                  </label>
+                  <label className="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-100 flex items-center gap-1.5">
+                    <Camera size={14} />
+                    <span>Add Scan / Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      capture="environment"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const newFiles = Array.from(e.target.files);
+                          handleFilesSelected([...selectedFiles, ...newFiles]);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Each scanned document photo or image will be neatly framed and compiled into a high-resolution PDF document.
+                </p>
               </div>
             )}
 
@@ -1072,7 +1238,14 @@ export default function UniversalToolPage() {
                   </span>
                 </div>
 
-                {hasScannedFormNotice ? (
+                {xfaNotice ? (
+                  <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                    <p className="font-bold">Unsupported Form Technology (Adobe XFA)</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {xfaNotice}
+                    </p>
+                  </div>
+                ) : hasScannedFormNotice ? (
                   <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
                     <p className="font-bold">This document contains no interactive AcroForm fields.</p>
                     <p className="text-slate-600 dark:text-slate-400">
@@ -1096,12 +1269,24 @@ export default function UniversalToolPage() {
                             />
                             <span className="text-xs text-slate-700 dark:text-slate-300">Checked</span>
                           </label>
+                        ) : f.type === 'dropdown' && f.options && f.options.length > 0 ? (
+                          <select
+                            value={String(formValues[f.name] || '')}
+                            onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200"
+                          >
+                            {f.options.map((opt, oIdx) => (
+                              <option key={oIdx} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
                         ) : (
                           <input
                             type="text"
                             value={String(formValues[f.name] || '')}
                             onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.value })}
-                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs"
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200"
                           />
                         )}
                       </div>
@@ -1375,8 +1560,45 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* 3. OCR RESULT CARD WITH UTF-8 TRANSCRIPT EXPORT */}
-            {ocrResult && (
+            {/* 3. OCR RESULT CARD WITH UTF-8 TRANSCRIPT EXPORT & ZERO-CHARACTER DIAGNOSTICS */}
+            {ocrResult && (!ocrResult.hasReadableText || !ocrResult.bytes) && (
+              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-5 text-left animate-in fade-in duration-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle size={26} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      No Readable Characters Detected
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {ocrResult.disclaimer}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                  <div className="font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                    <span>💡 Scan Quality Recommendation</span>
+                  </div>
+                  <p>
+                    {ocrResult.recommendation ||
+                      'Please ensure the scan has sufficient resolution (150–300 DPI), clear contrast, upright orientation, and is not a blank sheet.'}
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={handleReset}
+                    className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                  >
+                    ← Try another file or scan
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ocrResult && ocrResult.hasReadableText && ocrResult.bytes && (
               <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
                 <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
                   <div>
@@ -1396,7 +1618,7 @@ export default function UniversalToolPage() {
                       <span>Download Transcript (.txt)</span>
                     </button>
                     <button
-                      onClick={() => downloadFile(ocrResult.bytes, ocrResult.filename)}
+                      onClick={() => downloadFile(ocrResult.bytes!, ocrResult.filename)}
                       className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm"
                     >
                       <Download size={14} />
@@ -1422,7 +1644,50 @@ export default function UniversalToolPage() {
             )}
 
             {/* 5. LOCAL DOCUMENT SUMMARIZER RESULT VIEW WITH .MD AND .TXT EXPORTS */}
-            {aiSummary && (
+            {aiSummary && aiSummary.isScannedWarning && (
+              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-5 text-left animate-in fade-in duration-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle size={26} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Scanned / Image-Only Document Detected
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {aiSummary.summary.overview}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                  <div className="font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                    <span>💡 Recommendation</span>
+                  </div>
+                  <p>
+                    Because this document contains no selectable digital text, an executive summary cannot be generated from image pixels. Please run OCR PDF first to recognize the text.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <Link
+                    href="/tools/ocr-pdf"
+                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
+                  >
+                    <span>Run OCR PDF on This File</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                  <button
+                    onClick={handleReset}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                  >
+                    ← Select another PDF
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {aiSummary && !aiSummary.isScannedWarning && (
               <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 shadow-xl space-y-6 animate-in fade-in duration-200 text-left">
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
@@ -1496,7 +1761,42 @@ export default function UniversalToolPage() {
             )}
 
             {/* 6. TRANSLATION RESULT VIEW */}
-            {translationResult && (
+            {translationResult && translationResult.isScannedWarning && (
+              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-5 text-left animate-in fade-in duration-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle size={26} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Scanned / Image-Only Document Detected
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {translationResult.unsupportedMessage ||
+                        'This document contains zero selectable text across all analyzed pages. Please run OCR PDF first.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <Link
+                    href="/tools/ocr-pdf"
+                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
+                  >
+                    <span>Run OCR PDF on This File</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                  <button
+                    onClick={handleReset}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                  >
+                    ← Select another PDF
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {translationResult && !translationResult.isScannedWarning && (
               <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
                   <div>

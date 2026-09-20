@@ -69,6 +69,8 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
     >
       <input
         ref={fileInputRef}
+        id="docunexa-file-input"
+        data-testid="file-input"
         type="file"
         accept={accept}
         multiple={multiple}

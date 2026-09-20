@@ -126,9 +126,10 @@ export function RedactPdfTool() {
     setErrorMessage(null);
 
     try {
+      const freshBuf = await file.arrayBuffer();
       setProgress(60);
       const redactedBytes = await redactPdfAreas(
-        fileBuffer,
+        freshBuf,
         redactions.map((r) => ({
           page: r.page,
           x: r.x,

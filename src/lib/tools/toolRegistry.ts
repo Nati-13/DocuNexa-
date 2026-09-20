@@ -348,7 +348,7 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
   // 7. PDF Intelligence (3 tools)
   'ai-summarizer': {
     id: 'ai-summarizer',
-    name: 'AI Summarizer',
+    name: 'Document Summarizer',
     category: 'intelligence',
     inputType: ['.pdf'],
     outputType: 'summary / .md',

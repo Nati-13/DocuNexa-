@@ -178,7 +178,17 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02]"
           >
             <Download size={18} />
-            <span>Download PDF</span>
+            <span>
+              {files[0]?.name.toLowerCase().endsWith('.docx')
+                ? 'Download Word Document (.docx)'
+                : files[0]?.name.toLowerCase().endsWith('.pptx')
+                ? 'Download PowerPoint (.pptx)'
+                : files[0]?.name.toLowerCase().endsWith('.xlsx')
+                ? 'Download Excel (.xlsx)'
+                : files[0]?.name.toLowerCase().endsWith('.zip')
+                ? 'Download ZIP Archive'
+                : 'Download PDF'}
+            </span>
           </button>
         )}
 

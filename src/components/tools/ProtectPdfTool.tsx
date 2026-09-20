@@ -84,11 +84,12 @@ export function ProtectPdfTool() {
     setErrorMessage(null);
 
     try {
+      const freshBuf = await file.arrayBuffer();
       await new Promise((r) => setTimeout(r, 150));
       setProgress(50);
       setProgressStatus('Applying password security & permission locks...');
 
-      const protectedBytes = await encryptPdfFile(fileBuffer, password, {
+      const protectedBytes = await encryptPdfFile(freshBuf, password, {
         allowPrinting,
         allowCopying,
         allowModifying,

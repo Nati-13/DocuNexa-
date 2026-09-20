@@ -1,5 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
 import { getPdfJs, getPdfJsDocumentParams } from '../pdfReader';
+import { normalizePdfInput } from '../pdfInputNormalizer';
 
 export interface CompressResult {
   filename: string;
@@ -24,13 +25,14 @@ export async function performPdfCompression(
   level: 'balanced' | 'strong' | 'low' = 'balanced',
   onProgress?: (percent: number, status: string) => void
 ): Promise<CompressResult> {
-  onProgress?.(10, 'Loading original PDF bytes...');
+  onProgress?.(10, 'Normalizing and loading original PDF bytes...');
 
-  const originalBytes = new Uint8Array(pdfBuffer.slice(0));
-  const originalSize = originalBytes.byteLength;
+  const norm = await normalizePdfInput(pdfBuffer, { toolName: 'Compress PDF' });
+  const originalBytes = norm.uint8Array;
+  const originalSize = norm.size;
 
   // Use pdf-lib with stream reconstruction
-  const doc = await PDFDocument.load(originalBytes, { ignoreEncryption: true });
+  const doc = await PDFDocument.load(norm.arrayBuffer, { ignoreEncryption: true });
 
   onProgress?.(45, 'Compacting object streams and dictionary references...');
 
@@ -65,7 +67,7 @@ export async function performPdfCompression(
 
     // 2. PDF.js verification
     const pdfjs = await getPdfJs();
-    const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(newBytes));
+    const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(newBytes.slice(0)));
     const pdfjsDoc = await loadingTask.promise;
     if (pdfjsDoc.numPages === 0) {
       throw new Error('Compressed PDF failed verification in PDF.js.');

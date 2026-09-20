@@ -5,13 +5,35 @@ import { encryptPDF, EncryptPDFOptions } from '@pdfsmaller/pdf-encrypt';
 import { decryptPDF, isEncrypted } from '@pdfsmaller/pdf-decrypt';
 
 /**
- * Ensures safe non-detached ArrayBuffer slice
+ * Ensures safe non-detached ArrayBuffer slice, strips leading preamble / BOM bytes if present,
+ * and validates non-zero size before parsing.
  */
-function toSafeBuffer(source: ArrayBuffer): ArrayBuffer {
+function toSafeBuffer(source: ArrayBuffer | Uint8Array): ArrayBuffer {
   if (!source || source.byteLength === 0) {
-    throw new Error('PDF document buffer is empty or detached.');
+    throw new Error('PDF document buffer is empty or detached (0 bytes).');
   }
-  return source.slice(0);
+  const rawBytes = source instanceof Uint8Array ? source : new Uint8Array(source);
+  // Scan for %PDF- header within the first 1024 bytes
+  let headerOffset = -1;
+  const searchLimit = Math.min(rawBytes.byteLength - 4, 1024);
+  for (let i = 0; i < searchLimit; i++) {
+    if (
+      rawBytes[i] === 0x25 &&
+      rawBytes[i + 1] === 0x50 &&
+      rawBytes[i + 2] === 0x44 &&
+      rawBytes[i + 3] === 0x46 &&
+      rawBytes[i + 4] === 0x2d
+    ) {
+      headerOffset = i;
+      break;
+    }
+  }
+
+  const alignedBytes = headerOffset > 0 ? rawBytes.slice(headerOffset) : rawBytes;
+  return alignedBytes.buffer.slice(
+    alignedBytes.byteOffset,
+    alignedBytes.byteOffset + alignedBytes.byteLength
+  ) as ArrayBuffer;
 }
 
 // ----------------------------------------------------------------------
@@ -275,48 +297,167 @@ export async function addWatermarkToPdf(
   const font = await srcDoc.embedFont(StandardFonts.HelveticaBold);
   const pages = srcDoc.getPages();
 
+  if (pages.length === 0) {
+    throw new Error('PDF document contains 0 pages for watermarking.');
+  }
+
+  // Sanitize text to ASCII/WinAnsi characters to ensure reliable embedding
+  const safeText = options.text.replace(/[^\x20-\x7E]/g, ' ').trim() || 'CONFIDENTIAL';
+
+  // Parse color if hex is provided
+  let color = rgb(0.6, 0.6, 0.6);
+  if (options.colorHex && /^#([0-9a-f]{6})$/i.test(options.colorHex)) {
+    const r = parseInt(options.colorHex.slice(1, 3), 16) / 255;
+    const g = parseInt(options.colorHex.slice(3, 5), 16) / 255;
+    const b = parseInt(options.colorHex.slice(5, 7), 16) / 255;
+    color = rgb(r, g, b);
+  }
+
+  const safeOpacity = Math.max(0.05, Math.min(1, options.opacity || 0.3));
+  const safeFontSize = Math.max(8, Math.min(120, options.fontSize || 36));
+
   pages.forEach((page) => {
     const { width, height } = page.getSize();
-    const textWidth = font.widthOfTextAtSize(options.text, options.fontSize);
-    page.drawText(options.text, {
-      x: width / 2 - textWidth / 2,
+    const textWidth = font.widthOfTextAtSize(safeText, safeFontSize);
+    page.drawText(safeText, {
+      x: Math.max(10, width / 2 - textWidth / 2),
       y: height / 2,
-      size: options.fontSize,
+      size: safeFontSize,
       font,
-      color: rgb(0.6, 0.6, 0.6),
-      opacity: Math.max(0.05, Math.min(1, options.opacity)),
-      rotate: degrees(options.rotation),
+      color,
+      opacity: safeOpacity,
+      rotate: degrees(options.rotation || 45),
     });
   });
 
-  return await srcDoc.save();
+  const outputBytes = await srcDoc.save();
+
+  // Acceptance Verification: Ensure watermarked PDF opens cleanly and has identical page count
+  const verifyDoc = await PDFDocument.load(outputBytes);
+  if (verifyDoc.getPageCount() !== pages.length) {
+    throw new Error('Watermark verification failed: output page count mismatch.');
+  }
+
+  return outputBytes;
 }
 
-// ----------------------------------------------------------------------
-// 9. IMAGES TO PDF
-// ----------------------------------------------------------------------
-export async function imagesToPdf(imageFiles: File[]): Promise<Uint8Array> {
+export type ImageInputItem = File | Blob | { buffer: ArrayBuffer | Uint8Array; name?: string; type?: string };
+
+export async function imagesToPdf(
+  imageFiles: ImageInputItem[],
+  onProgress?: (current: number, total: number) => void
+): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
 
-  for (const file of imageFiles) {
-    const buffer = await file.arrayBuffer();
-    const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+  for (let idx = 0; idx < imageFiles.length; idx++) {
+    const item = imageFiles[idx];
+    onProgress?.(idx + 1, imageFiles.length);
 
-    let image;
-    if (isPng) {
-      image = await pdfDoc.embedPng(buffer);
+    let rawBuffer: ArrayBuffer;
+    let mimeType = '';
+    let itemName = '';
+
+    if (typeof (item as any)?.arrayBuffer === 'function') {
+      rawBuffer = await (item as any).arrayBuffer();
+      mimeType = (item as any).type || '';
+      itemName = (item as any).name || 'image.png';
+    } else if (item && typeof item === 'object' && 'buffer' in item) {
+      rawBuffer =
+        item.buffer instanceof Uint8Array
+          ? (item.buffer.buffer.slice(item.buffer.byteOffset, item.buffer.byteOffset + item.buffer.byteLength) as ArrayBuffer)
+          : (item.buffer as ArrayBuffer);
+      mimeType = (item as any).type || '';
+      itemName = (item as any).name || 'image.png';
     } else {
-      image = await pdfDoc.embedJpg(buffer);
+      continue;
     }
 
-    const { width, height } = image.scale(1);
+    const bytes = new Uint8Array(rawBuffer);
+    if (bytes.byteLength === 0) continue;
+
+    // Check PNG signature: 0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A
+    const isPngSignature =
+      bytes.length > 8 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a;
+
+    let embeddedImage: any = null;
+
+    // In browser environment, use createImageBitmap or Canvas to normalize orientation & format
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      try {
+        let bitmap: ImageBitmap | null = null;
+        const blob = new Blob([bytes], { type: mimeType || (isPngSignature ? 'image/png' : 'image/jpeg') });
+
+        if (typeof createImageBitmap !== 'undefined') {
+          try {
+            bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+          } catch {
+            bitmap = await createImageBitmap(blob);
+          }
+        }
+
+        if (bitmap) {
+          const canvas = document.createElement('canvas');
+          canvas.width = bitmap.width;
+          canvas.height = bitmap.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(bitmap, 0, 0);
+
+            const jpegBytes = await new Promise<Uint8Array>((resolve, reject) => {
+              canvas.toBlob(
+                (b) => {
+                  if (!b) return reject(new Error('Canvas toBlob failed'));
+                  b.arrayBuffer()
+                    .then((buf) => resolve(new Uint8Array(buf)))
+                    .catch(reject);
+                },
+                'image/jpeg',
+                0.95
+              );
+            });
+
+            embeddedImage = await pdfDoc.embedJpg(jpegBytes);
+          }
+          bitmap.close();
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+      } catch (browserErr) {
+        console.warn('Browser canvas image normalization fallback:', browserErr);
+      }
+    }
+
+    // Direct embedding fallback (or in Node.js test environment)
+    if (!embeddedImage) {
+      if (isPngSignature || mimeType.includes('png') || itemName.toLowerCase().endsWith('.png')) {
+        embeddedImage = await pdfDoc.embedPng(bytes);
+      } else {
+        embeddedImage = await pdfDoc.embedJpg(bytes);
+      }
+    }
+
+    const { width, height } = embeddedImage.scale(1);
     const page = pdfDoc.addPage([width, height]);
-    page.drawImage(image, {
+    page.drawImage(embeddedImage, {
       x: 0,
       y: 0,
       width,
       height,
     });
+  }
+
+  if (pdfDoc.getPageCount() === 0) {
+    throw new Error('No valid images could be compiled into the PDF document.');
   }
 
   return await pdfDoc.save();
@@ -523,22 +664,93 @@ export async function checkPdfIsEncrypted(buffer: ArrayBuffer): Promise<{
 // ----------------------------------------------------------------------
 // 18. CROP PDF
 // ----------------------------------------------------------------------
+export interface CropBoxDimensions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface CropOptions {
+  cropBox?: CropBoxDimensions;
+  marginPercent?: number; // e.g. 5 for 5% margin trim
+  trimTopPercent?: number; // e.g. 12 for header trim
+  trimBottomPercent?: number; // e.g. 10 for footer trim
+}
+
 export async function cropPdf(
   buffer: ArrayBuffer,
-  cropBox: { x: number; y: number; width: number; height: number },
+  cropInput: CropBoxDimensions | CropOptions,
   targetPages?: number[]
 ): Promise<Uint8Array> {
   const srcDoc = await PDFDocument.load(toSafeBuffer(buffer));
   const pages = srcDoc.getPages();
 
+  if (pages.length === 0) {
+    throw new Error('PDF document has 0 pages to crop.');
+  }
+
   pages.forEach((page, idx) => {
     const pageNum = idx + 1;
     if (!targetPages || targetPages.length === 0 || targetPages.includes(pageNum)) {
-      page.setCropBox(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+      const { width: pWidth, height: pHeight } = page.getSize();
+      let x = 0;
+      let y = 0;
+      let w = pWidth;
+      let h = pHeight;
+
+      if ('marginPercent' in cropInput && cropInput.marginPercent !== undefined) {
+        const mx = pWidth * (cropInput.marginPercent / 100);
+        const my = pHeight * (cropInput.marginPercent / 100);
+        x = mx;
+        y = my;
+        w = Math.max(10, pWidth - 2 * mx);
+        h = Math.max(10, pHeight - 2 * my);
+      } else if ('trimTopPercent' in cropInput && cropInput.trimTopPercent !== undefined) {
+        const trimTop = pHeight * (cropInput.trimTopPercent / 100);
+        x = 0;
+        y = 0;
+        w = pWidth;
+        h = Math.max(10, pHeight - trimTop);
+      } else if ('trimBottomPercent' in cropInput && cropInput.trimBottomPercent !== undefined) {
+        const trimBottom = pHeight * (cropInput.trimBottomPercent / 100);
+        x = 0;
+        y = trimBottom;
+        w = pWidth;
+        h = Math.max(10, pHeight - trimBottom);
+      } else {
+        const box =
+          'cropBox' in cropInput && cropInput.cropBox
+            ? cropInput.cropBox
+            : (cropInput as CropBoxDimensions);
+        // Clamp custom box coordinates to page dimensions
+        x = Math.max(0, Math.min(box.x, pWidth - 10));
+        y = Math.max(0, Math.min(box.y, pHeight - 10));
+        w = Math.max(10, Math.min(box.width, pWidth - x));
+        h = Math.max(10, Math.min(box.height, pHeight - y));
+      }
+
+      page.setCropBox(x, y, w, h);
+      page.setMediaBox(x, y, w, h);
     }
   });
 
-  return await srcDoc.save();
+  const croppedBytes = await srcDoc.save();
+
+  // Acceptance Verification: Ensure cropped document opens cleanly in both parsers
+  const verifyDoc = await PDFDocument.load(croppedBytes);
+  if (verifyDoc.getPageCount() === 0) {
+    throw new Error('Cropped PDF document verification failed: 0 pages generated.');
+  }
+
+  const pdfjs = await getPdfJs();
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(croppedBytes.slice(0)));
+  const pdfjsDoc = await loadingTask.promise;
+  if (pdfjsDoc.numPages === 0) {
+    throw new Error('Cropped PDF document verification failed in PDF.js.');
+  }
+
+  return croppedBytes;
 }
 
 // ----------------------------------------------------------------------

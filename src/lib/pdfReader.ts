@@ -7,7 +7,7 @@ export async function getPdfJs(): Promise<any> {
     if (typeof window !== 'undefined') {
       const pdfjs = await import('pdfjs-dist');
       if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
       }
       pdfjsLibInstance = pdfjs;
     } else {

@@ -46,7 +46,8 @@ export async function convertPdfToExcel(
   const totalPages = doc.numPages;
 
   // Dynamically import SheetJS (XLSX)
-  const XLSX = await import('xlsx');
+  const xlsxModule = await import('xlsx');
+  const XLSX = (xlsxModule as any).default || xlsxModule;
   const workbook = XLSX.utils.book_new();
 
   let totalRowsAcrossSheets = 0;

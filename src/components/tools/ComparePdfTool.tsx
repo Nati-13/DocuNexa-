@@ -66,7 +66,9 @@ export function ComparePdfTool() {
 
     try {
       setProgress(50);
-      const result = await comparePdfs(bufferA, fileA.name, bufferB, fileB.name);
+      const freshA = await fileA.arrayBuffer();
+      const freshB = await fileB.arrayBuffer();
+      const result = await comparePdfs(freshA, fileA.name, freshB, fileB.name);
 
       setProgress(100);
       await new Promise((r) => setTimeout(r, 150));

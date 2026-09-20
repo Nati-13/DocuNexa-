@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     config.resolve.alias.canvas = false;
     config.resolve.alias.encoding = false;
     config.resolve.alias["pdf-lib"] = path.resolve(__dirname, "node_modules/pdf-lib/dist/pdf-lib.esm.js");
-    config.resolve.alias["pptxgenjs"] = path.resolve(__dirname, "node_modules/pptxgenjs/dist/pptxgen.bundle.js");
+    config.resolve.alias["pptxgenjs"] = path.resolve(__dirname, "node_modules/pptxgenjs/dist/pptxgen.es.js");
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       canvas: "./empty-module.ts",
       "pdf-lib": "./node_modules/pdf-lib/dist/pdf-lib.esm.js",
-      pptxgenjs: "./node_modules/pptxgenjs/dist/pptxgen.bundle.js",
+      pptxgenjs: "./node_modules/pptxgenjs/dist/pptxgen.es.js",
     },
   },
 };

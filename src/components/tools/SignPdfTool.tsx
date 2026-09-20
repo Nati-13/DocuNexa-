@@ -180,8 +180,9 @@ export function SignPdfTool() {
     setErrorMessage(null);
 
     try {
+      const freshBuf = await file.arrayBuffer();
       // Calculate coordinates based on page dimensions
-      const srcDoc = await PDFDocument.load(fileBuffer.slice(0));
+      const srcDoc = await PDFDocument.load(freshBuf.slice(0));
       const pages = srcDoc.getPages();
       const pageIndex = Math.max(0, Math.min(targetPage - 1, pages.length - 1));
       const targetPdfPage = pages[pageIndex];
@@ -205,7 +206,7 @@ export function SignPdfTool() {
 
       setProgress(60);
       const signedBytes = await applySignatureToPdf(
-        fileBuffer,
+        freshBuf,
         signatureDataUrl,
         targetPage,
         x,

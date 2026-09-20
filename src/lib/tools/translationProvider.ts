@@ -120,10 +120,20 @@ export class LocalRuleBasedTranslationProvider implements TranslationProvider {
         }
       }
 
+      if (matchedCount === 0) {
+        return {
+          translatedText: '',
+          isSupported: false,
+          unsupportedMessage:
+            'No matching terminology found in this document for local Amharic glossary translation. The original source text was preserved without claiming translation.',
+          engineLabel: this.providerName,
+        };
+      }
+
       return {
         translatedText: result,
         isSupported: true,
-        engineLabel: this.providerName,
+        engineLabel: `${this.providerName} (${matchedCount} term${matchedCount > 1 ? 's' : ''} translated)`,
       };
     }
 

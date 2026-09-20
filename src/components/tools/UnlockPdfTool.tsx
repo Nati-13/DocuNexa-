@@ -66,13 +66,14 @@ export function UnlockPdfTool() {
     setErrorMessage(null);
 
     try {
+      const freshBuf = await file.arrayBuffer();
       await new Promise((r) => setTimeout(r, 150));
       setProgress(60);
       setProgressStatus('Authenticating document cipher...');
 
       let decryptedBytes: Uint8Array;
       try {
-        decryptedBytes = await decryptPdfFile(fileBuffer, password);
+        decryptedBytes = await decryptPdfFile(freshBuf, password);
       } catch (decryptErr: any) {
         throw new Error('Incorrect password or unable to unlock this PDF.');
       }

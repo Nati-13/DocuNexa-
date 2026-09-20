@@ -39,4 +39,12 @@ if (fs.existsSync(licensePath)) {
   fs.writeFileSync(licensePath, normalized, 'utf8');
 }
 
+// Copy local PDF.js worker to public/ to eliminate external CDN dependency
+const srcWorker = path.join(__dirname, '..', 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs');
+const destWorker = path.join(__dirname, '..', 'public', 'pdf.worker.min.mjs');
+if (fs.existsSync(srcWorker)) {
+  fs.copyFileSync(srcWorker, destWorker);
+  console.log('[copy-pdf-assets] Successfully copied local pdf.worker.min.mjs to public/');
+}
+
 console.log(`[copy-pdf-assets] Successfully copied ${copied} standard font assets to public/standard_fonts/`);
