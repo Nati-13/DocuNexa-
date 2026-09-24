@@ -6,6 +6,7 @@ import { ChevronRight, ShieldCheck, ArrowRight } from 'lucide-react';
 import { ToolItem } from '@/types';
 import { DynamicIcon } from '@/components/common/DynamicIcon';
 import { ALL_TOOLS, TOOL_CATEGORIES } from '@/config/tools';
+import { ToolSeoSection } from './ToolSeoSection';
 
 interface ToolLayoutProps {
   tool: ToolItem;
@@ -66,6 +67,9 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
         <div className="w-full mb-16">
           {children}
         </div>
+
+        {/* Informative Server-Rendered Documentation & Specifications */}
+        <ToolSeoSection tool={tool} />
 
         {/* Related Tools Section */}
         {relatedTools.length > 0 && (

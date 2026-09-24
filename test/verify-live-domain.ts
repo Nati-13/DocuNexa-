@@ -2,56 +2,55 @@ import { ALL_TOOLS } from '../src/config/tools';
 
 async function auditLiveDomain() {
   console.log('================================================================');
-  console.log('      DOCUNEXA — LIVE DOMAIN HTTP AUDIT (docunexa.pro.et)       ');
-  console.log('================================================================');
+  console.log('      DOCUNEXA — LIVE DOMAIN HTTP & SEO AUDIT (docunexa.pro.et) ');
+  console.log('================================================================\n');
 
   let passCount = 0;
   let failCount = 0;
 
-  for (const tool of ALL_TOOLS) {
-    const url = `https://docunexa.pro.et/tools/${tool.slug}`;
-    try {
-      const res = await fetch(url, { method: 'GET' });
-      if (res.status === 200) {
-        console.log(`✓ [PASS] (200) ${tool.slug.padEnd(22)}: ${tool.name}`);
-        passCount++;
-      } else {
-        console.error(`✗ [FAIL] (${res.status}) ${tool.slug.padEnd(22)}: ${tool.name}`);
-        failCount++;
-      }
-    } catch (err: any) {
-      console.error(`✗ [ERROR] ${tool.slug.padEnd(22)}: ${err.message}`);
-      failCount++;
-    }
-  }
-
-  // Key assets
-  const assets = [
+  const keyEndpoints = [
     { url: 'https://docunexa.pro.et/', name: 'Home Page' },
     { url: 'https://docunexa.pro.et/tools', name: 'Tools Directory' },
-    { url: 'https://docunexa.pro.et/tools/pdf-unit-cutter', name: 'PDF Unit Cutter (Dedicated)' },
-    { url: 'https://docunexa.pro.et/favicon.ico', name: 'Favicon ICO' },
-    { url: 'https://docunexa.pro.et/icon.svg', name: 'Icon SVG' },
-    { url: 'https://docunexa.pro.et/apple-icon.png', name: 'Apple Icon PNG' },
-    { url: 'https://docunexa.pro.et/pdf.worker.min.mjs', name: 'PDF.js Worker' },
-    { url: 'https://docunexa.pro.et/standard_fonts/FoxitFixed.pfb', name: 'Standard Font Asset' },
-    { url: 'https://docunexa.pro.et/standard_fonts/LICENSE_LIBERATION', name: 'Standard Font License' },
+    { url: 'https://docunexa.pro.et/tools/pdf-unit-cutter', name: 'PDF Unit Cutter (Flagship)' },
+    { url: 'https://docunexa.pro.et/tools/split-pdf', name: 'Split PDF' },
+    { url: 'https://docunexa.pro.et/tools/merge-pdf', name: 'Merge PDF' },
+    { url: 'https://docunexa.pro.et/tools/compress-pdf', name: 'Compress PDF' },
+    { url: 'https://docunexa.pro.et/tools/pdf-to-word', name: 'PDF to Word' },
+    { url: 'https://docunexa.pro.et/tools/jpg-to-pdf', name: 'JPG to PDF' },
+    { url: 'https://docunexa.pro.et/robots.txt', name: 'robots.txt' },
+    { url: 'https://docunexa.pro.et/sitemap.xml', name: 'sitemap.xml' },
   ];
 
-  console.log('\n--- Checking Asset Endpoints on Live Domain ---');
-  for (const a of assets) {
+  for (const ep of keyEndpoints) {
     try {
-      const res = await fetch(a.url, { method: 'GET' });
+      const res = await fetch(ep.url, { method: 'GET' });
+      const text = await res.text();
+
       if (res.status === 200) {
-        console.log(`✓ [PASS] (200) ${a.name.padEnd(26)}: ${a.url}`);
         passCount++;
+        console.log(`✓ [HTTP 200] ${ep.name.padEnd(28)}: ${ep.url}`);
+
+        if (ep.url.endsWith('.txt') || ep.url.endsWith('.xml')) {
+          console.log(`    Content-Type: ${res.headers.get('content-type')}`);
+          console.log(`    Length: ${text.length} chars`);
+        } else {
+          const titleMatch = text.match(/<title>([^<]*)<\/title>/i);
+          const h1Match = text.match(/<h1[^>]*>([^<]*)<\/h1>/i);
+          const canonicalMatch = text.match(/<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']*)["']/i);
+          const hasNoindex = text.includes('noindex');
+
+          if (titleMatch) console.log(`    Title:     ${titleMatch[1]}`);
+          if (h1Match) console.log(`    H1:        ${h1Match[1].trim()}`);
+          if (canonicalMatch) console.log(`    Canonical: ${canonicalMatch[1]}`);
+          console.log(`    Noindex:   ${hasNoindex ? 'YES (WARNING)' : 'None (Indexable)'}`);
+        }
       } else {
-        console.error(`✗ [FAIL] (${res.status}) ${a.name.padEnd(26)}: ${a.url}`);
         failCount++;
+        console.error(`✗ [HTTP ${res.status}] ${ep.name.padEnd(28)}: ${ep.url}`);
       }
     } catch (err: any) {
-      console.error(`✗ [ERROR] ${a.name.padEnd(26)}: ${err.message}`);
       failCount++;
+      console.error(`✗ [ERROR] ${ep.name.padEnd(28)}: ${err.message}`);
     }
   }
 

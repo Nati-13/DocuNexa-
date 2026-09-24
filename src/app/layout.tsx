@@ -16,7 +16,10 @@ export const metadata: Metadata = {
     template: '%s | DocuNexa',
   },
   description:
-    'Split, merge, convert, edit, secure, and intelligently manage your documents with 100% browser-based privacy. Features the intelligent PDF Unit Cutter to slice textbooks into organized chapters.',
+    'Free, private client-side PDF tools in one clean workspace. Split textbooks into chapters with PDF Unit Cutter, merge, compress, convert, edit, and organize documents directly in your browser.',
+  alternates: {
+    canonical: 'https://docunexa.pro.et',
+  },
   keywords: [
     'DocuNexa',
     'PDF tools',
@@ -27,7 +30,6 @@ export const metadata: Metadata = {
     'compress PDF',
     'PDF to Word',
     'convert PDF',
-    'AI PDF summarizer',
     'client-side PDF editor',
     'private PDF tools',
   ],
@@ -36,10 +38,26 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'DocuNexa — Every PDF tool. One simple workspace.',
     description:
-      'The modern, privacy-first PDF productivity platform. Split textbooks into units, merge, convert, compress, edit, and secure your files directly in your browser.',
+      'Free, private client-side PDF tools in one clean workspace. Split textbooks into chapters with PDF Unit Cutter, merge, compress, convert, edit, and organize documents directly in your browser.',
+    url: 'https://docunexa.pro.et',
     siteName: 'DocuNexa',
     locale: 'en_US',
     type: 'website',
+    images: [
+      {
+        url: 'https://docunexa.pro.et/icon.svg',
+        width: 512,
+        height: 512,
+        alt: 'DocuNexa — Every PDF tool. One simple workspace.',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'DocuNexa — Every PDF tool. One simple workspace.',
+    description:
+      'Free, private client-side PDF tools in one clean workspace. Split textbooks into chapters with PDF Unit Cutter, merge, compress, convert, edit, and organize documents directly in your browser.',
+    images: ['https://docunexa.pro.et/icon.svg'],
   },
   icons: {
     icon: [
@@ -57,6 +75,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const rootJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://docunexa.pro.et/#website',
+        url: 'https://docunexa.pro.et',
+        name: 'DocuNexa',
+        description: 'DocuNexa — Every PDF tool. One simple workspace.',
+        publisher: {
+          '@id': 'https://docunexa.pro.et/#organization',
+        },
+      },
+      {
+        '@type': 'Organization',
+        '@id': 'https://docunexa.pro.et/#organization',
+        name: 'DocuNexa',
+        url: 'https://docunexa.pro.et',
+        logo: 'https://docunexa.pro.et/icon.svg',
+      },
+    ],
+  };
   return (
     <html lang="en" className="h-full">
       <head>
@@ -65,6 +105,10 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(rootJsonLd) }}
         />
       </head>
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors">
