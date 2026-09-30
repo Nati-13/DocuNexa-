@@ -282,7 +282,7 @@ export function PdfFormsTool() {
         onFilesSelected={handleFileSelected}
         accept=".pdf,application/pdf"
         title="Drop a PDF Form to Fill"
-        subtitle="Genuine AcroForm scanning • Interactive typing • 100% Client-Side & Free"
+        subtitle="Genuine AcroForm scanning • Interactive typing • Client-Side & Free"
       />
     </div>
   );

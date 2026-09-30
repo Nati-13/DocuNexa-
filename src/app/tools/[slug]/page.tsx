@@ -950,7 +950,7 @@ export default function UniversalToolPage() {
   return (
     <ToolLayout tool={tool}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Responsive Non-Intrusive Top Sponsor Slot */}
+        {/* Responsive Non-Intrusive Top Ad Slot */}
         <AdSlot placement="banner" className="mb-2" />
 
         {/* Step 1: File Dropzone (if no files chosen) */}
@@ -1935,7 +1935,7 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* Responsive Bottom Sponsor Slot */}
+            {/* Responsive Bottom Ad Slot */}
             <AdSlot placement="banner" className="mt-6" />
           </div>
         )}

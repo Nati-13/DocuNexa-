@@ -250,7 +250,7 @@ export function RotatePdfTool() {
         onFilesSelected={handleFileSelected}
         accept=".pdf,application/pdf"
         title="Drop a PDF to Rotate"
-        subtitle="Individual page or batch rotation • 100% Client-Side & Free"
+        subtitle="Individual page or batch rotation • Client-Side & Free"
       />
     </div>
   );

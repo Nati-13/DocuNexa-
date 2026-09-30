@@ -1,8 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { DocuNexaLogo } from '@/components/common/DocuNexaLogo';
-import { TOOL_CATEGORIES, ALL_TOOLS } from '@/config/tools';
-import { ShieldCheck, Heart, Github, Twitter, Sparkles } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -15,14 +14,14 @@ export const Footer: React.FC = () => {
               <ShieldCheck size={26} />
             </div>
             <div>
-              <h4 className="text-base font-bold text-white">Privacy-First Guarantee</h4>
+              <h4 className="text-base font-bold text-white">Privacy-First Architecture</h4>
               <p className="text-xs text-slate-400 mt-0.5">
-                All core PDF processing is done directly in your browser. Your documents are never uploaded to, stored on, or analyzed by third-party servers.
+                Document operations for supported client-side tools run directly in your browser. Your files are not uploaded to or stored on remote servers.
               </p>
             </div>
           </div>
           <Link
-            href="/about"
+            href="/security"
             className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold shrink-0 transition-colors"
           >
             Learn About Our Architecture
@@ -37,7 +36,7 @@ export const Footer: React.FC = () => {
           <div className="col-span-2 space-y-4">
             <DocuNexaLogo size="md" showTagline={false} className="text-white" />
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Every PDF tool. One simple workspace. Split textbooks into units, merge, convert, edit, compress, and secure your documents with 100% browser-based privacy.
+              Every PDF tool. One simple workspace. Split textbooks into units, merge, convert, edit, compress, and secure your documents with client-side browser processing.
             </p>
             <div className="pt-2 flex items-center gap-3 text-xs text-slate-400">
               <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
@@ -50,7 +49,7 @@ export const Footer: React.FC = () => {
           {/* Quick Links */}
           <div className="space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-              Platform
+              Platform & Trust
             </h5>
             <ul className="space-y-2 text-xs">
               <li>
@@ -64,18 +63,33 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/tools/ai-summarizer" className="hover:text-white transition-colors">
-                  AI PDF Intelligence
-                </Link>
-              </li>
-              <li>
                 <Link href="/how-it-works" className="hover:text-white transition-colors">
                   How It Works
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="hover:text-white transition-colors">
-                  About & 100% Free Mission
+                  About DocuNexa
+                </Link>
+              </li>
+              <li>
+                <Link href="/security" className="hover:text-white transition-colors">
+                  Security & Architecture
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-white transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition-colors">
+                  Contact Us
                 </Link>
               </li>
             </ul>
@@ -159,10 +173,10 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Convert & AI */}
+          {/* Convert & Intelligence */}
           <div className="space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-              Convert & AI
+              Convert & Intelligence
             </h5>
             <ul className="space-y-2 text-xs">
               <li>
@@ -187,7 +201,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link href="/tools/ai-summarizer" className="hover:text-white transition-colors">
-                  AI Summarizer
+                  Document Summarizer
                 </Link>
               </li>
               <li>
@@ -202,16 +216,22 @@ export const Footer: React.FC = () => {
 
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p>© {new Date().getFullYear()} DocuNexa Inc. Every PDF tool. One simple workspace.</p>
-        <div className="flex items-center gap-6">
+        <p>© {new Date().getFullYear()} DocuNexa. Every PDF tool. One simple workspace.</p>
+        <div className="flex flex-wrap items-center gap-6">
           <Link href="/about" className="hover:text-white transition-colors">
+            About
+          </Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">
             Privacy Policy
           </Link>
-          <Link href="/about" className="hover:text-white transition-colors">
+          <Link href="/terms" className="hover:text-white transition-colors">
             Terms of Service
           </Link>
-          <Link href="/about" className="hover:text-white transition-colors">
+          <Link href="/security" className="hover:text-white transition-colors">
             Security Overview
+          </Link>
+          <Link href="/contact" className="hover:text-white transition-colors">
+            Contact
           </Link>
         </div>
       </div>

@@ -106,7 +106,7 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
           <span className="hidden sm:inline">•</span>
           <span className="text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            100% Client-Side Safe
+            Client-Side In-Memory Processing
           </span>
         </div>
       </div>

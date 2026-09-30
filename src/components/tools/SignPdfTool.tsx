@@ -421,7 +421,7 @@ export function SignPdfTool() {
       <PdfDropzone
         onFilesSelected={handleFileSelected}
         title="Drop PDF to sign"
-        subtitle="Visual drag-and-drop signing, custom drawn or typed signatures, 100% client-side"
+        subtitle="Visual drag-and-drop signing, custom drawn or typed signatures, client-side"
         accept=".pdf,application/pdf"
       />
     </div>

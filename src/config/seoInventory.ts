@@ -143,7 +143,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'organize',
     title: 'Remove Pages from PDF Online — Delete Unwanted Pages | DocuNexa',
     description:
-      'Select and delete unwanted, blank, or duplicate pages from your PDF document in seconds. 100% private in-browser document editing.',
+      'Select and delete unwanted, blank, or duplicate pages from your PDF document in seconds. Completely client-side in-browser document editing.',
     h1: 'Remove Pages',
     canonicalUrl: `${CANONICAL_BASE}/tools/remove-pages`,
     inputFormat: 'PDF (.pdf)',
@@ -374,7 +374,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'convert-to',
     title: 'JPG to PDF Online — Convert Images to PDF in Browser | DocuNexa',
     description:
-      'Convert JPG, PNG, WEBP, and BMP images into a clean, uniform PDF document. Batch combine images with 100% client-side privacy.',
+      'Convert JPG, PNG, WEBP, and BMP images into a clean, uniform PDF document. Batch combine images with client-side browser processing.',
     h1: 'JPG to PDF',
     canonicalUrl: `${CANONICAL_BASE}/tools/jpg-to-pdf`,
     inputFormat: 'Images (.jpg, .jpeg, .png, .webp, .bmp)',
@@ -440,7 +440,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'convert-to',
     title: 'PowerPoint to PDF Online — Convert PPTX Slides to PDF | DocuNexa',
     description:
-      'Transform PowerPoint presentation slides (.pptx) into printable landscape PDF files in your browser. 100% private client-side conversion.',
+      'Transform PowerPoint presentation slides (.pptx) into printable landscape PDF files in your browser. Client-side conversion without file uploads.',
     h1: 'PowerPoint to PDF',
     canonicalUrl: `${CANONICAL_BASE}/tools/powerpoint-to-pdf`,
     inputFormat: 'PowerPoint (.pptx, .ppt)',
@@ -473,7 +473,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'convert-to',
     title: 'Excel to PDF Online — Convert Spreadsheets to PDF Tables | DocuNexa',
     description:
-      'Transform Excel spreadsheets (.xlsx, .csv) into clean, neatly paginated PDF grid tables directly in your browser. 100% private.',
+      'Transform Excel spreadsheets (.xlsx, .csv) into clean, neatly paginated PDF grid tables directly in your browser with zero document uploads.',
     h1: 'Excel to PDF',
     canonicalUrl: `${CANONICAL_BASE}/tools/excel-to-pdf`,
     inputFormat: 'Excel (.xlsx, .xls, .csv)',
@@ -736,7 +736,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'edit',
     title: 'Add Page Numbers to PDF Online — Insert Custom Pagination | DocuNexa',
     description:
-      'Stamp customizable page numbers onto your PDF documents. Configure positions, numbering formats, and starting offsets with 100% privacy.',
+      'Stamp customizable page numbers onto your PDF documents. Configure positions, numbering formats, and starting offsets with client-side browser processing.',
     h1: 'Add Page Numbers',
     canonicalUrl: `${CANONICAL_BASE}/tools/add-page-numbers`,
     inputFormat: 'PDF (.pdf)',
@@ -769,7 +769,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'edit',
     title: 'Add Watermark to PDF Online — Stamp Confidential or Draft Text | DocuNexa',
     description:
-      'Overlay custom text watermarks onto PDF pages with adjustable opacity, angle, and position. 100% client-side with complete privacy.',
+      'Overlay custom text watermarks onto PDF pages with adjustable opacity, angle, and position. Client-side processing with zero document uploads.',
     h1: 'Add Watermark',
     canonicalUrl: `${CANONICAL_BASE}/tools/add-watermark`,
     inputFormat: 'PDF (.pdf)',
@@ -801,7 +801,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'edit',
     title: 'Crop PDF Online — Trim Margins & Adjust Viewport | DocuNexa',
     description:
-      'Trim unnecessary margins and adjust page dimensions in your browser. Interactive visual bounding box with 100% client-side privacy.',
+      'Trim unnecessary margins and adjust page dimensions in your browser. Interactive visual bounding box with client-side browser processing.',
     h1: 'Crop PDF',
     canonicalUrl: `${CANONICAL_BASE}/tools/crop-pdf`,
     inputFormat: 'PDF (.pdf)',
@@ -1027,7 +1027,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'security',
     title: 'Compare PDF Online — Visual Side-by-Side Document Diff | DocuNexa',
     description:
-      'Compare two PDF document versions side-by-side to pinpoint revisions, added sentences, and removed sections. 100% private in-browser comparison.',
+      'Compare two PDF document versions side-by-side to pinpoint revisions, added sentences, and removed sections. In-browser comparison without server uploads.',
     h1: 'Compare PDF',
     canonicalUrl: `${CANONICAL_BASE}/tools/compare-pdf`,
     inputFormat: 'PDF (.pdf, 2 files)',
@@ -1059,7 +1059,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'intelligence',
     title: 'Document Summarizer Online — Extract PDF Key Points Privately | DocuNexa',
     description:
-      'Extract structured executive overviews, key takeaways, and study questions from PDFs using client-side heuristic layout analysis. 100% private.',
+      'Extract structured executive overviews, key takeaways, and study questions from PDFs using client-side heuristic layout analysis without server transmission.',
     h1: 'Document Summarizer',
     canonicalUrl: `${CANONICAL_BASE}/tools/ai-summarizer`,
     inputFormat: 'PDF (.pdf)',
@@ -1092,7 +1092,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'intelligence',
     title: 'Translate PDF Online — Local Educational Glossary Translation | DocuNexa',
     description:
-      'Translate extracted educational PDF text between English and Amharic using local rule-based glossary transformations. 100% in-browser privacy.',
+      'Translate extracted educational PDF text between English and Amharic using local rule-based glossary transformations. In-browser processing with zero document transmission.',
     h1: 'Translate PDF',
     canonicalUrl: `${CANONICAL_BASE}/tools/translate-pdf`,
     inputFormat: 'PDF (.pdf)',
@@ -1124,7 +1124,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     category: 'intelligence',
     title: 'PDF to Markdown Online — Convert PDF Structure to Clean MD | DocuNexa',
     description:
-      'Convert PDF document hierarchy into clean, structured Markdown for Obsidian, Notion, or GitHub. 100% private in-browser conversion.',
+      'Convert PDF document hierarchy into clean, structured Markdown for Obsidian, Notion, or GitHub. Client-side conversion in your browser.',
     h1: 'PDF to Markdown',
     canonicalUrl: `${CANONICAL_BASE}/tools/pdf-to-markdown`,
     inputFormat: 'PDF (.pdf)',

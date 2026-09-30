@@ -49,7 +49,7 @@ export const TOOL_CATEGORIES: ToolCategoryInfo[] = [
   {
     id: 'security',
     name: 'PDF Security',
-    tagline: 'Encrypt, unlock, digitally sign, redact, and compare',
+    tagline: 'Encrypt, unlock, sign, redact, and compare',
     accentColor: 'cyan',
     accentBg: 'bg-sky-50 dark:bg-sky-950/30',
     accentBorder: 'border-sky-200 dark:border-sky-800/50',

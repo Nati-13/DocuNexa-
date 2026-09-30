@@ -327,7 +327,7 @@ export function PageNumbersTool() {
         onFilesSelected={handleFileSelected}
         accept=".pdf,application/pdf"
         title="Drop a PDF to Add Page Numbers"
-        subtitle="6-grid positioning • Roman or standard digits • 100% Client-Side & Free"
+        subtitle="6-grid positioning • Roman or standard digits • Client-Side & Free"
       />
     </div>
   );

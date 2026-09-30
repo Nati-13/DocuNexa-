@@ -126,7 +126,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ isOpen, onClose }) => {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-300">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              100% Client-Side Privacy: Your files never leave this device
+              Client-Side Document Privacy: Your files are processed locally in your browser
             </span>
           </div>
           <Link

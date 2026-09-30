@@ -72,7 +72,7 @@ export default function ToolsDirectoryPage() {
             All PDF Tools in One Workspace
           </h1>
           <p className="text-slate-700 dark:text-slate-200 text-sm sm:text-base leading-relaxed">
-            Every tool runs 100% locally in your browser. Split, merge, convert, compress, edit, secure, and understand your documents with absolute zero server exposure.
+            Document processing runs locally in your browser. Split, merge, convert, compress, edit, secure, and understand your documents with zero document uploads to remote servers.
           </p>
 
           {/* Search Bar */}

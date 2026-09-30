@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       <div className="bg-slate-50/90 border-t border-slate-100 px-4 py-1.5 text-center text-xs text-slate-500 flex items-center justify-center space-x-2">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
         <span>
-          <strong className="text-slate-700 font-medium">100% Client-Side Privacy:</strong> Your PDF is processed locally in your browser. Document files are never uploaded to any remote server.
+          <strong className="text-slate-700 font-medium">Client-Side Document Privacy:</strong> Your PDF is processed locally in your browser. Document files are not uploaded to remote servers.
         </span>
       </div>
     </header>

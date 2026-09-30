@@ -58,7 +58,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
       {/* Accessible Header Label */}
       <div className="text-center py-1 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200/60 dark:border-slate-800/60">
         <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-          Advertisement
+          {isRealProviderConfigured ? 'Advertisement' : 'Advertising Space (Unconfigured)'}
         </span>
       </div>
 
@@ -69,7 +69,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
             className="adsbygoogle"
             style={{ display: 'block', textAlign: 'center' }}
             data-ad-client={adClientId}
-            data-ad-slot={slotId || '1234567890'}
+            data-ad-slot={slotId || ''}
             data-ad-format="auto"
             data-full-width-responsive="true"
           />
@@ -78,10 +78,10 @@ export const AdSlot: React.FC<AdSlotProps> = ({
         /* Clean, Neutral Unconfigured Development Placeholder */
         <div className="flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-b-2xl text-center">
           <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-            Sponsor Space
+            Advertising Space
           </p>
           <span className="text-[11px] text-slate-400 dark:text-slate-600 mt-0.5">
-            DocuNexa is 100% free. Unobtrusive sponsors help support serverless hosting.
+            DocuNexa is free for everyone. Advertising space may help support hosting and continuous maintenance in the future.
           </span>
         </div>
       )}

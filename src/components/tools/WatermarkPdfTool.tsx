@@ -445,7 +445,7 @@ export function WatermarkPdfTool() {
         onFilesSelected={handleFileSelected}
         accept=".pdf,application/pdf"
         title="Drop a PDF to Add Watermark"
-        subtitle="Visual, draggable positioning • 100% Client-Side & Free"
+        subtitle="Visual, draggable positioning • Client-Side & Free"
       />
     </div>
   );

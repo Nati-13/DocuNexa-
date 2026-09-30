@@ -59,7 +59,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
           {/* Privacy & Guarantee Pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
             <ShieldCheck size={14} className="text-emerald-500" />
-            <span>100% Client-Side: Zero server uploads, processed privately in your browser.</span>
+            <span>Client-Side Processing: Zero document uploads, processed locally in your browser memory.</span>
           </div>
         </div>
 

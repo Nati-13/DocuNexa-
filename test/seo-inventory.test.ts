@@ -139,9 +139,9 @@ async function runSeoInventoryAudit() {
   const sitemapUrlSet = new Set(sitemapUrls);
 
   assert(
-    'Sitemap Contains Exactly 36 URLs',
-    sitemapItems.length === 36,
-    `Sitemap has ${sitemapItems.length} URLs (1 homepage + 1 tools directory + 34 tools)`
+    'Sitemap Contains Exactly 42 URLs',
+    sitemapItems.length === 42,
+    `Sitemap has ${sitemapItems.length} URLs (1 homepage + 1 tools directory + 6 trust/info pages + 34 tools)`
   );
 
   assert(
@@ -161,6 +161,15 @@ async function runSeoInventoryAudit() {
     sitemapUrlSet.has(`${CANONICAL_BASE}/tools`),
     `Found tools directory: ${CANONICAL_BASE}/tools`
   );
+
+  const trustPages = ['how-it-works', 'about', 'security', 'privacy', 'terms', 'contact'];
+  trustPages.forEach((slug) => {
+    assert(
+      `Sitemap Includes /${slug}`,
+      sitemapUrlSet.has(`${CANONICAL_BASE}/${slug}`),
+      `Found trust/info page: ${CANONICAL_BASE}/${slug}`
+    );
+  });
 
   let missingToolsInSitemap = 0;
   ALL_TOOLS.forEach((tool) => {

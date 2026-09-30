@@ -133,7 +133,7 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
           </span>
           <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
             <Cpu size={14} />
-            <span>100% In-Browser</span>
+            <span>Local In-Browser</span>
           </p>
         </div>
 

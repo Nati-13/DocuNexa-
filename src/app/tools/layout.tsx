@@ -5,14 +5,14 @@ const CANONICAL_URL = 'https://docunexa.pro.et/tools';
 export const metadata: Metadata = {
   title: 'All 34 PDF Tools — Free & Private In-Browser Document Workspace | DocuNexa',
   description:
-    'Explore all 34 client-side PDF tools in DocuNexa. Split textbooks with PDF Unit Cutter, merge, compress, convert, edit, and secure PDFs with 100% in-browser privacy.',
+    'Explore all 34 client-side PDF tools in DocuNexa. Split textbooks with PDF Unit Cutter, merge, compress, convert, edit, and secure PDFs with client-side in-browser processing.',
   alternates: {
     canonical: CANONICAL_URL,
   },
   openGraph: {
     title: 'All 34 PDF Tools — Free & Private In-Browser Document Workspace | DocuNexa',
     description:
-      'Explore all 34 client-side PDF tools in DocuNexa. Split textbooks with PDF Unit Cutter, merge, compress, convert, edit, and secure PDFs with 100% in-browser privacy.',
+      'Explore all 34 client-side PDF tools in DocuNexa. Split textbooks with PDF Unit Cutter, merge, compress, convert, edit, and secure PDFs with client-side in-browser processing.',
     url: CANONICAL_URL,
     siteName: 'DocuNexa',
     type: 'website',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'All 34 PDF Tools — Free & Private In-Browser Document Workspace | DocuNexa',
     description:
-      'Explore all 34 client-side PDF tools in DocuNexa. Split textbooks with PDF Unit Cutter, merge, compress, convert, edit, and secure PDFs with 100% in-browser privacy.',
+      'Explore all 34 client-side PDF tools in DocuNexa. Split textbooks with PDF Unit Cutter, merge, compress, convert, edit, and secure PDFs with client-side in-browser processing.',
     images: ['https://docunexa.pro.et/icon.svg'],
   },
 };

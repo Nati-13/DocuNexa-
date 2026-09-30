@@ -112,7 +112,7 @@ export const Navbar: React.FC = () => {
                 </span>
               </Link>
 
-              {/* AI Tools */}
+              {/* Document Intelligence */}
               <Link
                 href="/tools/ai-summarizer"
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
@@ -122,7 +122,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <Sparkles size={15} className="text-indigo-500" />
-                <span>AI Tools</span>
+                <span>Document Intelligence</span>
               </Link>
 
               <Link
@@ -136,7 +136,7 @@ export const Navbar: React.FC = () => {
                 href="/about"
                 className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors"
               >
-                About & Privacy
+                About
               </Link>
             </nav>
           </div>

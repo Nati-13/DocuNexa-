@@ -88,7 +88,35 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
               onClick={onClose}
               className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              About & Privacy
+              About DocuNexa
+            </Link>
+            <Link
+              href="/privacy"
+              onClick={onClose}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/security"
+              onClick={onClose}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Security Architecture
+            </Link>
+            <Link
+              href="/terms"
+              onClick={onClose}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/contact"
+              onClick={onClose}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Contact Us
             </Link>
           </div>
 
@@ -140,8 +168,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
 
         {/* Footer info */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-[11px] text-slate-600 dark:text-slate-300">
-          <p className="font-semibold text-emerald-700 dark:text-emerald-300">✓ 100% Client-Side Privacy</p>
-          <p className="mt-0.5">Files never leave your device.</p>
+          <p className="font-semibold text-emerald-700 dark:text-emerald-300">✓ Client-Side Document Privacy</p>
+          <p className="mt-0.5">Files are processed locally in your browser.</p>
         </div>
       </div>
     </div>

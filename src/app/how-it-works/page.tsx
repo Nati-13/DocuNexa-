@@ -15,7 +15,11 @@ import {
 
 export const metadata = {
   title: 'How It Works — DocuNexa All-In-One PDF Workspace',
-  description: 'Understand how DocuNexa processes documents 100% in your browser and how our automatic Unit Cutter engine slices textbooks.',
+  description:
+    'Understand how DocuNexa processes documents locally in your browser and how our automatic Unit Cutter engine slices textbooks.',
+  alternates: {
+    canonical: 'https://docunexa.pro.et/how-it-works',
+  },
 };
 
 export default function HowItWorksPage() {
@@ -62,7 +66,7 @@ export default function HowItWorksPage() {
             How DocuNexa Works
           </h1>
           <p className="text-slate-700 dark:text-slate-200 text-base sm:text-lg leading-relaxed">
-            A revolutionary privacy-first architecture that executes military-grade PDF algorithms directly in your browser.
+            A privacy-first architecture that executes standard PDF processing algorithms directly in your browser.
           </p>
         </div>
 

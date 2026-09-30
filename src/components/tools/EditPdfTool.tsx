@@ -312,7 +312,7 @@ export function EditPdfTool() {
         onFilesSelected={handleFileSelected}
         accept=".pdf,application/pdf"
         title="Drop a PDF to Edit"
-        subtitle="Draggable text stamps • Live canvas preview • 100% Client-Side & Free"
+        subtitle="Draggable text stamps • Live canvas preview • Client-Side & Free"
       />
     </div>
   );

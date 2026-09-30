@@ -115,7 +115,7 @@ export default function HomePage() {
   const faqs = [
     {
       q: 'Are my PDF documents uploaded to a remote server?',
-      a: 'No. DocuNexa is built on a 100% client-side, privacy-first architecture. All parsing, unit detection, splitting, merging, and transformations execute directly in your browser memory using WebAssembly and Web Workers. Your files never leave your computer.',
+      a: 'No. DocuNexa is built on a client-side, privacy-first architecture. Document parsing, unit detection, splitting, merging, and transformations execute directly in your browser memory using WebAssembly and Web Workers. Your files are processed locally on your device.',
     },
     {
       q: 'How does the PDF Unit Cutter automatically detect units in a textbook?',
@@ -127,7 +127,7 @@ export default function HomePage() {
     },
     {
       q: 'Does splitting reduce the quality of text or images?',
-      a: 'Never. Unlike simplistic tools that convert pages to low-resolution JPEG screenshots, DocuNexa uses native PDF object copying. Vector graphics, searchable text layers, mathematical formulas, and font definitions are 100% losslessly preserved.',
+      a: 'Never. Unlike simplistic tools that convert pages to low-resolution JPEG screenshots, DocuNexa uses native PDF object copying. Vector graphics, searchable text layers, mathematical formulas, and font definitions are losslessly preserved.',
     },
     {
       q: 'Can I save the sliced PDFs directly into a folder on my computer?',
@@ -183,18 +183,17 @@ export default function HomePage() {
           </a>
         </div>
 
-        {/* Trust & Guarantee stats */}
         <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-600 dark:text-slate-300">
           <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-semibold">
             <ShieldCheck size={16} className="text-emerald-500" />
-            100% In-Browser Privacy
+            Client-Side Document Privacy
           </span>
           <span>•</span>
-          <span>Zero Server Storage</span>
+          <span>Zero Document Uploads</span>
           <span>•</span>
           <span>Lossless Vector Quality</span>
           <span>•</span>
-          <span>Free Forever</span>
+          <span>Completely Free</span>
         </div>
       </section>
 
@@ -330,7 +329,7 @@ export default function HomePage() {
                 >
                   <Sparkles size={20} className="text-indigo-500 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">AI Summarizer</span>
+                    <span className="font-bold text-xs text-slate-900 dark:text-white block">Document Summarizer</span>
                     <span className="text-[11px] text-slate-700 dark:text-slate-200">Extract takeaways & study questions</span>
                   </div>
                 </Link>
@@ -748,13 +747,13 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
-              title: '100% In-Browser Safe',
+              title: 'In-Browser Processing',
               desc: 'Your files are parsed and manipulated in your device memory. Zero uploads to external servers.',
               icon: ShieldCheck,
             },
             {
               title: 'Lossless Vector Quality',
-              desc: 'No rasterization to low-resolution JPGs. Vectors, text, formulas, and fonts remain 100% sharp.',
+              desc: 'No rasterization to low-resolution JPGs. Vectors, text, formulas, and fonts remain crisp and vector-precise.',
               icon: Zap,
             },
             {
@@ -897,7 +896,7 @@ export default function HomePage() {
                 <span className="text-xs text-slate-500 dark:text-slate-400">/ forever free</span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                DocuNexa is a non-monetized public resource. Every tool is unlocked for everyone.
+                DocuNexa is a completely free document toolkit. Every tool is unlocked for everyone without paywalls or subscriptions.
               </p>
               <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
                 <li className="flex items-center gap-2">
