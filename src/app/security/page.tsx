@@ -152,7 +152,7 @@ export default function SecurityPage() {
                 5. OCR Language Data Retrieval vs. Document Processing
               </h3>
               <p className="text-slate-300 leading-relaxed">
-                Optical character recognition (OCR PDF) analyzes document pages locally in your browser using a Tesseract.js WebAssembly worker. To execute recognition, the engine retrieves required public language model files (such as English or Amharic <code>.traineddata.gz</code>) on-demand from the public jsDelivr CDN repository into local browser cache/IndexedDB. Document pages, rendered canvas pixels, and extracted text never leave your device.
+                Optical character recognition (OCR PDF) analyzes document pages locally in your browser using a Tesseract.js WebAssembly worker. To execute recognition, the engine retrieves required public language model files (such as English or Amharic <code>.traineddata.gz</code>) on-demand from the public jsDelivr CDN repository into local browser cache/IndexedDB. Document pages, rendered canvas pixels, and extracted text are processed locally in browser memory without cloud server transmission.
               </p>
             </div>
           </div>

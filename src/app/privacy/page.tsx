@@ -74,7 +74,7 @@ export default function PrivacyPage() {
             <div className="flex items-start gap-2.5">
               <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
               <span>
-                <strong>No Tracking Cookies Currently:</strong> We do not currently use behavioral tracking cookies or third-party ad pixels.
+                <strong>Transparent Advertising:</strong> Monetag advertising technology is integrated to fund free hosting; document processing remains client-side.
               </span>
             </div>
           </div>
@@ -212,34 +212,40 @@ export default function PrivacyPage() {
                   Like virtually all web applications, our edge serverless hosting provider records standard HTTP connection metadata (IP address, browser user-agent, operating system, and request timestamps) strictly for technical network routing, DDoS mitigation, and system performance. DocuNexa does not harvest or sell personal usage telemetry.
                 </p>
               </div>
+              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <p className="font-bold text-slate-900 dark:text-white">E. Advertising Delivery (Monetag):</p>
+                <p className="mt-0.5">
+                  DocuNexa integrates Monetag (via <code>tag.min.js</code> and service worker) to display advertisements that support operating costs. When you load pages, the advertising script may make network requests to Monetag infrastructure and may utilize browser identifiers, cookies, local storage, or related web technologies to deliver, measure, and optimize advertising impressions. Monetag scripts do not have access to your document files or local document processing memory.
+                </p>
+              </div>
             </div>
           </section>
 
-          {/* Section 6: Future Advertising & AdSense Readiness */}
+          {/* Section 6: Advertising & Monetization Disclosures */}
           <section className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white space-y-4 shadow-lg border border-slate-800">
             <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
               <Megaphone size={20} className="text-brand-400" />
-              6. Advertising and Third-Party Services (Future Implementation)
+              6. Advertising and Monetization Disclosures
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              DocuNexa is a free public service that does not charge fees or require paid subscriptions. To help cover ongoing hosting and development costs, DocuNexa is intended to display advertisements supported by third-party advertising services (such as Google AdSense) in the future.
+              DocuNexa is a free public service that does not charge fees or require paid subscriptions. To help cover ongoing hosting, compute, and bandwidth expenses, DocuNexa displays advertisements supported by third-party advertising partners.
             </p>
             <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2 text-xs text-slate-300">
               <p className="font-semibold text-white">
-                Current Status & Future Commitment:
+                Advertising Technologies & Safeguards:
               </p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-400">
+              <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
                 <li>
-                  <strong>Current Status:</strong> Google AdSense is <em>not currently installed or active</em> on DocuNexa. No third-party advertising cookies, web beacons, or tracking pixels are currently deployed.
+                  <strong>Monetag Integration:</strong> DocuNexa integrates Monetag advertising technology. Monetag and its advertising partners may use cookies, device identifiers, IP addresses, and browsing telemetry to deliver, measure, and optimize advertisements.
                 </li>
                 <li>
-                  <strong>Future Advertising Behavior:</strong> When advertising services are approved and enabled, advertising vendors (including Google) may use cookies, device identifiers, or similar technologies to serve relevant advertisements based on a user&apos;s prior visits to this or other websites.
+                  <strong>Document Isolation Guarantee:</strong> Third-party advertising tags run with standard web client permissions and have strictly zero access to your document bytes, in-memory PDF structures, or local file processing pipelines.
                 </li>
                 <li>
-                  <strong>Consent Architecture:</strong> Prior to activating personalized advertising, DocuNexa will provide a transparent consent management mechanism allowing visitors to accept, reject, or customize their advertising cookie preferences in accordance with applicable regional data protection regulations (such as GDPR and CCPA).
+                  <strong>Google AdSense Status:</strong> Google AdSense is not currently active on DocuNexa. If AdSense or other providers are enabled in the future, this policy will be updated accordingly.
                 </li>
                 <li>
-                  <strong>Ad Placement Boundaries:</strong> Advertisements will always be clearly labeled as &quot;Advertisement&quot; and will never disguise themselves as fake download buttons or interfere with your document files.
+                  <strong>Ad Placement Boundaries:</strong> Advertisements are strictly separated from tool workspaces and will never disguise themselves as fake download buttons, deceive visitors, or overlay file upload and document manipulation controls.
                 </li>
               </ul>
             </div>

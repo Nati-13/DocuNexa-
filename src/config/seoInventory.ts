@@ -908,7 +908,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     capabilities: [
       'Client-side PDF encryption using @pdfsmaller/pdf-encrypt WebAssembly',
       'Password protection restricting unauthorized document viewing',
-      'Zero server upload: cryptographic keys and files never leave your computer',
+      'Zero server upload: cryptographic keys and document data are processed locally in your browser memory',
       'Compatible with standard PDF readers requiring password entry',
     ],
     limitations: [

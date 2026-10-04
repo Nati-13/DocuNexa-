@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -117,6 +118,13 @@ export default function RootLayout({
           {children}
         </div>
         <Footer />
+        <Script
+          src="https://quge5.com/88/tag.min.js"
+          data-zone="289364"
+          data-cfasync="false"
+          async
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
