@@ -213,9 +213,15 @@ export default function PrivacyPage() {
                 </p>
               </div>
               <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">E. Advertising Delivery (Monetag):</p>
+                <p className="font-bold text-slate-900 dark:text-white">E. Advertising Delivery (Monetag & Plan Distinctions):</p>
                 <p className="mt-0.5">
-                  DocuNexa integrates Monetag (via <code>tag.min.js</code> and service worker) to display advertisements that support operating costs. When you load pages, the advertising script may make network requests to Monetag infrastructure and may utilize browser identifiers, cookies, local storage, or related web technologies to deliver, measure, and optimize advertising impressions. Monetag scripts do not have access to your document files or local document processing memory.
+                  DocuNexa integrates Monetag (via <code>tag.min.js</code> and service worker) to display advertisements that support operating costs for free users. For anonymous visitors and registered Free plan users, Monetag advertising technology is used to deliver, measure, and optimize advertising impressions. For authenticated Ad-Free users, DocuNexa does not intentionally initialize Monetag advertising scripts or service workers for their account. In all cases, advertising scripts run in standard web isolation and have strictly zero access to your document files or local document processing memory.
+                </p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <p className="font-bold text-slate-900 dark:text-white">F. Cryptocurrency Payment Processing & Bybit Verification:</p>
+                <p className="mt-0.5">
+                  When you choose to upgrade to the $2 USD Ad-Free plan, payments are made directly in cryptocurrency (USDT on the Polygon PoS network) to a Bybit-hosted deposit address. DocuNexa queries Bybit&apos;s read-only deposit record API (<code>GET /v5/asset/deposit/query-record</code>) to match and verify your on-chain payment. Public blockchain transaction information (including transaction hash, recipient address, block timestamp, confirmations, and amount) is retrieved and processed to confirm payment. Our database (Supabase) stores the minimum payment/order metadata (order ID, user ID, status, transaction ID, and timestamp) necessary to activate and maintain your Ad-Free entitlement. We do not process or store private keys, fund passwords, or personal financial account credentials. We do not claim 100% anonymity, zero data processing, or zero third-party requests; network operations and payment verifications require strictly disclosed server communications.
                 </p>
               </div>
             </div>
@@ -228,15 +234,18 @@ export default function PrivacyPage() {
               6. Advertising and Monetization Disclosures
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              DocuNexa is a free public service that does not charge fees or require paid subscriptions. To help cover ongoing hosting, compute, and bandwidth expenses, DocuNexa displays advertisements supported by third-party advertising partners.
+              DocuNexa offers free PDF tools supported by advertisements, alongside an optional $2 USD one-time Ad-Free plan.
             </p>
             <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2 text-xs text-slate-300">
               <p className="font-semibold text-white">
-                Advertising Technologies & Safeguards:
+                Advertising Technologies & Plan Safeguards:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
                 <li>
-                  <strong>Monetag Integration:</strong> DocuNexa integrates Monetag advertising technology. Monetag and its advertising partners may use cookies, device identifiers, IP addresses, and browsing telemetry to deliver, measure, and optimize advertisements.
+                  <strong>Free Users:</strong> For anonymous visitors and registered Free plan accounts, DocuNexa uses Monetag advertising technology. Monetag and its advertising partners may use cookies, device identifiers, IP addresses, and browsing telemetry to deliver, measure, and optimize advertisements.
+                </li>
+                <li>
+                  <strong>Ad-Free Users:</strong> For authenticated accounts that have purchased the Ad-Free upgrade, DocuNexa does not intentionally initialize Monetag advertising for their account. The Monetag script tag is excluded from server-rendered pages and any previously active Monetag service worker registration is safely unregistered.
                 </li>
                 <li>
                   <strong>Document Isolation Guarantee:</strong> Third-party advertising tags run with standard web client permissions and have strictly zero access to your document bytes, in-memory PDF structures, or local file processing pipelines.
@@ -251,40 +260,66 @@ export default function PrivacyPage() {
             </div>
           </section>
 
-          {/* Section 7: User Inquiries & Communications */}
+          {/* Section 7: Optional Accounts, Coupon Codes & Payment Processing */}
           <section className="space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              7. Inquiries, Bug Reports & Communications
+              7. Optional Accounts, Coupon Codes & Cryptocurrency Payments
+            </h2>
+            <p>
+              While public PDF tools remain completely anonymous and account-free, users who voluntarily register an account or upgrade to Ad-Free provide limited information necessary to deliver and verify the service:
+            </p>
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm">
+              <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
+                <li>
+                  <strong>Account Identification:</strong> When creating an optional account, we store your email address and chosen plan status (Free or Ad-Free) managed securely through Supabase Authentication and PostgreSQL database.
+                </li>
+                <li>
+                  <strong>Payment & Order Metadata:</strong> When initiating an Ad-Free upgrade, we record order identifiers, the required payment amount (USDT), expiration timestamps, and public blockchain deposit transaction hashes (txID) to confirm payment. We do not store or collect personal banking credentials, credit card numbers, or crypto private keys.
+                </li>
+                <li>
+                  <strong>Coupon Code Redemptions:</strong> If you apply a promotional coupon code, we store the normalized code, the discount amount granted, and redemption timestamps associated with your payment order to enforce per-user redemption limits and prevent abuse.
+                </li>
+                <li>
+                  <strong>Data Minimization:</strong> Payment and account records are used solely to verify entitlements, provide administrative support, and enforce usage policies. They are never sold or shared with marketing third parties.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 8: User Inquiries & Communications */}
+          <section className="space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              8. Inquiries, Bug Reports & Communications
             </h2>
             <p>
               If you contact us via email or submit an issue on our public GitHub repository, we receive the information you provide (such as your email address, name or GitHub handle, and message details). This information is used exclusively to respond to your inquiry, troubleshoot bug reports, or consider feature recommendations. We do not sell, rent, or use contact information for unsolicited marketing.
             </p>
           </section>
 
-          {/* Section 8: User Rights */}
+          {/* Section 9: User Rights */}
           <section className="space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              8. User Rights & Data Retention
+              9. User Rights & Data Retention
             </h2>
             <p>
-              Because DocuNexa does not require accounts, store document contents, or maintain personal user databases, we do not hold personal document records on our servers. You have complete control over your files: you decide what files to open in your browser, and you can clear all active state instantly by closing the browser tab or clearing local browser cache.
+              Because DocuNexa does not require accounts or store document contents, you retain complete sovereignty over your documents. If you have created an optional account, you may request deletion of your account and associated profile data by contacting us.
             </p>
           </section>
 
-          {/* Section 9: Updates to this Policy */}
+          {/* Section 10: Updates to this Policy */}
           <section className="space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              9. Changes to this Privacy Policy
+              10. Changes to this Privacy Policy
             </h2>
             <p>
               We may update this Privacy Policy periodically to reflect technological adjustments, new tool features, or future advertising configurations. Any revisions will be published on this page with an updated &quot;Last Updated&quot; date.
             </p>
           </section>
 
-          {/* Section 10: Contact Information */}
+          {/* Section 11: Contact Information */}
           <section className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              10. Contact Us
+              11. Contact Us
             </h2>
             <p>
               If you have any questions, suggestions, or concerns regarding this Privacy Policy or our client-side architecture, please contact the maintainer:

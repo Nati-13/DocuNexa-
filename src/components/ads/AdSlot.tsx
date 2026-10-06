@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 export interface AdSlotProps {
   placement?: 'banner' | 'rectangle' | 'in-feed';
@@ -13,7 +14,7 @@ export interface AdSlotProps {
  * Accessible, privacy-conscious advertisement component.
  * Prevents cumulative layout shift (CLS) by reserving min-height.
  * Strictly avoids loading external scripts unless explicitly enabled with a valid client ID.
- * NEVER renders deceptive or disguised download buttons.
+ * Collapses completely for authenticated Ad-Free users.
  */
 export const AdSlot: React.FC<AdSlotProps> = ({
   placement,
@@ -21,6 +22,12 @@ export const AdSlot: React.FC<AdSlotProps> = ({
   slotId,
   className = '',
 }) => {
+  const { user } = useAuth();
+
+  if (user?.plan === 'ad_free') {
+    return null;
+  }
+
   const effectivePlacement: 'banner' | 'rectangle' | 'in-feed' =
     placement || (format === 'rectangle' ? 'rectangle' : format === 'responsive' ? 'in-feed' : 'banner');
 

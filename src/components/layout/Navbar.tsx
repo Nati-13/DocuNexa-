@@ -18,6 +18,7 @@ import { DocuNexaLogo } from '@/components/common/DocuNexaLogo';
 import { MegaMenu } from '@/components/layout/MegaMenu';
 import { MobileDrawer } from '@/components/layout/MobileDrawer';
 import { SearchModal } from '@/components/common/SearchModal';
+import { NavbarAuthControls } from '@/components/layout/NavbarAuthControls';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -164,12 +165,15 @@ export const Navbar: React.FC = () => {
               {isDarkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
             </button>
 
+            {/* Auth / Account Controls */}
+            <NavbarAuthControls />
+
             {/* Direct CTA */}
             <Link
               href="/tools"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm shadow-brand-500/25 transition-all hover:shadow-brand-500/40 hover:scale-[1.02]"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm shadow-brand-500/25 transition-all hover:shadow-brand-500/40 hover:scale-[1.02]"
             >
-              <span>Get Started</span>
+              <span>Tools</span>
               <ArrowRight size={13} />
             </Link>
 

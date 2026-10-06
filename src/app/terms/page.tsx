@@ -135,14 +135,119 @@ export default function TermsPage() {
               5. Advertising & Third-Party Links
             </h2>
             <p>
-              DocuNexa may display third-party advertisements (such as Google AdSense) in the future to help fund infrastructure and ongoing maintenance. DocuNexa does not endorse or assume responsibility for products, content, or services advertised by third parties. Your interactions with third-party advertisers are governed solely by their respective terms and privacy policies.
+              DocuNexa displays third-party advertisements (such as Monetag) to help fund free hosting and infrastructure maintenance. DocuNexa does not endorse or assume responsibility for products, content, or services advertised by third parties. Your interactions with third-party advertisers are governed solely by their respective terms and privacy policies.
             </p>
           </section>
 
-          {/* Section 6 */}
+          {/* Section 6: Ad-Free Upgrade & Cryptocurrency Payments */}
           <section className="space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              6. Disclaimer of Warranties
+              6. Ad-Free Upgrade & Cryptocurrency Payments
+            </h2>
+            <p>
+              DocuNexa offers an optional paid upgrade for users who prefer an advertising-free workspace:
+            </p>
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pb-3 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                <div>
+                  <span className="block text-[11px] font-bold uppercase text-slate-400">Price</span>
+                  <span className="font-bold text-slate-900 dark:text-white">$2.00 USD</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase text-slate-400">Currency</span>
+                  <span className="font-bold text-slate-900 dark:text-white">USDT</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase text-slate-400">Network</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Polygon (PoS)</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase text-slate-400">Type</span>
+                  <span className="font-bold text-slate-900 dark:text-white">One-time payment</span>
+                </div>
+              </div>
+
+              <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400">
+                <li>
+                  <strong>Pricing & Discounts:</strong> The standard price for DocuNexa Ad-Free is $2.00 USD. When a valid promotional coupon code is applied, the final payable price is discounted accordingly (e.g. 25% off reduces the price to $1.50).
+                </li>
+                <li>
+                  <strong>Unique Payment Amount:</strong> Each order generates a unique payment amount based on the final price (e.g. 2.004821 USDT for normal orders or 1.504821 USDT when discounted) with 6 decimal places to uniquely identify your deposit on the Polygon blockchain without requiring personal banking information.
+                </li>
+                <li>
+                  <strong>Exact Amount Requirement:</strong> Customers must send <strong>EXACTLY</strong> the displayed amount. Any discrepancy (even $0.000001) will prevent automatic activation and will require manual administrative review.
+                </li>
+                <li>
+                  <strong>20-Minute Payment Window:</strong> Payment orders and their assigned unique amounts remain active for exactly 20 minutes from creation. Deposits must be confirmed within this window.
+                </li>
+                <li>
+                  <strong>Verification & Confirmation Timing:</strong> Payments are verified server-to-server using Bybit&apos;s official on-chain deposit record API. Account upgrade occurs ONLY after the deposit is fully confirmed by the Polygon blockchain and credited by Bybit. We do not promise instant confirmation; verification typically completes within a few minutes depending on network conditions.
+                </li>
+                <li>
+                  <strong>Scope of Ad-Free:</strong> Ad-Free removes Monetag advertising scripts, banners, and service workers across DocuNexa web properties only.
+                </li>
+              </ul>
+            </div>
+
+            {/* Promotional Coupon Terms */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Promotional Coupon Codes
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                DocuNexa may issue promotional coupon codes granting percentage or fixed USDT discounts toward the Ad-Free upgrade:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
+                <li>
+                  <strong>Eligibility:</strong> Coupon codes apply exclusively to the DocuNexa Ad-Free upgrade and do not apply to other products or third-party services.
+                </li>
+                <li>
+                  <strong>Non-Cash Value:</strong> Coupons have no independent cash value, cannot be redeemed or exchanged for legal tender or cryptocurrency, and cannot be refunded.
+                </li>
+                <li>
+                  <strong>Server-Side Authority:</strong> Validity, eligible discount percentage or value, and expiration are strictly determined by our server-side database. Client-side modifications or unauthorized alterations are automatically rejected.
+                </li>
+                <li>
+                  <strong>Usage Limits:</strong> Coupons may have specific start dates, expiration dates, total maximum redemption caps, and per-user limits (defaulting to one redemption per registered account).
+                </li>
+                <li>
+                  <strong>Redemption Timing:</strong> A coupon is officially redeemed only upon successful on-chain confirmation of the associated payment order. Creating a checkout without completing payment does not consume a limited redemption.
+                </li>
+              </ul>
+            </div>
+
+            {/* Refund & Payment Resolution Policy */}
+            <div className="p-5 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Refund & Payment Exception Policy
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Cryptocurrency transfers on public blockchains are irreversible. DocuNexa does not operate automatic refund smart contracts or automatic reversal payout bots. Our policy regarding payment exceptions is as follows:
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400">
+                <li>
+                  <strong>Duplicate Payments:</strong> If multiple payments are sent for the same order, automatic entitlement is granted only once. Duplicate funds cannot be refunded automatically. Customers should contact support with the transaction hashes for manual review.
+                </li>
+                <li>
+                  <strong>Wrong Amount:</strong> If a deposit arrives with an amount differing from the exact order amount, the order enters an <code>amount_mismatch</code> state. Ad-Free status will not activate automatically. Contact support with your transaction hash to verify and resolve the order manually.
+                </li>
+                <li>
+                  <strong>Late Payments:</strong> If a payment is detected after the 20-minute order window expires, the order is marked as <code>late_payment</code>. Ad-Free status is not automatically enabled. Contact support with your order ID and transaction hash for manual entitlement credit.
+                </li>
+                <li>
+                  <strong>Wrong Network:</strong> If USDT is sent using an unsupported network (such as Ethereum, Binance Smart Chain, or Tron) instead of the required Polygon PoS network, DocuNexa&apos;s Polygon deposit checker will not detect the payment. DocuNexa cannot retrieve or refund funds sent to incorrect networks or incompatible addresses.
+                </li>
+                <li>
+                  <strong>Technical Payment Failure:</strong> If a confirmed on-chain deposit is verified by Bybit but fails to credit your DocuNexa account due to a server-side synchronization error, our support team will manually verify the deposit and activate your Ad-Free status upon receiving your order ID and transaction hash.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 7 */}
+          <section className="space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              7. Disclaimer of Warranties
             </h2>
             <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm text-amber-900 dark:text-amber-200">
               <p>
@@ -151,30 +256,30 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 7 */}
+          {/* Section 8 */}
           <section className="space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              7. Limitation of Liability
+              8. Limitation of Liability
             </h2>
             <p>
               To the fullest extent permitted by applicable law, DocuNexa and its maintainer shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of data, profits, or goodwill, arising out of or in connection with your use of or inability to use the service.
             </p>
           </section>
 
-          {/* Section 8 */}
+          {/* Section 9 */}
           <section className="space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              8. Modifications to Service & Terms
+              9. Modifications to Service & Terms
             </h2>
             <p>
               We reserve the right to modify, improve, or temporarily suspend any tool or feature at any time without prior notice. These Terms may also be updated periodically. Your continued use of DocuNexa following any modifications constitutes your acceptance of the updated Terms.
             </p>
           </section>
 
-          {/* Section 9 */}
+          {/* Section 10 */}
           <section className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              9. Contact & Inquiries
+              10. Contact & Inquiries
             </h2>
             <p>
               For any questions regarding these Terms of Service or tool usage, please reach out to the project maintainer:

@@ -3,6 +3,9 @@ import Script from 'next/script';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { getCurrentUser } from '@/lib/auth';
+import { AuthProvider } from '@/context/AuthContext';
+import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -71,11 +74,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+  const isAdFree = user?.plan === 'ad_free';
+
   const rootJsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -113,18 +119,24 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors">
-        <Navbar />
-        <div className="flex-1">
-          {children}
-        </div>
-        <Footer />
-        <Script
-          src="https://quge5.com/88/tag.min.js"
-          data-zone="289364"
-          data-cfasync="false"
-          async
-          strategy="afterInteractive"
-        />
+        <AuthProvider initialUser={user ? { id: user.id, email: user.email, plan: user.plan, created_at: user.created_at } : null}>
+          <Navbar />
+          <div className="flex-1">
+            {children}
+          </div>
+          <Footer />
+        </AuthProvider>
+        {isAdFree ? (
+          <MonetagServiceWorkerCleanup />
+        ) : (
+          <Script
+            src="https://quge5.com/88/tag.min.js"
+            data-zone="289364"
+            data-cfasync="false"
+            async
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
