@@ -180,6 +180,35 @@ async function runTests() {
   assert(!wrongKeyBootstrap.success, 'Enforces ADMIN_SETUP_KEY when set in environment');
   delete process.env.ADMIN_SETUP_KEY;
 
+  // --- SECTION 7: FAIL CLOSED & PROVIDER CHECKS ---
+  console.log('\n--- 7. PRIVILEGED SERVER SECRETS & FAIL CLOSED ---');
+
+  const { createAdminSupabaseClient } = await import('../src/lib/supabase/server');
+  const origServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const origSecretKey = process.env.SUPABASE_SECRET_KEY;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.SUPABASE_SECRET_KEY;
+
+  let threwWithoutSecret = false;
+  try {
+    createAdminSupabaseClient();
+  } catch (err: any) {
+    threwWithoutSecret = true;
+  }
+  assert(threwWithoutSecret, 'createAdminSupabaseClient fails closed when server secret key is missing');
+
+  // Restore keys
+  if (origServiceKey) process.env.SUPABASE_SERVICE_ROLE_KEY = origServiceKey;
+  if (origSecretKey) process.env.SUPABASE_SECRET_KEY = origSecretKey;
+
+  const { sendPasswordResetEmail } = await import('../src/lib/auth/email');
+  const origEnv = process.env.NODE_ENV;
+  (process.env as any).NODE_ENV = 'production';
+  delete process.env.RESEND_API_KEY;
+  const missingEmailRes = await sendPasswordResetEmail({ to: 'test@example.com', code: '1234AB' });
+  assert(!missingEmailRes.success, 'sendPasswordResetEmail treats missing RESEND_API_KEY as unavailable (no silent success)');
+  (process.env as any).NODE_ENV = origEnv;
+
   console.log('\n======================================================');
   console.log(`TOTAL: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
   console.log('======================================================\n');

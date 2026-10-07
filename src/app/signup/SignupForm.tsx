@@ -7,14 +7,10 @@ import { DocuNexaLogo } from '@/components/common/DocuNexaLogo';
 import { useAuth } from '@/context/AuthContext';
 import {
   AlertCircle,
-  CheckCircle2,
   Lock,
   Mail,
   ArrowRight,
   Loader2,
-  RefreshCw,
-  Inbox,
-  ArrowLeft,
 } from 'lucide-react';
 
 export function SignupForm() {
@@ -26,12 +22,6 @@ export function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Confirmation screen state
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
-  const [resending, setResending] = useState(false);
-  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,13 +62,7 @@ export function SignupForm() {
         throw new Error(data.error || 'Failed to create account.');
       }
 
-      if (data.requiresConfirmation) {
-        setRegisteredEmail(data.email || email);
-        setShowConfirmation(true);
-        setLoading(false);
-        return;
-      }
-
+      // Refresh session client-side and redirect directly to /choose-plan
       await refreshUser();
       router.push(data.redirect || '/choose-plan');
     } catch (err: any) {
@@ -87,93 +71,6 @@ export function SignupForm() {
     }
   };
 
-  const handleResendConfirmation = async () => {
-    setResending(true);
-    setResendStatus(null);
-    try {
-      const res = await fetch('/api/auth/resend-confirmation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: registeredEmail }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to resend confirmation email.');
-      }
-      setResendStatus('Confirmation email resent! Please check your inbox and spam folder.');
-    } catch (err: any) {
-      setResendStatus(err.message || 'Unable to resend confirmation right now. Please wait a moment.');
-    } finally {
-      setResending(false);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // Confirmation Screen View
-  // --------------------------------------------------------------------------
-  if (showConfirmation) {
-    return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 text-center">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900 flex items-center justify-center text-brand-600 dark:text-brand-400">
-            <Inbox size={32} />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-2">
-            Check your inbox
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-            We sent a verification link to:
-          </p>
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-mono font-semibold text-slate-900 dark:text-white">
-            {registeredEmail}
-          </div>
-        </div>
-
-        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          Please click the link inside the confirmation email to verify your account and activate your tools.
-        </p>
-
-        {resendStatus && (
-          <div
-            role="status"
-            className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2 text-left"
-          >
-            <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-            <span>{resendStatus}</span>
-          </div>
-        )}
-
-        <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <button
-            onClick={handleResendConfirmation}
-            disabled={resending}
-            className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            {resending ? (
-              <>
-                <Loader2 size={14} className="animate-spin" /> Resending...
-              </>
-            ) : (
-              <>
-                <RefreshCw size={14} /> Resend confirmation email
-              </>
-            )}
-          </button>
-
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline pt-1"
-          >
-            <ArrowLeft size={14} /> Back to login
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // Standard Signup Form View
-  // --------------------------------------------------------------------------
   return (
     <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
       <div className="flex flex-col items-center text-center space-y-2">

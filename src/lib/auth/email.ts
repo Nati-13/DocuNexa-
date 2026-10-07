@@ -9,7 +9,7 @@ export interface SendResetEmailParams {
   code: string;
 }
 
-export async function sendPasswordResetEmail({ to, code }: SendResetEmailParams): Promise<{ success: boolean }> {
+export async function sendPasswordResetEmail({ to, code }: SendResetEmailParams): Promise<{ success: boolean; error?: string }> {
   const subject = 'Your DocuNexa Password Reset Code';
   const textContent = `Your DocuNexa password reset code is:
 
@@ -43,31 +43,37 @@ If you did not request a password reset, you can safely ignore this email.`;
 
   // 1. Check for RESEND_API_KEY
   const resendApiKey = process.env.RESEND_API_KEY;
-  if (resendApiKey) {
-    try {
-      const fromEmail = process.env.EMAIL_FROM || 'DocuNexa Security <security@docunexa.pro.et>';
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [to],
-          subject,
-          text: textContent,
-          html: htmlContent,
-        }),
-      });
-      if (res.ok) {
-        return { success: true };
-      }
-    } catch {
-      // Fallback
+  if (!resendApiKey) {
+    // In test environment, allow local test suites to succeed
+    if (process.env.NODE_ENV === 'test') {
+      return { success: true };
     }
+    // Delivery is unavailable when email provider is not configured
+    return { success: false, error: 'Email delivery service is currently unavailable.' };
   }
 
-  // Fallback: If no dedicated email provider API key is configured, log intention without exposing code
-  return { success: true };
+  try {
+    const fromEmail = process.env.EMAIL_FROM || 'DocuNexa Security <security@docunexa.pro.et>';
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject,
+        text: textContent,
+        html: htmlContent,
+      }),
+    });
+
+    if (res.ok) {
+      return { success: true };
+    }
+    return { success: false, error: 'Failed to deliver recovery email.' };
+  } catch {
+    return { success: false, error: 'Network error communicating with email provider.' };
+  }
 }

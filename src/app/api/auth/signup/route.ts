@@ -49,32 +49,33 @@ export async function POST(req: Request) {
       return secureJsonResponse({ error: 'Passwords do not match.' }, { status: 400 }, requestId);
     }
 
-    const supabase = await createServerSupabaseClient();
     const admin = createAdminSupabaseClient();
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://docunexa.pro.et';
 
-    // 1. Create account via Supabase Auth with standard email confirmation
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // 1. Create account server-side via Supabase Auth admin API with email_confirm: true
+    // This avoids triggering Supabase's hosted email confirmation emails.
+    const { data: createData, error: createError } = await admin.auth.admin.createUser({
       email: cleanEmail,
       password,
-      options: {
-        emailRedirectTo: `${origin}/auth/callback?next=/choose-plan`,
-      },
+      email_confirm: true,
     });
 
-    if (authError) {
-      const lower = authError.message.toLowerCase();
-      if (lower.includes('already registered') || lower.includes('already in use') || lower.includes('user already exists')) {
+    if (createError) {
+      const lower = createError.message.toLowerCase();
+      if (
+        lower.includes('already registered') ||
+        lower.includes('already in use') ||
+        lower.includes('user already exists')
+      ) {
         return secureJsonResponse(
           { error: 'An account with this email address already exists. Please log in instead.' },
           { status: 409 },
           requestId
         );
       }
-      return secureJsonResponse({ error: authError.message || 'Registration failed.' }, { status: 400 }, requestId);
+      return secureJsonResponse({ error: createError.message || 'Registration failed.' }, { status: 400 }, requestId);
     }
 
-    const userId = authData.user?.id;
+    const userId = createData.user?.id;
     if (!userId) {
       return secureJsonResponse({ error: 'Failed to create user account. Please try again.' }, { status: 500 }, requestId);
     }
@@ -94,20 +95,34 @@ export async function POST(req: Request) {
       // Trigger handles creation if upsert fails
     }
 
-    // Check if session was immediately established or email confirmation is required
-    const requiresConfirmation = !authData.session;
+    // 3. Sign the newly-created user in using the existing SSR Supabase client
+    const supabase = await createServerSupabaseClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (signInError) {
+      return secureJsonResponse(
+        {
+          success: true,
+          user: { id: userId, email: cleanEmail, plan: 'free' },
+          redirect: '/login',
+        },
+        { status: 201 },
+        requestId
+      );
+    }
 
     return secureJsonResponse(
       {
         success: true,
-        requiresConfirmation,
-        email: cleanEmail,
         user: {
           id: userId,
           email: cleanEmail,
           plan: 'free',
         },
-        redirect: requiresConfirmation ? undefined : '/choose-plan',
+        redirect: '/choose-plan',
       },
       { status: 201 },
       requestId
