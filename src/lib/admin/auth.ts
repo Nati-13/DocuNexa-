@@ -23,6 +23,13 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
       .single();
 
     if (error || !data) return false;
+
+    // Verify email is confirmed
+    const { data: userData } = await admin.auth.admin.getUserById(userId);
+    if (!userData?.user || !userData.user.email_confirmed_at) {
+      return false;
+    }
+
     return true;
   } catch {
     return false;

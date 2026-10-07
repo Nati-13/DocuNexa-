@@ -274,6 +274,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      password_resets: {
+        Row: {
+          id: string;
+          user_id: string;
+          email: string;
+          code_hash: string;
+          expires_at: string;
+          attempts: number;
+          max_attempts: number;
+          used_at: string | null;
+          created_at: string;
+          request_ip_hash: string | null;
+          verification_token_hash: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email: string;
+          code_hash: string;
+          expires_at: string;
+          attempts?: number;
+          max_attempts?: number;
+          used_at?: string | null;
+          created_at?: string;
+          request_ip_hash?: string | null;
+          verification_token_hash?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          email?: string;
+          code_hash?: string;
+          expires_at?: string;
+          attempts?: number;
+          max_attempts?: number;
+          used_at?: string | null;
+          created_at?: string;
+          request_ip_hash?: string | null;
+          verification_token_hash?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

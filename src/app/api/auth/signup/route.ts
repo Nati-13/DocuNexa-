@@ -51,19 +51,19 @@ export async function POST(req: Request) {
 
     const supabase = await createServerSupabaseClient();
     const admin = createAdminSupabaseClient();
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://docunexa.pro.et';
 
-    // 1. Create or register user via Supabase Auth
-    // Use admin.auth.admin to guarantee email is confirmed so user is immediately active
-    let userId: string | null = null;
-
-    const { data: createData, error: createError } = await admin.auth.admin.createUser({
+    // 1. Create account via Supabase Auth with standard email confirmation
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
-      email_confirm: true,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback?next=/choose-plan`,
+      },
     });
 
-    if (createError) {
-      const lower = createError.message.toLowerCase();
+    if (authError) {
+      const lower = authError.message.toLowerCase();
       if (lower.includes('already registered') || lower.includes('already in use') || lower.includes('user already exists')) {
         return secureJsonResponse(
           { error: 'An account with this email address already exists. Please log in instead.' },
@@ -71,32 +71,15 @@ export async function POST(req: Request) {
           requestId
         );
       }
-      // If admin createUser is restricted, fallback to standard signUp
-      const { data: fallbackAuth, error: fallbackError } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password,
-      });
-
-      if (fallbackError) {
-        const status = fallbackError.message.toLowerCase().includes('already registered') ? 409 : 400;
-        return secureJsonResponse({ error: fallbackError.message || 'Registration failed.' }, { status }, requestId);
-      }
-      userId = fallbackAuth.user?.id || null;
-    } else {
-      userId = createData.user?.id || null;
+      return secureJsonResponse({ error: authError.message || 'Registration failed.' }, { status: 400 }, requestId);
     }
 
+    const userId = authData.user?.id;
     if (!userId) {
       return secureJsonResponse({ error: 'Failed to create user account. Please try again.' }, { status: 500 }, requestId);
     }
 
-    // 2. Automatically establish an active session so the user remains signed in for plan selection
-    const { data: sessionData } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
-      password,
-    });
-
-    // 3. Ensure profile row exists in public.profiles with default free plan
+    // 2. Ensure initial profile row exists in public.profiles with default free plan
     try {
       await admin.from('profiles').upsert(
         {
@@ -111,16 +94,20 @@ export async function POST(req: Request) {
       // Trigger handles creation if upsert fails
     }
 
+    // Check if session was immediately established or email confirmation is required
+    const requiresConfirmation = !authData.session;
+
     return secureJsonResponse(
       {
         success: true,
+        requiresConfirmation,
+        email: cleanEmail,
         user: {
           id: userId,
           email: cleanEmail,
           plan: 'free',
-          created_at: sessionData?.user?.created_at || new Date().toISOString(),
         },
-        redirect: '/choose-plan',
+        redirect: requiresConfirmation ? undefined : '/choose-plan',
       },
       { status: 201 },
       requestId

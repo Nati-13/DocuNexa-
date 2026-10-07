@@ -1,14 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DocuNexaLogo } from '@/components/common/DocuNexaLogo';
 import { useAuth } from '@/context/AuthContext';
-import { AlertCircle, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  Lock,
+  Mail,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
+  RefreshCw,
+} from 'lucide-react';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -16,9 +25,27 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Unconfirmed email resend state
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendFeedback, setResendFeedback] = useState<string | null>(null);
+
+  // Success message (e.g. from password reset or confirmation)
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('reset') === 'success') {
+      setSuccessNotice('Your password has been reset successfully. You can now sign in.');
+    } else if (searchParams.get('confirmed') === 'true') {
+      setSuccessNotice('Email address confirmed successfully! Please sign in to continue.');
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNeedsConfirmation(false);
+    setResendFeedback(null);
 
     if (!email || !password) {
       setError('Please enter both your email address and password.');
@@ -37,15 +64,44 @@ export function LoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.needsEmailConfirmation || (data.error && data.error.includes('confirm your email'))) {
+          setNeedsConfirmation(true);
+        }
         throw new Error(data.error || 'Invalid email or password.');
       }
 
       await refreshUser();
-      router.push('/account');
+      const redirectTarget = searchParams.get('redirect') || '/account';
+      router.push(redirectTarget);
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'An error occurred during login.');
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('Please provide your email address to resend confirmation.');
+      return;
+    }
+    setResending(true);
+    setResendFeedback(null);
+    try {
+      const res = await fetch('/api/auth/resend-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to resend confirmation email.');
+      }
+      setResendFeedback('Confirmation email resent! Please check your inbox.');
+    } catch (err: any) {
+      setResendFeedback(err.message || 'Error resending confirmation. Please wait a moment.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -61,13 +117,56 @@ export function LoginForm() {
         </p>
       </div>
 
+      {successNotice && (
+        <div
+          role="status"
+          className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-start gap-2.5 text-xs text-emerald-700 dark:text-emerald-300"
+        >
+          <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-emerald-600" />
+          <span>{successNotice}</span>
+        </div>
+      )}
+
       {error && (
         <div
           role="alert"
-          className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400"
+          className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 space-y-2 text-xs text-rose-600 dark:text-rose-400"
         >
-          <AlertCircle size={16} className="shrink-0 mt-0.5" />
-          <span>{error}</span>
+          <div className="flex items-start gap-2.5">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+
+          {needsConfirmation && (
+            <div className="pt-2 border-t border-rose-200/60 dark:border-rose-900/60">
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resending}
+                className="w-full py-1.5 px-3 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/50 dark:hover:bg-rose-900/80 text-rose-800 dark:text-rose-200 font-semibold text-[11px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {resending ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" /> Sending...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={12} /> Resend confirmation email
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {resendFeedback && (
+        <div
+          role="status"
+          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2"
+        >
+          <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+          <span>{resendFeedback}</span>
         </div>
       )}
 
@@ -89,7 +188,7 @@ export function LoginForm() {
               required
               autoComplete="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
             />
@@ -104,9 +203,12 @@ export function LoginForm() {
             >
               Password
             </label>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500" title="Contact support if you need password recovery">
+            <Link
+              href="/forgot-password"
+              className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline"
+            >
               Forgot password?
-            </span>
+            </Link>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -118,7 +220,7 @@ export function LoginForm() {
               required
               autoComplete="current-password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
             />

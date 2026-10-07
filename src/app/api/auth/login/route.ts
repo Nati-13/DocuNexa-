@@ -34,10 +34,12 @@ export async function POST(req: Request) {
       return secureJsonResponse({ error: 'Please enter a valid email address.' }, { status: 400 }, requestId);
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const supabase = await createServerSupabaseClient();
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password,
     });
 
@@ -51,7 +53,15 @@ export async function POST(req: Request) {
       }
 
       if (lower.includes('email not confirmed')) {
-        return secureJsonResponse({ error: 'Email address has not been confirmed yet. Please check your inbox or sign up again.' }, { status: 401 }, requestId);
+        return secureJsonResponse(
+          {
+            error: 'Please confirm your email address before signing in.',
+            needsEmailConfirmation: true,
+            email: cleanEmail,
+          },
+          { status: 403 },
+          requestId
+        );
       }
 
       if (lower.includes('rate limit') || lower.includes('too many requests')) {

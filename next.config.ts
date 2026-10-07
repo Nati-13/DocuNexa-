@@ -78,6 +78,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/admin/setup',
+        destination: '/admin-setup',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
