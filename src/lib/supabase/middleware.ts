@@ -57,8 +57,8 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.headers.set('Cache-Control', 'private, no-cache, no-store, max-age=0, must-revalidate');
   }
 
-  // Protected route checking: /admin requires active authenticated session
-  if (pathname.startsWith('/admin')) {
+  // Protected route checking: /admin requires active authenticated session (except first-time bootstrap)
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin-setup') && pathname !== '/admin/setup') {
     if (!user) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/login';
