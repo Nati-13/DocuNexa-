@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { getCurrentProfile } from '@/lib/supabase/server';
 import { isUserAdmin } from '@/lib/admin/auth';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { ShieldCheck, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ArrowLeft } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: 'Admin Control Center | DocuNexa',
@@ -27,7 +30,27 @@ export default async function AdminLayout({
 
   const isAdmin = await isUserAdmin(profile.id);
   if (!isAdmin) {
-    redirect('/account');
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center px-4 py-16 text-center">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 flex items-center justify-center text-rose-600 dark:text-rose-400">
+            <ShieldAlert size={24} />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">403 — Access Forbidden</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Administrator privileges are required to access this portal. Your account is not authorized for administrative access.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 text-white text-xs font-semibold hover:bg-brand-500 transition-all shadow-sm"
+            >
+              <ArrowLeft size={14} /> Return to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

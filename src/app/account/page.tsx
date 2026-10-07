@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation';
 import { getCurrentProfile, createServerSupabaseClient } from '@/lib/supabase/server';
 import { AccountView } from './AccountView';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'Your Account',
   description: 'Manage your DocuNexa account, plan entitlement, and preferences.',

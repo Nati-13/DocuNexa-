@@ -1,14 +1,24 @@
-import { NextResponse } from 'next/server';
 import { getCurrentProfile } from '@/lib/supabase/server';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['GET'],
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
-      return NextResponse.json({ authenticated: false, user: null });
+      return secureJsonResponse({ authenticated: false, user: null }, { status: 200 }, requestId);
     }
 
-    return NextResponse.json({
+    return secureJsonResponse({
       authenticated: true,
       user: {
         id: profile.id,
@@ -16,11 +26,12 @@ export async function GET() {
         plan: profile.plan,
         created_at: profile.created_at,
       },
-    });
+    }, { status: 200 }, requestId);
   } catch (err: any) {
-    return NextResponse.json(
+    return secureJsonResponse(
       { authenticated: false, user: null, error: err.message },
-      { status: 500 }
+      { status: 500 },
+      requestId
     );
   }
 }

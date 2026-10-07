@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import { PlanSelection } from './PlanSelection';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'Choose Your DocuNexa Plan',
   description: 'Select between our Free ad-supported plan or $2 one-time Ad-Free upgrade.',

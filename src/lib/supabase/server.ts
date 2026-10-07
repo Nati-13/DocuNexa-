@@ -87,3 +87,19 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     return null;
   }
 }
+
+/**
+ * Validates and retrieves server-side authenticated JWT claims using PKCE & cryptographic verification.
+ */
+export async function getServerAuthClaims(): Promise<Record<string, any> | null> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase.auth.getClaims();
+    if (error || !data || !data.claims) {
+      return null;
+    }
+    return data.claims;
+  } catch {
+    return null;
+  }
+}

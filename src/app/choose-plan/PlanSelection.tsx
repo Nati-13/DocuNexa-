@@ -28,7 +28,7 @@ export function PlanSelection() {
       }
 
       await refreshUser();
-      router.push(data.redirect || '/tools');
+      router.push(data.redirect || '/account');
     } catch (err: any) {
       setError(err.message || 'Error selecting plan');
       setLoadingPlan(null);

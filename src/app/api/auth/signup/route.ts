@@ -1,61 +1,107 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server';
 import { validateEmail, validatePasswordStrength } from '@/lib/auth';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['POST'],
+    maxBodyBytes: 32 * 1024,
+    rateLimitAction: 'auth-signup',
+    maxRequests: 10,
+    windowSeconds: 60,
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return secureJsonResponse({ error: 'Malformed request JSON.' }, { status: 400 }, requestId);
+    }
+
     const { email, password, confirmPassword } = body;
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'A valid email address is required.' }, { status: 400 });
+      return secureJsonResponse({ error: 'A valid email address is required.' }, { status: 400 }, requestId);
     }
 
-    if (!validateEmail(email)) {
-      return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!validateEmail(cleanEmail)) {
+      return secureJsonResponse({ error: 'Please enter a valid email address.' }, { status: 400 }, requestId);
     }
 
     if (!password || typeof password !== 'string') {
-      return NextResponse.json({ error: 'Password is required.' }, { status: 400 });
+      return secureJsonResponse({ error: 'Password is required.' }, { status: 400 }, requestId);
     }
 
     const strengthCheck = validatePasswordStrength(password);
     if (!strengthCheck.valid) {
-      return NextResponse.json({ error: strengthCheck.message }, { status: 400 });
+      return secureJsonResponse({ error: strengthCheck.message }, { status: 400 }, requestId);
     }
 
     if (password !== confirmPassword) {
-      return NextResponse.json({ error: 'Passwords do not match.' }, { status: 400 });
+      return secureJsonResponse({ error: 'Passwords do not match.' }, { status: 400 }, requestId);
     }
 
     const supabase = await createServerSupabaseClient();
     const admin = createAdminSupabaseClient();
 
-    // Sign up user via Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
+    // 1. Create or register user via Supabase Auth
+    // Use admin.auth.admin to guarantee email is confirmed so user is immediately active
+    let userId: string | null = null;
+
+    const { data: createData, error: createError } = await admin.auth.admin.createUser({
+      email: cleanEmail,
+      password,
+      email_confirm: true,
+    });
+
+    if (createError) {
+      const lower = createError.message.toLowerCase();
+      if (lower.includes('already registered') || lower.includes('already in use') || lower.includes('user already exists')) {
+        return secureJsonResponse(
+          { error: 'An account with this email address already exists. Please log in instead.' },
+          { status: 409 },
+          requestId
+        );
+      }
+      // If admin createUser is restricted, fallback to standard signUp
+      const { data: fallbackAuth, error: fallbackError } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+      });
+
+      if (fallbackError) {
+        const status = fallbackError.message.toLowerCase().includes('already registered') ? 409 : 400;
+        return secureJsonResponse({ error: fallbackError.message || 'Registration failed.' }, { status }, requestId);
+      }
+      userId = fallbackAuth.user?.id || null;
+    } else {
+      userId = createData.user?.id || null;
+    }
+
+    if (!userId) {
+      return secureJsonResponse({ error: 'Failed to create user account. Please try again.' }, { status: 500 }, requestId);
+    }
+
+    // 2. Automatically establish an active session so the user remains signed in for plan selection
+    const { data: sessionData } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
       password,
     });
 
-    if (authError) {
-      const status = authError.message.toLowerCase().includes('already registered') ? 409 : 400;
-      return NextResponse.json(
-        { error: authError.message || 'Registration failed.' },
-        { status }
-      );
-    }
-
-    const user = authData.user;
-    if (!user) {
-      return NextResponse.json({ error: 'Failed to create user account.' }, { status: 500 });
-    }
-
-    // Ensure profile row exists in public.profiles with default free plan
+    // 3. Ensure profile row exists in public.profiles with default free plan
     try {
       await admin.from('profiles').upsert(
         {
-          id: user.id,
-          email: user.email || email.trim().toLowerCase(),
+          id: userId,
+          email: cleanEmail,
           plan: 'free',
           updated_at: new Date().toISOString(),
         },
@@ -65,23 +111,25 @@ export async function POST(req: Request) {
       // Trigger handles creation if upsert fails
     }
 
-    return NextResponse.json(
+    return secureJsonResponse(
       {
         success: true,
         user: {
-          id: user.id,
-          email: user.email,
+          id: userId,
+          email: cleanEmail,
           plan: 'free',
-          created_at: user.created_at,
+          created_at: sessionData?.user?.created_at || new Date().toISOString(),
         },
         redirect: '/choose-plan',
       },
-      { status: 201 }
+      { status: 201 },
+      requestId
     );
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || 'An error occurred during account registration.' },
-      { status: 500 }
+    return secureJsonResponse(
+      { error: 'An unexpected error occurred during account registration.' },
+      { status: 500 },
+      requestId
     );
   }
 }

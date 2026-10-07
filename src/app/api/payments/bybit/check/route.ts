@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
 import { fetchBybitDeposits, matchDepositToOrder } from '@/lib/payments/bybit';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['GET'],
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return secureJsonResponse({ error: 'Unauthorized' }, { status: 401 }, requestId);
     }
 
     const searchParams = req.nextUrl.searchParams;

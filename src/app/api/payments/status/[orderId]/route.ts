@@ -1,14 +1,24 @@
-import { NextResponse } from 'next/server';
 import { getCurrentProfile, createServerSupabaseClient } from '@/lib/supabase/server';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ orderId: string }> }
 ) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['GET'],
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return secureJsonResponse({ error: 'Unauthorized' }, { status: 401 }, requestId);
     }
 
     const { orderId } = await params;
@@ -21,15 +31,15 @@ export async function GET(
       .single();
 
     if (error || !order) {
-      return NextResponse.json({ error: 'Payment order not found' }, { status: 404 });
+      return secureJsonResponse({ error: 'Payment order not found' }, { status: 404 }, requestId);
     }
 
     // Security: Only the user who created the order can access its status
     if (order.user_id !== profile.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return secureJsonResponse({ error: 'Forbidden' }, { status: 403 }, requestId);
     }
 
-    return NextResponse.json({
+    return secureJsonResponse({
       orderId: order.order_id,
       status: order.status,
       amount: order.payment_amount_usdt,
@@ -41,11 +51,12 @@ export async function GET(
       confirmedAt: order.confirmed_at,
       txId: order.tx_id,
       expiresAt: order.expires_at,
-    });
+    }, { status: 200 }, requestId);
   } catch (err: any) {
-    return NextResponse.json(
+    return secureJsonResponse(
       { error: err.message || 'Error checking payment status' },
-      { status: 500 }
+      { status: 500 },
+      requestId
     );
   }
 }

@@ -3,24 +3,38 @@ import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/ser
 import { generateUniquePaymentAmount, getBybitConfig, normalizeAmount } from '@/lib/payments/bybit';
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
 import { CouponDiscountType } from '@/lib/supabase/types';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['POST'],
+    maxBodyBytes: 16 * 1024,
+    rateLimitAction: 'payment-create',
+    maxRequests: 10,
+    windowSeconds: 60,
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
-      return NextResponse.json(
+      return secureJsonResponse(
         { error: 'Please log in to upgrade to Ad-Free.' },
-        { status: 401 }
+        { status: 401 },
+        requestId
       );
     }
 
     if (profile.plan === 'ad_free') {
-      return NextResponse.json({
+      return secureJsonResponse({
         success: true,
         alreadyPaid: true,
         message: 'Your account is already Ad-Free.',
         redirect: '/account',
-      });
+      }, { status: 200 }, requestId);
     }
 
     const body = await req.json().catch(() => ({}));

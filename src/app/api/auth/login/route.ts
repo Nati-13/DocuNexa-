@@ -1,18 +1,37 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { validateEmail } from '@/lib/auth';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['POST'],
+    maxBodyBytes: 32 * 1024,
+    rateLimitAction: 'auth-login',
+    maxRequests: 10,
+    windowSeconds: 60,
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return secureJsonResponse({ error: 'Malformed request JSON.' }, { status: 400 }, requestId);
+    }
+
     const { email, password } = body;
 
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
-      return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
+      return secureJsonResponse({ error: 'Email and password are required.' }, { status: 400 }, requestId);
     }
 
     if (!validateEmail(email)) {
-      return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
+      return secureJsonResponse({ error: 'Please enter a valid email address.' }, { status: 400 }, requestId);
     }
 
     const supabase = await createServerSupabaseClient();
@@ -22,11 +41,24 @@ export async function POST(req: Request) {
       password,
     });
 
-    if (authError || !authData.user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password.' },
-        { status: 401 }
-      );
+    if (authError || !authData?.user) {
+      const msg = authError?.message || '';
+      const lower = msg.toLowerCase();
+
+      // Truthful error reporting: only report "Invalid email or password" on actual credential failure
+      if (lower.includes('invalid login credentials') || lower.includes('invalid grant') || lower.includes('user not found')) {
+        return secureJsonResponse({ error: 'Invalid email or password.' }, { status: 401 }, requestId);
+      }
+
+      if (lower.includes('email not confirmed')) {
+        return secureJsonResponse({ error: 'Email address has not been confirmed yet. Please check your inbox or sign up again.' }, { status: 401 }, requestId);
+      }
+
+      if (lower.includes('rate limit') || lower.includes('too many requests')) {
+        return secureJsonResponse({ error: 'Too many login attempts. Please wait a moment and try again.' }, { status: 429 }, requestId);
+      }
+
+      return secureJsonResponse({ error: msg || 'Authentication failed. Please verify your credentials.' }, { status: 401 }, requestId);
     }
 
     // Retrieve profile to confirm plan
@@ -36,7 +68,7 @@ export async function POST(req: Request) {
       .eq('id', authData.user.id)
       .single();
 
-    return NextResponse.json({
+    return secureJsonResponse({
       success: true,
       user: {
         id: authData.user.id,
@@ -44,11 +76,12 @@ export async function POST(req: Request) {
         plan: profile?.plan || 'free',
         created_at: authData.user.created_at,
       },
-    });
+    }, { status: 200 }, requestId);
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || 'An error occurred during login.' },
-      { status: 500 }
+    return secureJsonResponse(
+      { error: 'An unexpected error occurred during login. Please try again.' },
+      { status: 500 },
+      requestId
     );
   }
 }

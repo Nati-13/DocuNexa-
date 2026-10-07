@@ -1,43 +1,59 @@
 import { NextResponse } from 'next/server';
-import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getCurrentProfile } from '@/lib/supabase/server';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['POST'],
+    maxBodyBytes: 16 * 1024,
+    rateLimitAction: 'choose-plan',
+    maxRequests: 20,
+    windowSeconds: 60,
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return secureJsonResponse({ error: 'Your session has expired. Please sign in again.' }, { status: 401 }, requestId);
     }
 
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return secureJsonResponse({ error: 'Malformed request payload.' }, { status: 400 }, requestId);
+    }
+
     const { plan } = body;
 
     if (plan === 'free') {
-      const admin = createAdminSupabaseClient();
-      await admin
-        .from('profiles')
-        .update({ plan: 'free', updated_at: new Date().toISOString() })
-        .eq('id', profile.id);
-
-      return NextResponse.json({
+      // FREE selection: do not create unnecessary DB mutations, preserve active session, redirect to Account
+      return secureJsonResponse({
         success: true,
         plan: 'free',
-        redirect: '/tools',
-      });
+        redirect: '/account',
+      }, { status: 200 }, requestId);
     }
 
     if (plan === 'ad_free') {
-      return NextResponse.json({
+      // AD-FREE selection: preserve session and route to checkout
+      return secureJsonResponse({
         success: true,
         plan: profile.plan,
         redirect: '/account?checkout=ad_free',
-      });
+      }, { status: 200 }, requestId);
     }
 
-    return NextResponse.json({ error: 'Invalid plan selection' }, { status: 400 });
+    return secureJsonResponse({ error: 'Invalid plan selection.' }, { status: 400 }, requestId);
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || 'Error processing plan choice' },
-      { status: 500 }
+    return secureJsonResponse(
+      { error: 'Something went wrong while confirming your plan. Please try again.' },
+      { status: 500 },
+      requestId
     );
   }
 }

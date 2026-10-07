@@ -2,8 +2,22 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { getBybitConfig, parseExactUsdt } from '@/lib/payments/bybit';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['GET'],
+    rateLimitAction: 'admin-overview',
+    maxRequests: 60,
+    windowSeconds: 60,
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     await requireAdmin();
     const admin = createAdminSupabaseClient();

@@ -4,8 +4,22 @@ import { logAdminAction } from '@/lib/admin/audit';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { normalizeCouponCode, isValidCouponCodeFormat, calculateCouponDiscount } from '@/lib/coupons';
 import { CouponDiscountType } from '@/lib/supabase/types';
+import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  const { errorResponse, requestId } = await guardApiRequest(req, {
+    allowedMethods: ['GET'],
+    rateLimitAction: 'admin-coupons-get',
+    maxRequests: 60,
+    windowSeconds: 60,
+  });
+
+  if (errorResponse) {
+    return errorResponse;
+  }
+
   try {
     await requireAdmin();
     const admin = createAdminSupabaseClient();
