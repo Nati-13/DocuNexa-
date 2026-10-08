@@ -49,7 +49,7 @@ If you did not request a password reset, you can safely ignore this email.`;
       return { success: true };
     }
     // Delivery is unavailable when email provider is not configured
-    return { success: false, error: 'Email delivery service is currently unavailable.' };
+    return { success: false, error: 'Password reset email service is currently not configured or unavailable.' };
   }
 
   try {

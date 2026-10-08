@@ -59,7 +59,7 @@ export function hashResetSecret(secret: string): string {
 export async function requestPasswordReset(
   rawEmail: string,
   ip: string = '127.0.0.1'
-): Promise<{ success: boolean; message: string; debugCode?: string }> {
+): Promise<{ success: boolean; message: string; error?: string; debugCode?: string }> {
   const email = rawEmail.trim().toLowerCase();
   const genericMessage = "If an account exists for this email, we've sent a password reset code.";
 
@@ -152,7 +152,14 @@ export async function requestPasswordReset(
     }
 
     // 3. Send reset email
-    await sendPasswordResetEmail({ to: email, code });
+    const emailResult = await sendPasswordResetEmail({ to: email, code });
+    if (!emailResult.success) {
+      return {
+        success: false,
+        error: emailResult.error || 'Password reset email service is currently unavailable.',
+        message: emailResult.error || 'Password reset email service is currently unavailable.',
+      };
+    }
 
     return {
       success: true,
@@ -161,6 +168,13 @@ export async function requestPasswordReset(
       debugCode: process.env.NODE_ENV === 'test' ? code : undefined,
     };
   } catch (err: any) {
+    if (err?.message?.includes('secret key') || err?.message?.includes('server secret')) {
+      return {
+        success: false,
+        error: 'Authentication server secret key is not configured.',
+        message: 'Authentication server secret key is not configured.',
+      };
+    }
     if (process.env.NODE_ENV === 'test') {
       console.error('[TEST DEBUG requestPasswordReset error]:', err?.message || err);
     }

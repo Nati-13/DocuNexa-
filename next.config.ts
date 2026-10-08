@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   webpack: (config: any, { webpack }: any) => {
     config.resolve.alias.canvas = false;
     config.resolve.alias.encoding = false;

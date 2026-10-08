@@ -31,15 +31,50 @@ export async function POST(req: Request) {
     const ip = getClientIp(req);
     const result = await requestPasswordReset(email, ip);
 
+    if (!result.success) {
+      console.error(
+        `[Password Reset Request Error] [Request ID: ${requestId}]: ${result.error || 'Email service unavailable.'}`
+      );
+      return secureJsonResponse(
+        {
+          error: result.error || 'Password reset email service is currently not configured or unavailable.',
+          code: 'EMAIL_SERVICE_UNAVAILABLE',
+          requestId,
+        },
+        { status: 503 },
+        requestId
+      );
+    }
+
     return secureJsonResponse(
       { success: true, message: result.message },
       { status: 200 },
       requestId
     );
-  } catch {
+  } catch (err: any) {
+    const isConfigError =
+      err?.message?.includes('secret key') ||
+      err?.message?.includes('configuration');
+
+    if (isConfigError) {
+      console.error(
+        `[Password Reset Request Config Error] [Request ID: ${requestId}]: Server configuration missing: ${err.message}`
+      );
+      return secureJsonResponse(
+        {
+          error: 'Password reset service configuration error. Please contact the administrator.',
+          code: 'CONFIG_MISSING',
+          requestId,
+        },
+        { status: 503 },
+        requestId
+      );
+    }
+
+    console.error(`[Password Reset Request Error] [Request ID: ${requestId}]:`, err?.message || err);
     return secureJsonResponse(
-      { success: true, message: "If an account exists for this email, we've sent a password reset code." },
-      { status: 200 },
+      { error: 'An unexpected error occurred while requesting password reset. Please try again.', requestId },
+      { status: 500 },
       requestId
     );
   }

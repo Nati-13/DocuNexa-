@@ -49,6 +49,30 @@ export async function POST(req: Request) {
       return secureJsonResponse({ error: 'Passwords do not match.' }, { status: 400 }, requestId);
     }
 
+    // Check server-side Supabase configuration upfront
+    const serviceKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SECRET_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!serviceKey || !supabaseUrl) {
+      console.error(
+        `[Auth Signup Config Error] [Request ID: ${requestId}]: Server-side Supabase configuration missing. ` +
+        `Server secret key: ${serviceKey ? 'CONFIGURED' : 'NOT CONFIGURED'}, ` +
+        `Supabase URL: ${supabaseUrl ? 'CONFIGURED' : 'NOT CONFIGURED'}`
+      );
+      return secureJsonResponse(
+        {
+          error:
+            'Server authentication configuration is incomplete. The server-side Supabase secret key (SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY) is not configured in the environment. Please contact support.',
+          code: 'CONFIG_MISSING',
+          requestId,
+        },
+        { status: 503 },
+        requestId
+      );
+    }
+
     const admin = createAdminSupabaseClient();
 
     // 1. Create account server-side via Supabase Auth admin API with email_confirm: true
@@ -60,11 +84,14 @@ export async function POST(req: Request) {
     });
 
     if (createError) {
-      const lower = createError.message.toLowerCase();
+      const lower = (createError.message || '').toLowerCase();
+      const code = (createError as any).code || '';
       if (
+        code === 'email_exists' ||
         lower.includes('already registered') ||
         lower.includes('already in use') ||
-        lower.includes('user already exists')
+        lower.includes('already exists') ||
+        lower.includes('user already registered')
       ) {
         return secureJsonResponse(
           { error: 'An account with this email address already exists. Please log in instead.' },
@@ -128,8 +155,30 @@ export async function POST(req: Request) {
       requestId
     );
   } catch (err: any) {
+    const isConfigError =
+      err?.message?.includes('Supabase server secret key is required') ||
+      err?.message?.includes('secret key') ||
+      err?.message?.includes('configuration');
+
+    if (isConfigError) {
+      console.error(
+        `[Auth Signup Config Error] [Request ID: ${requestId}]: Server secret key configuration missing: ${err.message}`
+      );
+      return secureJsonResponse(
+        {
+          error:
+            'Server authentication configuration is incomplete. The server-side Supabase secret key (SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY) is not configured in the environment. Please contact support.',
+          code: 'CONFIG_MISSING',
+          requestId,
+        },
+        { status: 503 },
+        requestId
+      );
+    }
+
+    console.error(`[Auth Signup Error] [Request ID: ${requestId}]:`, err?.message || err);
     return secureJsonResponse(
-      { error: 'An unexpected error occurred during account registration.' },
+      { error: 'An unexpected error occurred during account registration. Please try again.', requestId },
       { status: 500 },
       requestId
     );
