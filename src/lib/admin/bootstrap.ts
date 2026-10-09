@@ -12,22 +12,21 @@ export interface BootstrapResult {
  * Returns true ONLY if public.admin_users is completely empty (0 rows).
  */
 export async function isBootstrapAvailable(): Promise<boolean> {
-  try {
-    const admin = createAdminSupabaseClient();
-    const { count, error } = await admin
-      .from('admin_users')
-      .select('user_id', { count: 'exact', head: true });
+  const admin = createAdminSupabaseClient();
+  const { count, error } = await admin
+    .from('admin_users')
+    .select('user_id', { count: 'exact', head: true });
 
-    if (error) {
-      // If table query fails, try select count
-      const { data } = await admin.from('admin_users').select('user_id').limit(1);
-      return !data || data.length === 0;
+  if (error) {
+    // If table query fails, try select count
+    const { data, error: selectErr } = await admin.from('admin_users').select('user_id').limit(1);
+    if (selectErr) {
+      throw selectErr;
     }
-
-    return (count ?? 0) === 0;
-  } catch {
-    return false;
+    return !data || data.length === 0;
   }
+
+  return (count ?? 0) === 0;
 }
 
 /**

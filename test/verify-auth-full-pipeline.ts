@@ -65,7 +65,7 @@ async function runPipeline() {
 
     if (testUserId) {
       assert(
-        !!createData.user.email_confirmed_at,
+        !!createData.user?.email_confirmed_at,
         'email_confirmed_at is set immediately (email_confirm: true, no confirmation email needed)'
       );
 
@@ -139,8 +139,9 @@ async function runPipeline() {
     const bootRes = await bootstrapFirstAdmin({
       email: adminEmail,
       password: adminPass,
+      setupKey: process.env.ADMIN_SETUP_KEY,
     });
-    assert(bootRes.success, 'First admin bootstrap succeeds with user-supplied credentials');
+    assert(bootRes.success, 'First admin bootstrap succeeds with user-supplied credentials and setupKey');
 
     // Retrieve created admin user id
     const { data: adminList } = await admin.from('admin_users').select('user_id');

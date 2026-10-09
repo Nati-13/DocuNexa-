@@ -15,16 +15,54 @@ export async function GET(req: Request) {
     return errorResponse;
   }
 
-  const available = await isBootstrapAvailable();
-  return secureJsonResponse(
-    {
-      isSetup: !available,
-      canBootstrap: available,
-      requiresSetupKey: !!process.env.ADMIN_SETUP_KEY,
-    },
-    { status: 200 },
-    requestId
-  );
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!serviceKey || !supabaseUrl) {
+    console.error(
+      `[Admin Bootstrap Status Config Error] [Request ID: ${requestId}]: Server-side Supabase configuration missing.`
+    );
+    return secureJsonResponse(
+      {
+        error:
+          'Server authentication configuration is incomplete. The server-side Supabase secret key (SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY) is not configured in the environment. Please contact support.',
+        code: 'CONFIG_MISSING',
+        requestId,
+      },
+      { status: 503 },
+      requestId
+    );
+  }
+
+  try {
+    const available = await isBootstrapAvailable();
+    return secureJsonResponse(
+      {
+        isSetup: !available,
+        canBootstrap: available,
+        requiresSetupKey: !!process.env.ADMIN_SETUP_KEY,
+      },
+      { status: 200 },
+      requestId
+    );
+  } catch (err: any) {
+    console.error(
+      `[Admin Bootstrap Status Error] [Request ID: ${requestId}]: Database access failure:`,
+      err?.message || err
+    );
+    return secureJsonResponse(
+      {
+        error:
+          'Unable to verify administrator setup status due to a database service error. Please try again later.',
+        code: 'DATABASE_UNAVAILABLE',
+        requestId,
+      },
+      { status: 503 },
+      requestId
+    );
+  }
 }
 
 export async function POST(req: Request) {

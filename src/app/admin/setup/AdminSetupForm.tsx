@@ -40,10 +40,14 @@ export function AdminSetupForm() {
       try {
         const res = await fetch('/api/admin/bootstrap');
         const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Administrator setup service is currently unavailable.');
+          return;
+        }
         setIsSetup(!!data.isSetup);
         setRequiresSetupKey(!!data.requiresSetupKey);
       } catch {
-        // Fallback
+        setError('Failed to reach administrator setup service.');
       } finally {
         setLoadingStatus(false);
       }
