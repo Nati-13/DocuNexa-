@@ -58,7 +58,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protected route checking: /admin requires active authenticated session (except first-time bootstrap)
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin-setup') && pathname !== '/admin/setup') {
+  if (
+    pathname.startsWith('/admin') &&
+    !pathname.startsWith('/admin-setup') &&
+    pathname !== '/admin/setup' &&
+    pathname !== '/admin/setup/'
+  ) {
     if (!user) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/login';

@@ -88,7 +88,9 @@ export async function POST(req: Request) {
       const code = (createError as any).code || '';
       if (
         code === 'email_exists' ||
+        lower.includes('email_exists') ||
         lower.includes('already registered') ||
+        lower.includes('already been registered') ||
         lower.includes('already in use') ||
         lower.includes('already exists') ||
         lower.includes('user already registered')

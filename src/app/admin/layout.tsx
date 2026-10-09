@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentProfile } from '@/lib/supabase/server';
@@ -23,6 +24,12 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const reqUrl = headersList.get('x-pathname') || headersList.get('next-url') || '';
+  if (reqUrl.includes('/admin/setup')) {
+    return <>{children}</>;
+  }
+
   const profile = await getCurrentProfile();
   if (!profile) {
     redirect('/login?redirect=/admin');
