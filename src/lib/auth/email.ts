@@ -72,8 +72,49 @@ If you did not request a password reset, you can safely ignore this email.`;
     if (res.ok) {
       return { success: true };
     }
-    return { success: false, error: 'Failed to deliver recovery email.' };
-  } catch {
+
+    // Inspect provider error safely without logging sensitive tokens, codes, or secrets
+    let errorCategory = 'PROVIDER_ERROR';
+    let safeMessage = 'Failed to deliver recovery email.';
+
+    try {
+      const errorJson = await res.json();
+      const status = res.status;
+      const errorName = (errorJson?.name || '').toLowerCase();
+      const errorMsg = (errorJson?.message || '').toLowerCase();
+
+      if (status === 401 || errorName.includes('invalid_api_key')) {
+        errorCategory = 'INVALID_API_KEY';
+        safeMessage = 'Email service authentication failed (invalid API key).';
+      } else if (
+        status === 403 ||
+        errorName.includes('validation_error') ||
+        errorMsg.includes('domain') ||
+        errorMsg.includes('verify')
+      ) {
+        errorCategory = 'UNVERIFIED_DOMAIN';
+        safeMessage = 'Email service sender domain is not verified in Resend.';
+      } else if (status === 429 || errorName.includes('rate_limit')) {
+        errorCategory = 'RATE_LIMIT_EXCEEDED';
+        safeMessage = 'Email service rate limit reached.';
+      } else {
+        errorCategory = `HTTP_${status}`;
+      }
+
+      console.error(
+        `[Resend Provider Diagnostic] code=${errorCategory}, status=${status}, reason=${safeMessage}`
+      );
+    } catch {
+      console.error(
+        `[Resend Provider Diagnostic] HTTP_${res.status}: Failed to deliver recovery email.`
+      );
+    }
+
+    return { success: false, error: safeMessage };
+  } catch (err: any) {
+    console.error(
+      `[Resend Provider Network Error] Network error communicating with email provider: ${err?.message || 'unknown'}`
+    );
     return { success: false, error: 'Network error communicating with email provider.' };
   }
 }

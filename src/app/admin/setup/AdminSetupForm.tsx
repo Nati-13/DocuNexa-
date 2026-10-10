@@ -24,6 +24,7 @@ export function AdminSetupForm() {
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [isSetup, setIsSetup] = useState(false);
   const [requiresSetupKey, setRequiresSetupKey] = useState(false);
+  const [keyRequiredMissing, setKeyRequiredMissing] = useState(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +42,11 @@ export function AdminSetupForm() {
         const res = await fetch('/api/admin/bootstrap');
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error || 'Administrator setup service is currently unavailable.');
+          if (data.code === 'ADMIN_SETUP_KEY_REQUIRED') {
+            setKeyRequiredMissing(true);
+          } else {
+            setError(data.error || 'Administrator setup service is currently unavailable.');
+          }
           return;
         }
         setIsSetup(!!data.isSetup);
@@ -115,6 +120,41 @@ export function AdminSetupForm() {
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl text-center space-y-4">
         <Loader2 size={28} className="animate-spin text-brand-600 mx-auto" />
         <p className="text-xs text-slate-500">Checking administrator setup status...</p>
+      </div>
+    );
+  }
+
+  if (keyRequiredMissing) {
+    return (
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/80 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-5">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400">
+          <ShieldAlert size={28} />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Master Setup Key Required</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+            Administrator bootstrap is locked in production until <strong>ADMIN_SETUP_KEY</strong> is configured in server environment variables. This prevents unauthorized administrative takeover of this deployment.
+          </p>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left text-xs space-y-2">
+          <div className="font-semibold text-slate-800 dark:text-slate-200">Owner Action Required:</div>
+          <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+            <li>Open Vercel Project Settings &rarr; <strong>Environment Variables</strong>.</li>
+            <li>Add <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700 font-mono text-[10px]">ADMIN_SETUP_KEY</code> with your generated secret.</li>
+            <li>Redeploy or promote the production build.</li>
+            <li>Refresh this page to complete first-time administrator initialization.</li>
+          </ol>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <Link
+            href="/"
+            className="inline-block text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            Return to Homepage
+          </Link>
+        </div>
       </div>
     );
   }

@@ -36,6 +36,22 @@ export async function GET(req: Request) {
     );
   }
 
+  if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_SETUP_KEY) {
+    return secureJsonResponse(
+      {
+        error:
+          'Administrator bootstrap is disabled in production until ADMIN_SETUP_KEY is configured in server environment variables.',
+        code: 'ADMIN_SETUP_KEY_REQUIRED',
+        isSetup: false,
+        canBootstrap: false,
+        requiresSetupKey: true,
+        requestId,
+      },
+      { status: 503 },
+      requestId
+    );
+  }
+
   try {
     const available = await isBootstrapAvailable();
     return secureJsonResponse(
@@ -76,6 +92,19 @@ export async function POST(req: Request) {
 
   if (errorResponse) {
     return errorResponse;
+  }
+
+  if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_SETUP_KEY) {
+    return secureJsonResponse(
+      {
+        error:
+          'Administrator bootstrap is disabled in production until ADMIN_SETUP_KEY is configured in server environment variables.',
+        code: 'ADMIN_SETUP_KEY_REQUIRED',
+        requestId,
+      },
+      { status: 503 },
+      requestId
+    );
   }
 
   try {

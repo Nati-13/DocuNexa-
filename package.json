@@ -22,7 +22,8 @@
     "test:detector": "tsx test/unit-detector.test.ts",
     "test:audit": "tsx test/full-tool-audit.test.ts",
     "test:conversions": "tsx test/test-conversions.test.ts",
-    "test:sample": "tsx test/generate-sample-pdf.ts"
+    "test:sample": "tsx test/generate-sample-pdf.ts",
+    "test:unit-workflow": "tsx test/unit-cutter-workflow.test.ts"
   },
   "dependencies": {
     "@pdfsmaller/pdf-decrypt": "^1.0.1",

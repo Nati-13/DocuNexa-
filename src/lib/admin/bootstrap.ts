@@ -66,6 +66,13 @@ export async function bootstrapFirstAdmin({
 
   // Check setup key if configured in environment
   const configuredSetupKey = process.env.ADMIN_SETUP_KEY;
+  if (!configuredSetupKey && process.env.NODE_ENV === 'production') {
+    return {
+      success: false,
+      error: 'Administrator bootstrap is disabled in production until ADMIN_SETUP_KEY is configured in server environment variables.',
+      message: '',
+    };
+  }
   if (configuredSetupKey && setupKey !== configuredSetupKey) {
     return {
       success: false,
