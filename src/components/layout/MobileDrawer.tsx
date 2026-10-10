@@ -113,6 +113,23 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
               Terms of Service
             </Link>
             <Link
+              href="/support"
+              onClick={onClose}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-brand-600 dark:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Support Center
+            </Link>
+            <a
+              href="https://t.me/docunexa_bot"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onClose}
+              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+            >
+              <span>Telegram Support</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 font-bold">@docunexa_bot</span>
+            </a>
+            <Link
               href="/contact"
               onClick={onClose}
               className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"

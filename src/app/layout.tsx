@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { AuthProvider } from '@/context/AuthContext';
 import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController';
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
+import { FloatingSupportButton } from '@/components/layout/FloatingSupportButton';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -126,6 +127,7 @@ export default async function RootLayout({
           <div className="flex-1">
             {children}
           </div>
+          <FloatingSupportButton />
           <Footer />
         </AuthProvider>
         {isAdFree ? (

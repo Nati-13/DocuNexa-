@@ -351,22 +351,22 @@ export default function AdminCouponsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="block font-semibold text-slate-700 dark:text-slate-300">
-                    {discountType === 'percent' ? 'Discount Percentage (1–99)' : 'Discount Amount (0.01–1.99 USDT)'}
+                    {discountType === 'percent' ? 'Discount Percentage (1–100)' : 'Discount Amount (0.01–2.00 USDT)'}
                   </label>
                   <input
                     type="number"
                     step={discountType === 'percent' ? '1' : '0.01'}
                     min={discountType === 'percent' ? '1' : '0.01'}
-                    max={discountType === 'percent' ? '99' : '1.99'}
+                    max={discountType === 'percent' ? '100' : '2.00'}
                     value={discountValue}
                     onChange={(e) => setDiscountValue(e.target.value)}
-                    placeholder={discountType === 'percent' ? '25' : '0.50'}
+                    placeholder={discountType === 'percent' ? '100' : '2.00'}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
                     required
                   />
                   <p className="text-[10px] text-slate-400">
                     {discountType === 'percent'
-                      ? 'e.g. 25 reduces $2.00 to $1.50'
+                      ? 'e.g. 100 gives 100% complimentary access'
                       : 'e.g. 0.50 reduces $2.00 to $1.50'}
                   </p>
                 </div>

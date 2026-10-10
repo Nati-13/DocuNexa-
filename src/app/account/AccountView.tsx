@@ -57,10 +57,11 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
         throw new Error(data.error || 'Failed to start payment order');
       }
 
-      if (data.alreadyPaid) {
+      if (data.alreadyPaid || data.zeroCost || data.activated) {
         setUser(prev => ({ ...prev, plan: 'ad_free' }));
         await refreshUser();
         setCheckoutLoading(false);
+        setActiveOrder(null);
         return;
       }
 
@@ -86,12 +87,14 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
     }
   }, [refreshUser]);
 
+  const couponParam = searchParams.get('coupon');
+
   // If page was loaded with ?checkout=ad_free, open checkout automatically
   useEffect(() => {
     if (checkoutParam === 'ad_free' && user.plan !== 'ad_free') {
-      handleStartCheckout();
+      handleStartCheckout(couponParam || undefined);
     }
-  }, [checkoutParam, user.plan, handleStartCheckout]);
+  }, [checkoutParam, couponParam, user.plan, handleStartCheckout]);
 
   // If orderId was in URL, check status
   useEffect(() => {

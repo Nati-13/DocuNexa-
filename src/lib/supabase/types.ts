@@ -89,6 +89,30 @@ export type DbCouponRedemption = {
   redeemed_at: string;
 };
 
+export type SupportCategory =
+  | 'Account'
+  | 'Payments'
+  | 'PDF Tools'
+  | 'Coupon'
+  | 'Bug Report'
+  | 'Other';
+
+export type SupportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+export type DbSupportTicket = {
+  id: string; // uuid
+  user_id: string | null;
+  name: string;
+  email: string;
+  category: SupportCategory;
+  subject: string;
+  message: string;
+  status: SupportStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DbAdminUser = {
   user_id: string;
   created_at: string;
@@ -352,6 +376,36 @@ export type Database = {
           visitor_id_hash?: string;
           user_id?: string | null;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      support_tickets: {
+        Row: DbSupportTicket;
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          name: string;
+          email: string;
+          category: SupportCategory;
+          subject: string;
+          message: string;
+          status?: SupportStatus;
+          admin_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          name?: string;
+          email?: string;
+          category?: SupportCategory;
+          subject?: string;
+          message?: string;
+          status?: SupportStatus;
+          admin_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

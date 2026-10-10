@@ -139,6 +139,17 @@ export const Navbar: React.FC = () => {
               >
                 About
               </Link>
+
+              <Link
+                href="/support"
+                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  pathname === '/support'
+                    ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
+                    : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                }`}
+              >
+                Support
+              </Link>
             </nav>
           </div>
 

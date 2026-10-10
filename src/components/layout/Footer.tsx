@@ -92,6 +92,21 @@ export const Footer: React.FC = () => {
                   Contact Us
                 </Link>
               </li>
+              <li>
+                <Link href="/support" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">
+                  Support Center
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://t.me/docunexa_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 hover:text-sky-300 font-semibold transition-colors"
+                >
+                  Telegram Support (@docunexa_bot)
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -229,6 +244,9 @@ export const Footer: React.FC = () => {
           </Link>
           <Link href="/security" className="hover:text-white transition-colors">
             Security Overview
+          </Link>
+          <Link href="/support" className="hover:text-white transition-colors">
+            Support
           </Link>
           <Link href="/contact" className="hover:text-white transition-colors">
             Contact

@@ -95,6 +95,136 @@ export async function POST(req: Request) {
     const admin = createAdminSupabaseClient();
     const nowIso = new Date().toISOString();
 
+    // -------------------------------------------------------------------------
+    // Safe Complimentary Zero-Cost Order Flow (100% Discount)
+    // -------------------------------------------------------------------------
+    if (finalAmountUsdt === '0.0000' && couponCode) {
+      if ((profile.plan as string) === 'ad_free') {
+        return secureJsonResponse({
+          success: true,
+          alreadyPaid: true,
+          message: 'Your account is already Ad-Free.',
+          redirect: '/account',
+        }, { status: 200 }, requestId);
+      }
+
+      const orderId = `DNX-FREE-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+
+      // Insert confirmed zero-cost order without fake blockchain hashes or deposits
+      const { data: newOrder, error: orderError } = await admin
+        .from('payment_orders')
+        .insert({
+          user_id: profile.id,
+          order_id: orderId,
+          product: 'ad_free',
+          base_amount_usd: 2.00,
+          original_amount_usd: originalAmountUsd,
+          discount_amount_usdt: discountAmountUsdt,
+          final_amount_usdt: '0.0000',
+          payment_amount_usdt: '0.0000',
+          coupon_id: couponId && !couponId.startsWith('d0c01000') ? couponId : null,
+          coupon_code: couponCode,
+          discount_type: discountType,
+          currency: 'USDT',
+          network: requestedNetwork,
+          destination_address: 'COMPLIMENTARY_ACTIVATION',
+          status: 'confirmed',
+          expires_at: nowIso,
+          created_at: nowIso,
+          detected_at: null,
+          confirmed_at: nowIso,
+          bybit_deposit_id: null,
+          tx_id: null,
+          block_hash: null,
+          confirmations: null,
+          received_amount: '0.0000',
+          failure_reason: null,
+          updated_at: nowIso,
+        })
+        .select('*')
+        .single();
+
+      if (orderError) {
+        return NextResponse.json(
+          { error: 'Failed to process complimentary activation. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      // Record coupon redemption if real coupon record exists
+      if (couponId && !couponId.startsWith('d0c01000')) {
+        await admin
+          .from('coupon_redemptions')
+          .insert({
+            coupon_id: couponId,
+            user_id: profile.id,
+            payment_order_id: newOrder.id,
+            discount_amount_usdt: discountAmountUsdt,
+            redeemed_at: nowIso,
+          })
+          .select();
+
+        // Increment coupon redemption count
+        const { data: couponData } = await admin
+          .from('coupons')
+          .select('redemption_count')
+          .eq('id', couponId)
+          .single();
+
+        if (couponData) {
+          await admin
+            .from('coupons')
+            .update({
+              redemption_count: (couponData.redemption_count || 0) + 1,
+              updated_at: nowIso,
+            })
+            .eq('id', couponId);
+        }
+      }
+
+      // Activate user entitlement
+      const { error: profileError } = await admin
+        .from('profiles')
+        .update({
+          plan: 'ad_free',
+          updated_at: nowIso,
+        })
+        .eq('id', profile.id);
+
+      if (profileError) {
+        return NextResponse.json(
+          { error: 'Failed to activate Ad-Free plan. Please contact support.' },
+          { status: 500 }
+        );
+      }
+
+      // Cancel any prior pending payment orders
+      await admin
+        .from('payment_orders')
+        .update({
+          status: 'cancelled',
+          failure_reason: 'Superseded by complimentary 100% coupon activation',
+          updated_at: nowIso,
+        })
+        .eq('user_id', profile.id)
+        .eq('status', 'pending');
+
+      return NextResponse.json({
+        success: true,
+        zeroCost: true,
+        activated: true,
+        alreadyPaid: false,
+        orderId,
+        amount: '0.0000',
+        originalPriceUsd: originalAmountUsd,
+        discountAmountUsdt,
+        couponCode,
+        formattedDiscount: '100% off',
+        message: '100% coupon applied! Ad-Free plan is now active.',
+        redirect: '/account',
+      });
+    }
+
     // Check if user already has an active, non-expired pending or detected order
     const { data: existingActive } = await admin
       .from('payment_orders')

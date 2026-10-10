@@ -763,11 +763,17 @@ async function runTests() {
     assert.strictEqual(calc99.finalAmountUsdt, '0.020000');
   });
 
-  test('Percentage discount rejects zero, negative, 100%, and over-limit values', () => {
+  test('Percentage discount accepts 100% complimentary discount and rejects zero, negative, and over-limit values', () => {
     assert.strictEqual(calculateCouponDiscount('percent', '0', '2.000000').valid, false);
     assert.strictEqual(calculateCouponDiscount('percent', '-10', '2.000000').valid, false);
-    assert.strictEqual(calculateCouponDiscount('percent', '100', '2.000000').valid, false);
     assert.strictEqual(calculateCouponDiscount('percent', '120', '2.000000').valid, false);
+
+    // 100% coupon test
+    const calc100 = calculateCouponDiscount('percent', '100', '2.000000');
+    assert.strictEqual(calc100.valid, true);
+    assert.strictEqual(calc100.discountAmountUsdt, '2.000000');
+    assert.strictEqual(calc100.finalAmountUsdt, '0.000000');
+    assert.strictEqual(calc100.formattedDiscount, '100% off');
   });
 
   test('Fixed USDT discount calculates exact amounts (e.g. 0.50 USDT off $2.00 = $1.50)', () => {

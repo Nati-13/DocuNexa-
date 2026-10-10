@@ -3,13 +3,59 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Check, ShieldCheck, Zap, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Check, ShieldCheck, Zap, ArrowRight, Loader2, AlertCircle, Tag } from 'lucide-react';
 
 export function PlanSelection() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<'free' | 'ad_free' | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: string;
+    formattedDiscount: string;
+    originalAmountUsd: string;
+    discountAmountUsdt: string;
+    finalAmountUsdt: string;
+  } | null>(null);
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = couponCode.trim().toUpperCase();
+    if (!trimmed) return;
+    setCouponLoading(true);
+    setCouponError(null);
+
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid coupon code');
+      }
+      setAppliedCoupon({
+        code: data.code,
+        discountType: data.discountType,
+        formattedDiscount: data.formattedDiscount,
+        originalAmountUsd: data.originalAmountUsd,
+        discountAmountUsdt: data.discountAmountUsdt,
+        finalAmountUsdt: data.finalAmountUsdt,
+      });
+    } catch (err: any) {
+      setCouponError(err.message || 'Invalid coupon code');
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const handleSelectFree = async () => {
     setLoadingPlan('free');
@@ -35,8 +81,32 @@ export function PlanSelection() {
     }
   };
 
-  const handleSelectAdFree = () => {
-    router.push('/account?checkout=ad_free');
+  const handleSelectAdFree = async () => {
+    setLoadingPlan('ad_free');
+    setError(null);
+
+    // If 100% coupon applied, execute immediate zero-cost order activation
+    if (appliedCoupon && (appliedCoupon.finalAmountUsdt === '0.000000' || appliedCoupon.finalAmountUsdt === '0.0000')) {
+      try {
+        const res = await fetch('/api/payments/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ couponCode: appliedCoupon.code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to activate coupon');
+        await refreshUser();
+        router.push('/account');
+        return;
+      } catch (err: any) {
+        setError(err.message || 'Failed to activate zero-cost plan');
+        setLoadingPlan(null);
+        return;
+      }
+    }
+
+    const couponParam = appliedCoupon?.code ? `&coupon=${encodeURIComponent(appliedCoupon.code)}` : '';
+    router.push(`/account?checkout=ad_free${couponParam}`);
   };
 
   return (
@@ -127,9 +197,32 @@ export function PlanSelection() {
               </p>
             </div>
 
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">$2</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">one-time</span>
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-1.5">
+                {appliedCoupon ? (
+                  <>
+                    <span className="text-4xl sm:text-5xl font-extrabold text-emerald-600 dark:text-emerald-400">
+                      ${Number(appliedCoupon.finalAmountUsdt).toFixed(2)}
+                    </span>
+                    <span className="text-xs text-slate-400 line-through">
+                      ${appliedCoupon.originalAmountUsd}
+                    </span>
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                      ({appliedCoupon.formattedDiscount})
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">$2</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">one-time</span>
+                  </>
+                )}
+              </div>
+              {appliedCoupon && Number(appliedCoupon.finalAmountUsdt) === 0 && (
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                  ✓ 100% complimentary coupon applied! Instant free activation.
+                </p>
+              )}
             </div>
 
             <ul className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300">
@@ -143,12 +236,50 @@ export function PlanSelection() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Check size={16} className="text-emerald-500 shrink-0" />
-                <span>One-time crypto payment</span>
+                <span>{appliedCoupon && Number(appliedCoupon.finalAmountUsdt) === 0 ? 'Complimentary activation' : 'One-time crypto payment'}</span>
               </li>
             </ul>
+
+            {/* Coupon Code Input */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                  <Tag size={12} /> Have a coupon code?
+                </span>
+                {appliedCoupon && (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono text-[11px]">
+                    Applied: {appliedCoupon.code}
+                  </span>
+                )}
+              </div>
+
+              <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    setCouponError(null);
+                  }}
+                  placeholder="e.g. DOCUNEXA100well"
+                  className="flex-1 px-3 py-1.5 rounded-xl text-xs font-mono font-medium uppercase tracking-wider bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+                <button
+                  type="submit"
+                  disabled={couponLoading || !couponCode.trim()}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center min-w-[60px]"
+                >
+                  {couponLoading ? <Loader2 size={12} className="animate-spin" /> : 'Apply'}
+                </button>
+              </form>
+
+              {couponError && (
+                <p className="text-[11px] text-rose-500 dark:text-rose-400 font-medium">{couponError}</p>
+              )}
+            </div>
           </div>
 
-          <div className="pt-8">
+          <div className="pt-6">
             <button
               onClick={handleSelectAdFree}
               disabled={loadingPlan !== null}
@@ -156,16 +287,22 @@ export function PlanSelection() {
             >
               {loadingPlan === 'ad_free' ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" /> Preparing Checkout...
+                  <Loader2 size={16} className="animate-spin" /> Activating...
+                </>
+              ) : appliedCoupon && Number(appliedCoupon.finalAmountUsdt) === 0 ? (
+                <>
+                  <ShieldCheck size={18} /> Activate Free ($0.00)
                 </>
               ) : (
                 <>
-                  <ShieldCheck size={18} /> Remove Ads — $2
+                  <ShieldCheck size={18} /> Remove Ads — ${appliedCoupon ? appliedCoupon.finalAmountUsdt : '2'}
                 </>
               )}
             </button>
             <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
-              Direct Bybit USDT transfer on Polygon network. No subscription or renewal fees.
+              {appliedCoupon && Number(appliedCoupon.finalAmountUsdt) === 0
+                ? 'Zero-cost activation. Instant access with no payment required.'
+                : 'Direct Bybit USDT transfer on Polygon or Aptos. No recurring fees.'}
             </p>
           </div>
         </div>
