@@ -12,7 +12,11 @@ export interface AuditLogParams {
     | 'manual_revoke_ad_free'
     | 'payment_reviewed'
     | 'payment_manually_approved'
-    | 'payment_manually_rejected';
+    | 'payment_manually_rejected'
+    | 'user_suspended'
+    | 'user_restored'
+    | 'user_password_recovery_initiated'
+    | 'admin_password_changed';
   targetUserId?: string | null;
   targetPaymentId?: string | null;
   targetCouponId?: string | null;

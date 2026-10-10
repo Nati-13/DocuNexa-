@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Power,
   Edit2,
+  Sparkles,
 } from 'lucide-react';
 
 export default function AdminCouponsPage() {
@@ -32,6 +33,21 @@ export default function AdminCouponsPage() {
   const [maxRedemptionsPerUser, setMaxRedemptionsPerUser] = useState('1');
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const handleGenerateRandomCode = () => {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const array = new Uint8Array(6);
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+      window.crypto.getRandomValues(array);
+    } else {
+      for (let i = 0; i < 6; i++) array[i] = Math.floor(Math.random() * 256);
+    }
+    let codeStr = '';
+    for (let i = 0; i < 6; i++) {
+      codeStr += chars[array[i] % chars.length];
+    }
+    setCode(`DOCU-${codeStr}`);
+  };
 
   // Edit / Toggle State
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -295,14 +311,23 @@ export default function AdminCouponsPage() {
             <form onSubmit={handleCreateCoupon} className="space-y-4 pt-1 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="block font-semibold text-slate-700 dark:text-slate-300">
-                    Coupon Code (Uppercase)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300">
+                      Coupon Code (Uppercase)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleGenerateRandomCode}
+                      className="text-[11px] text-brand-600 dark:text-brand-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Sparkles size={11} /> Generate Random
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
-                    placeholder="e.g. SAVE25"
+                    placeholder="e.g. DOCU-8K2N9X"
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
                     required
                   />

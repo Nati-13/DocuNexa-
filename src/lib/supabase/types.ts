@@ -4,8 +4,21 @@ export type Profile = {
   id: string; // uuid
   email: string;
   plan: UserPlan;
+  is_suspended?: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type AnalyticsEventType = 'pageview' | 'signup' | 'login';
+
+export type DbAnalyticsEvent = {
+  id: string; // uuid
+  event_type: AnalyticsEventType;
+  path: string;
+  country_code: string | null;
+  visitor_id_hash: string;
+  user_id: string | null;
+  created_at: string;
 };
 
 export type PaymentOrderStatus =
@@ -108,6 +121,7 @@ export type Database = {
           id: string;
           email: string;
           plan?: UserPlan;
+          is_suspended?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -115,6 +129,7 @@ export type Database = {
           id?: string;
           email?: string;
           plan?: UserPlan;
+          is_suspended?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -313,6 +328,28 @@ export type Database = {
           created_at?: string;
           request_ip_hash?: string | null;
           verification_token_hash?: string | null;
+        };
+        Relationships: [];
+      };
+      analytics_events: {
+        Row: DbAnalyticsEvent;
+        Insert: {
+          id?: string;
+          event_type: AnalyticsEventType;
+          path: string;
+          country_code?: string | null;
+          visitor_id_hash: string;
+          user_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_type?: AnalyticsEventType;
+          path?: string;
+          country_code?: string | null;
+          visitor_id_hash?: string;
+          user_id?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };

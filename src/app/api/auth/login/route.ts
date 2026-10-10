@@ -78,6 +78,23 @@ export async function POST(req: Request) {
       .eq('id', authData.user.id)
       .single();
 
+    // Record verified successful login event (never on failed attempts)
+    const countryCode =
+      req.headers.get('x-vercel-ip-country') ||
+      req.headers.get('cf-ipcountry') ||
+      req.headers.get('x-country') ||
+      null;
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+
+    const { recordAnalyticsEvent } = await import('@/lib/analytics/tracker');
+    recordAnalyticsEvent({
+      eventType: 'login',
+      path: '/login',
+      countryCode,
+      ip,
+      userId: authData.user.id,
+    }).catch(() => {});
+
     return secureJsonResponse({
       success: true,
       user: {

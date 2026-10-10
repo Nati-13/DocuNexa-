@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { parseExactUsdt } from '@/lib/payments/bybit';
-import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+import { guardApiRequest } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const { errorResponse, requestId } = await guardApiRequest(req, {
+  const { errorResponse } = await guardApiRequest(req, {
     allowedMethods: ['GET'],
     rateLimitAction: 'admin-users',
     maxRequests: 60,
@@ -25,13 +25,14 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const search = (searchParams.get('search') || '').trim();
     const plan = searchParams.get('plan');
+    const status = searchParams.get('status');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const offset = (page - 1) * limit;
 
     let query = admin
       .from('profiles')
-      .select('id, email, plan, created_at, updated_at', { count: 'exact' });
+      .select('id, email, plan, is_suspended, created_at, updated_at', { count: 'exact' });
 
     if (search) {
       query = query.ilike('email', `%${search}%`);
@@ -39,6 +40,12 @@ export async function GET(req: NextRequest) {
 
     if (plan && (plan === 'free' || plan === 'ad_free')) {
       query = query.eq('plan', plan);
+    }
+
+    if (status === 'suspended') {
+      query = query.eq('is_suspended', true);
+    } else if (status === 'active') {
+      query = query.or('is_suspended.is.null,is_suspended.eq.false');
     }
 
     query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
@@ -63,6 +70,24 @@ export async function GET(req: NextRequest) {
       .select('user_id')
       .in('user_id', userIds);
 
+    // Fetch last login from auth or analytics
+    const lastLoginMap: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      // Check auth users in parallel
+      await Promise.allSettled(
+        userIds.map(async (uid) => {
+          try {
+            const { data: authUser } = await admin.auth.admin.getUserById(uid);
+            if (authUser?.user?.last_sign_in_at) {
+              lastLoginMap[uid] = authUser.user.last_sign_in_at;
+            }
+          } catch {
+            // Non-critical if auth lookup fails
+          }
+        })
+      );
+    }
+
     const spendMap: Record<string, bigint> = {};
     const ordersCountMap: Record<string, number> = {};
     const redemptionsCountMap: Record<string, number> = {};
@@ -85,11 +110,16 @@ export async function GET(req: NextRequest) {
     const enrichedUsers = userList.map((u) => {
       const spendMicro = spendMap[u.id] || 0n;
       const spendFormatted = (Number(spendMicro) / 1000000).toFixed(2);
+      const isSuspended = Boolean(u.is_suspended);
       return {
         id: u.id,
         email: u.email,
         plan: u.plan,
+        isSuspended,
+        status: isSuspended ? 'suspended' : 'active',
+        entitlementExpiry: u.plan === 'ad_free' ? 'Lifetime Access' : 'N/A',
         createdAt: u.created_at,
+        lastLogin: lastLoginMap[u.id] || u.updated_at || null,
         paymentsCount: ordersCountMap[u.id] || 0,
         totalSpendUsdt: spendFormatted,
         couponRedemptionsCount: redemptionsCountMap[u.id] || 0,

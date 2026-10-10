@@ -304,3 +304,30 @@ export async function validateCouponForUser(
     calculation,
   };
 }
+
+/**
+ * Generates a cryptographically secure random coupon code with prefix DOCU-
+ * Uses unambiguous characters (excluding 0, 1, I, O) to prevent transcription confusion.
+ */
+export function generateSecureCouponCode(prefix = 'DOCU'): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const array = new Uint8Array(6);
+  if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(array);
+  } else {
+    try {
+      const nodeCrypto = require('crypto');
+      const bytes = nodeCrypto.randomBytes(6);
+      for (let i = 0; i < 6; i++) array[i] = bytes[i];
+    } catch {
+      // Fallback
+      for (let i = 0; i < 6; i++) array[i] = Math.floor(Math.random() * 256);
+    }
+  }
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[array[i] % chars.length];
+  }
+  return `${prefix}-${code}`;
+}
+

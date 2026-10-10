@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { getCurrentUser } from '@/lib/auth';
 import { AuthProvider } from '@/context/AuthContext';
 import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController';
+import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -119,6 +120,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors">
+        <AnalyticsTracker />
         <AuthProvider initialUser={user ? { id: user.id, email: user.email, plan: user.plan, created_at: user.created_at } : null}>
           <Navbar />
           <div className="flex-1">

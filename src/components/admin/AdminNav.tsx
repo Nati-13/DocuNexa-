@@ -3,12 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, CreditCard, Tag, ScrollText, ShieldAlert, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Globe, CreditCard, Layers, Tag, ScrollText, ShieldAlert, Settings } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/analytics', label: 'Analytics', icon: Globe },
   { href: '/admin/payments', label: 'Payments', icon: CreditCard },
+  { href: '/admin/plans', label: 'Plans', icon: Layers },
   { href: '/admin/coupons', label: 'Coupons', icon: Tag },
   { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
   { href: '/admin/security', label: 'Security & MFA', icon: ShieldAlert },
