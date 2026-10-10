@@ -18,7 +18,7 @@ import {
   LifeBuoy,
 } from 'lucide-react';
 import { SUPPORT_CATEGORIES } from '@/lib/support/constants';
-import { TELEGRAM_BOT_HANDLE, TELEGRAM_BOT_URL } from '@/lib/telegram/bot';
+import { TELEGRAM_BOT_HANDLE, TELEGRAM_BOT_URL } from '@/lib/telegram/constants';
 
 export function SupportClient() {
   const { user } = useAuth();

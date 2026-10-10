@@ -216,39 +216,21 @@ export async function validateCouponForUser(
 
   const admin = createAdminSupabaseClient();
 
-  // Query coupon record
+  // Query coupon record from database
   const { data: coupon, error: couponError } = await admin
     .from('coupons')
     .select('*')
     .eq('code', code)
     .single();
 
-  let activeCoupon = coupon;
-
-  if (couponError || !activeCoupon) {
-    if (code === 'DOCUNEXA100WELL') {
-      activeCoupon = {
-        id: 'd0c01000-0000-4000-8000-000000000100',
-        code: 'DOCUNEXA100WELL',
-        discount_type: 'percent',
-        discount_value: 100,
-        active: true,
-        starts_at: null,
-        expires_at: null,
-        max_redemptions: null,
-        max_redemptions_per_user: 1,
-        redemption_count: 0,
-        created_by: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    } else {
-      return {
-        valid: false,
-        error: 'This coupon code is invalid or unavailable.',
-      };
-    }
+  if (couponError || !coupon) {
+    return {
+      valid: false,
+      error: 'This coupon code is invalid or does not exist.',
+    };
   }
+
+  const activeCoupon = coupon;
 
   // 1. Verify Active Status
   if (!activeCoupon.active) {

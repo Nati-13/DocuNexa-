@@ -409,6 +409,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      telegram_support_mappings: {
+        Row: {
+          owner_message_id: string;
+          customer_chat_id: string;
+          customer_message_id: string | null;
+          customer_user_id: string | null;
+          customer_name: string | null;
+          ticket_ref: string;
+          created_at: string;
+        };
+        Insert: {
+          owner_message_id: string;
+          customer_chat_id: string;
+          customer_message_id?: string | null;
+          customer_user_id?: string | null;
+          customer_name?: string | null;
+          ticket_ref: string;
+          created_at?: string;
+        };
+        Update: {
+          owner_message_id?: string;
+          customer_chat_id?: string;
+          customer_message_id?: string | null;
+          customer_user_id?: string | null;
+          customer_name?: string | null;
+          ticket_ref?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      telegram_processed_updates: {
+        Row: {
+          update_id: string;
+          processed_at: string;
+        };
+        Insert: {
+          update_id: string;
+          processed_at?: string;
+        };
+        Update: {
+          update_id?: string;
+          processed_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -420,6 +465,14 @@ export type Database = {
           p_block_hash?: string | null;
           p_confirmations?: number | null;
           p_received_amount?: number | string | null;
+        };
+        Returns: Json;
+      };
+      redeem_zero_cost_coupon_atomic: {
+        Args: {
+          p_user_id: string;
+          p_coupon_id: string;
+          p_order_id: string;
         };
         Returns: Json;
       };

@@ -61,7 +61,34 @@ export async function PATCH(
       // Fallback
     }
 
-    // 2. Audit log recorded update
+    // 2. Fallback: Update stored ticket metadata in admin_audit_logs
+    try {
+      const { data: existingRows } = await admin
+        .from('admin_audit_logs')
+        .select('id, metadata')
+        .eq('action', 'support_ticket_submitted')
+        .filter('metadata->>id', 'eq', ticketId)
+        .limit(1);
+
+      if (existingRows && existingRows.length > 0) {
+        const row = existingRows[0];
+        const currentMeta = (row.metadata as Record<string, any>) || {};
+        const updatedMeta = {
+          ...currentMeta,
+          status: newStatus || currentMeta.status || 'open',
+          admin_notes: adminNotes !== undefined ? adminNotes : currentMeta.admin_notes,
+          updated_at: nowIso,
+        };
+        await admin
+          .from('admin_audit_logs')
+          .update({ metadata: updatedMeta })
+          .eq('id', row.id);
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+
+    // 3. Audit log recorded update
     await logAdminAction({
       adminUserId: adminProfile.id,
       action: 'support_ticket_updated' as any,

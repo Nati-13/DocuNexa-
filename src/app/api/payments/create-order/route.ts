@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     // -------------------------------------------------------------------------
     // Safe Complimentary Zero-Cost Order Flow (100% Discount)
     // -------------------------------------------------------------------------
-    if (finalAmountUsdt === '0.0000' && couponCode) {
+    if (finalAmountUsdt === '0.0000' && couponCode && couponId) {
       if ((profile.plan as string) === 'ad_free') {
         return secureJsonResponse({
           success: true,
@@ -110,7 +110,52 @@ export async function POST(req: Request) {
 
       const orderId = `DNX-FREE-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 
-      // Insert confirmed zero-cost order without fake blockchain hashes or deposits
+      // 1. Try atomic PostgreSQL procedure (row-locked, ACID transaction)
+      try {
+        const { data: rpcRes, error: rpcErr } = await admin.rpc('redeem_zero_cost_coupon_atomic', {
+          p_user_id: profile.id,
+          p_coupon_id: couponId,
+          p_order_id: orderId,
+        });
+
+        if (!rpcErr && rpcRes) {
+          const rpcResult = rpcRes as any;
+          if (rpcResult.already_paid) {
+            return secureJsonResponse({
+              success: true,
+              alreadyPaid: true,
+              message: 'Your account is already Ad-Free.',
+              redirect: '/account',
+            }, { status: 200 }, requestId);
+          }
+
+          if (rpcResult.success) {
+            return NextResponse.json({
+              success: true,
+              zeroCost: true,
+              activated: true,
+              alreadyPaid: false,
+              orderId,
+              amount: '0.0000',
+              originalPriceUsd: originalAmountUsd,
+              discountAmountUsdt,
+              couponCode,
+              formattedDiscount: '100% off',
+              message: '100% coupon applied! Ad-Free plan is now active.',
+              redirect: '/account',
+            });
+          }
+
+          if (rpcResult.error) {
+            return NextResponse.json({ error: rpcResult.error }, { status: 400 });
+          }
+        }
+      } catch {
+        // Fall through to transactional rollback-safe application flow
+      }
+
+      // 2. Rollback-Safe Application Fallback Sequence
+      // Step A: Insert confirmed zero-cost order
       const { data: newOrder, error: orderError } = await admin
         .from('payment_orders')
         .insert({
@@ -122,7 +167,7 @@ export async function POST(req: Request) {
           discount_amount_usdt: discountAmountUsdt,
           final_amount_usdt: '0.0000',
           payment_amount_usdt: '0.0000',
-          coupon_id: couponId && !couponId.startsWith('d0c01000') ? couponId : null,
+          coupon_id: couponId,
           coupon_code: couponCode,
           discount_type: discountType,
           currency: 'USDT',
@@ -144,45 +189,61 @@ export async function POST(req: Request) {
         .select('*')
         .single();
 
-      if (orderError) {
+      if (orderError || !newOrder) {
         return NextResponse.json(
           { error: 'Failed to process complimentary activation. Please try again.' },
           { status: 500 }
         );
       }
 
-      // Record coupon redemption if real coupon record exists
-      if (couponId && !couponId.startsWith('d0c01000')) {
-        await admin
-          .from('coupon_redemptions')
-          .insert({
-            coupon_id: couponId,
-            user_id: profile.id,
-            payment_order_id: newOrder.id,
-            discount_amount_usdt: discountAmountUsdt,
-            redeemed_at: nowIso,
-          })
-          .select();
+      // Step B: Record coupon redemption
+      const { data: redemptionData, error: redemptionError } = await admin
+        .from('coupon_redemptions')
+        .insert({
+          coupon_id: couponId,
+          user_id: profile.id,
+          payment_order_id: newOrder.id,
+          discount_amount_usdt: discountAmountUsdt,
+          redeemed_at: nowIso,
+        })
+        .select('id')
+        .single();
 
-        // Increment coupon redemption count
-        const { data: couponData } = await admin
-          .from('coupons')
-          .select('redemption_count')
-          .eq('id', couponId)
-          .single();
-
-        if (couponData) {
-          await admin
-            .from('coupons')
-            .update({
-              redemption_count: (couponData.redemption_count || 0) + 1,
-              updated_at: nowIso,
-            })
-            .eq('id', couponId);
-        }
+      if (redemptionError || !redemptionData) {
+        // ROLLBACK Step A: Remove the payment order
+        await admin.from('payment_orders').delete().eq('id', newOrder.id);
+        return NextResponse.json(
+          { error: 'Could not record coupon redemption. No order was charged.' },
+          { status: 500 }
+        );
       }
 
-      // Activate user entitlement
+      // Step C: Increment coupon redemption count
+      const { data: couponData } = await admin
+        .from('coupons')
+        .select('redemption_count')
+        .eq('id', couponId)
+        .single();
+
+      const { error: couponCountError } = await admin
+        .from('coupons')
+        .update({
+          redemption_count: ((couponData?.redemption_count as number) || 0) + 1,
+          updated_at: nowIso,
+        })
+        .eq('id', couponId);
+
+      if (couponCountError) {
+        // ROLLBACK Steps A & B
+        await admin.from('coupon_redemptions').delete().eq('id', redemptionData.id);
+        await admin.from('payment_orders').delete().eq('id', newOrder.id);
+        return NextResponse.json(
+          { error: 'Could not update coupon counter. Activation rolled back safely.' },
+          { status: 500 }
+        );
+      }
+
+      // Step D: Activate user entitlement in profile
       const { error: profileError } = await admin
         .from('profiles')
         .update({
@@ -192,13 +253,24 @@ export async function POST(req: Request) {
         .eq('id', profile.id);
 
       if (profileError) {
+        // ROLLBACK Steps A, B & C
+        await admin
+          .from('coupons')
+          .update({
+            redemption_count: (couponData?.redemption_count as number) || 0,
+            updated_at: nowIso,
+          })
+          .eq('id', couponId);
+        await admin.from('coupon_redemptions').delete().eq('id', redemptionData.id);
+        await admin.from('payment_orders').delete().eq('id', newOrder.id);
+
         return NextResponse.json(
-          { error: 'Failed to activate Ad-Free plan. Please contact support.' },
+          { error: 'Failed to activate Ad-Free plan. Transaction rolled back safely.' },
           { status: 500 }
         );
       }
 
-      // Cancel any prior pending payment orders
+      // Step E: Cancel prior pending payment orders
       await admin
         .from('payment_orders')
         .update({

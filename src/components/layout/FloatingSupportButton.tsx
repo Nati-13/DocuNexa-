@@ -11,7 +11,7 @@ import {
   ExternalLink,
   ChevronUp,
 } from 'lucide-react';
-import { TELEGRAM_BOT_HANDLE, TELEGRAM_BOT_URL } from '@/lib/telegram/bot';
+import { TELEGRAM_BOT_HANDLE, TELEGRAM_BOT_URL } from '@/lib/telegram/constants';
 
 export const FloatingSupportButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

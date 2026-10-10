@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 import { getCurrentProfile } from '@/lib/supabase/server';
 import { validateSupportTicketInput, persistSupportTicket } from '@/lib/support';
+import { notifyOwnerOfWebsiteTicket } from '@/lib/telegram/bot';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,20 @@ export async function POST(req: NextRequest) {
         { status: 500 },
         requestId
       );
+    }
+
+    // 5. Notify owner via Telegram if configured (non-blocking, never fails the ticket)
+    if (persistence.ticketId) {
+      notifyOwnerOfWebsiteTicket({
+        ticketId: persistence.ticketId,
+        name: validation.sanitized.name,
+        email: validation.sanitized.email,
+        category: validation.sanitized.category,
+        subject: validation.sanitized.subject,
+        message: validation.sanitized.message,
+      }).catch((err) => {
+        console.error('[support-tg-notify] Non-blocking notification error:', err?.message || err);
+      });
     }
 
     return secureJsonResponse(

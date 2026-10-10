@@ -18,7 +18,7 @@ import {
   Send,
   ExternalLink,
 } from 'lucide-react';
-import { TELEGRAM_BOT_URL } from '@/lib/telegram/bot';
+import { TELEGRAM_BOT_URL } from '@/lib/telegram/constants';
 
 export default function AdminSupportInboxPage() {
   const [tickets, setTickets] = useState<any[]>([]);
