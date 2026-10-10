@@ -144,6 +144,43 @@ export async function getTelegramWebhookInfo(): Promise<{
 }
 
 /**
+ * Registers the live webhook with Telegram Bot API
+ */
+export async function setTelegramWebhook(
+  webhookUrl: string,
+  secretToken?: string
+): Promise<{ ok: boolean; description?: string }> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    return { ok: false, description: 'TELEGRAM_BOT_TOKEN is not configured.' };
+  }
+
+  try {
+    const body: any = {
+      url: webhookUrl,
+      drop_pending_updates: false,
+    };
+    if (secretToken && secretToken.trim().length > 0) {
+      body.secret_token = secretToken.trim();
+    }
+
+    const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    return {
+      ok: Boolean(res.ok && data.ok),
+      description: data.description || (res.ok ? 'Webhook registered successfully.' : `HTTP ${res.status}`),
+    };
+  } catch (err: any) {
+    return { ok: false, description: err.message };
+  }
+}
+
+/**
  * Sends a message via Telegram Bot API
  */
 export async function sendTelegramMessage(

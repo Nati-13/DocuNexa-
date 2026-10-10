@@ -17,6 +17,7 @@ import {
   Calendar,
   Send,
   ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import { TELEGRAM_BOT_URL } from '@/lib/telegram/constants';
 
@@ -33,6 +34,29 @@ export default function AdminSupportInboxPage() {
   const [updateStatus, setUpdateStatus] = useState<string>('open');
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  // Webhook sync state
+  const [webhookSyncing, setWebhookSyncing] = useState(false);
+  const [webhookResult, setWebhookResult] = useState<string | null>(null);
+
+  const handleSyncWebhook = async () => {
+    setWebhookSyncing(true);
+    setWebhookResult(null);
+    try {
+      const res = await fetch('/api/admin/support/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: 'https://docunexa.pro.et/api/telegram/webhook' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to sync webhook');
+      setWebhookResult(data.message || 'Telegram webhook synced successfully!');
+    } catch (err: any) {
+      setWebhookResult(`Error: ${err.message}`);
+    } finally {
+      setWebhookSyncing(false);
+    }
+  };
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -110,15 +134,46 @@ export default function AdminSupportInboxPage() {
           </p>
         </div>
 
-        <a
-          href={TELEGRAM_BOT_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs hover:bg-sky-500/20 transition-colors self-start sm:self-auto cursor-pointer"
-        >
-          <Send size={13} className="rotate-45" /> Telegram Bot: @docunexa_bot <ExternalLink size={12} />
-        </a>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={handleSyncWebhook}
+            disabled={webhookSyncing}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+            title="Registers the live webhook URL with Telegram Bot API"
+          >
+            {webhookSyncing ? (
+              <Loader2 size={13} className="animate-spin text-brand-500" />
+            ) : (
+              <RefreshCw size={13} className="text-slate-500" />
+            )}
+            Sync Webhook
+          </button>
+
+          <a
+            href={TELEGRAM_BOT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs hover:bg-sky-500/20 transition-colors cursor-pointer"
+          >
+            <Send size={13} className="rotate-45" /> Telegram Bot: @docunexa_bot <ExternalLink size={12} />
+          </a>
+        </div>
       </div>
+
+      {webhookResult && (
+        <div
+          className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between gap-2 ${
+            webhookResult.startsWith('Error')
+              ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+          }`}
+        >
+          <span>{webhookResult}</span>
+          <button onClick={() => setWebhookResult(null)} className="text-slate-400 hover:text-slate-600">
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
