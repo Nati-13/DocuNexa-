@@ -40,3 +40,4 @@ tmp/
 temp/
 *.tsbuildinfo
 .data/
+supabase/.temp/

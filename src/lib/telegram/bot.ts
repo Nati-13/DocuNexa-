@@ -484,12 +484,22 @@ export async function handleTelegramWebhookUpdate(
   update: any,
   secretTokenHeader?: string | null
 ): Promise<{ ok: boolean; handled: string; error?: string }> {
-  // 1. Verify Secret Token if TELEGRAM_WEBHOOK_SECRET is set
+  // 1. Verify Secret Token (Fail-Closed: reject if secret is missing/empty or header mismatches)
   const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
-  if (expectedSecret && expectedSecret.length > 0) {
-    if (!secretTokenHeader || secretTokenHeader !== expectedSecret) {
-      return { ok: false, handled: 'rejected', error: 'Invalid or missing X-Telegram-Bot-Api-Secret-Token' };
-    }
+  if (!expectedSecret || expectedSecret.length === 0) {
+    return {
+      ok: false,
+      handled: 'rejected',
+      error: 'TELEGRAM_WEBHOOK_SECRET is not configured on the server. Incoming updates rejected.',
+    };
+  }
+
+  if (!secretTokenHeader || secretTokenHeader !== expectedSecret) {
+    return {
+      ok: false,
+      handled: 'rejected',
+      error: 'Invalid or missing X-Telegram-Bot-Api-Secret-Token',
+    };
   }
 
   // 2. Validate update structure

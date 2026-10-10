@@ -249,26 +249,76 @@ async function runTests() {
   // --------------------------------------------------------------------------
   console.log('\n--- 4. TELEGRAM WEBHOOK SECRETS, DEDUPLICATION & ROUTING ---');
 
-  await test('Incorrect webhook secrets: Rejects request when secret header mismatches TELEGRAM_WEBHOOK_SECRET', async () => {
+  await test('Missing webhook secret in server env: Rejects updates when TELEGRAM_WEBHOOK_SECRET is unset (fail-closed)', async () => {
     const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-    process.env.TELEGRAM_WEBHOOK_SECRET = 'SUPER_SECURE_SECRET_12345';
+    delete process.env.TELEGRAM_WEBHOOK_SECRET;
 
-    const testUpdate = { update_id: 8881001, message: { chat: { id: 123 }, text: 'hello' } };
-    const res = await handleTelegramWebhookUpdate(testUpdate, 'WRONG_SECRET_VALUE');
+    const testUpdate = { update_id: 8881000, message: { chat: { id: 123 }, text: 'hello' } };
+    const res = await handleTelegramWebhookUpdate(testUpdate, 'ANY_HEADER_TOKEN');
 
     assert.strictEqual(res.ok, false);
     assert.strictEqual(res.handled, 'rejected');
-    assert.ok(res.error?.includes('Secret-Token'));
+    assert.ok(res.error?.includes('TELEGRAM_WEBHOOK_SECRET is not configured'));
+
+    if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
+  });
+
+  await test('Empty webhook secret in server env: Rejects updates when TELEGRAM_WEBHOOK_SECRET is blank or whitespace (fail-closed)', async () => {
+    const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    process.env.TELEGRAM_WEBHOOK_SECRET = '   ';
+
+    const testUpdate = { update_id: 8881001, message: { chat: { id: 123 }, text: 'hello' } };
+    const res = await handleTelegramWebhookUpdate(testUpdate, 'ANY_HEADER_TOKEN');
+
+    assert.strictEqual(res.ok, false);
+    assert.strictEqual(res.handled, 'rejected');
+    assert.ok(res.error?.includes('TELEGRAM_WEBHOOK_SECRET is not configured'));
 
     if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
     else delete process.env.TELEGRAM_WEBHOOK_SECRET;
   });
 
-  await test('Correct webhook secret: Accepts update matching TELEGRAM_WEBHOOK_SECRET', async () => {
+  await test('Missing secret header: Rejects incoming update when header is null or omitted despite configured secret', async () => {
+    const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    process.env.TELEGRAM_WEBHOOK_SECRET = 'SUPER_SECURE_SECRET_12345';
+
+    const testUpdate = { update_id: 8881002, message: { chat: { id: 123 }, text: 'hello' } };
+    const resNull = await handleTelegramWebhookUpdate(testUpdate, null);
+    assert.strictEqual(resNull.ok, false);
+    assert.strictEqual(resNull.handled, 'rejected');
+    assert.ok(resNull.error?.includes('Secret-Token'));
+
+    const resUndefined = await handleTelegramWebhookUpdate(testUpdate);
+    assert.strictEqual(resUndefined.ok, false);
+    assert.strictEqual(resUndefined.handled, 'rejected');
+    assert.ok(resUndefined.error?.includes('Secret-Token'));
+
+    if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
+    else delete process.env.TELEGRAM_WEBHOOK_SECRET;
+  });
+
+  await test('Incorrect webhook secret header: Rejects request when secret header mismatches TELEGRAM_WEBHOOK_SECRET', async () => {
+    const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    process.env.TELEGRAM_WEBHOOK_SECRET = 'SUPER_SECURE_SECRET_12345';
+
+    const testUpdate = { update_id: 8881003, message: { chat: { id: 123 }, text: 'hello' } };
+    const res = await handleTelegramWebhookUpdate(testUpdate, 'WRONG_SECRET_VALUE');
+
+    assert.strictEqual(res.ok, false);
+    assert.strictEqual(res.handled, 'rejected');
+    assert.ok(res.error?.includes('Secret-Token'));
+    // Ensure the secret itself is never reflected or leaked in the error output
+    assert.strictEqual(res.error?.includes('SUPER_SECURE_SECRET_12345'), false);
+
+    if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
+    else delete process.env.TELEGRAM_WEBHOOK_SECRET;
+  });
+
+  await test('Correct webhook secret header: Accepts update matching TELEGRAM_WEBHOOK_SECRET', async () => {
     const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
     process.env.TELEGRAM_WEBHOOK_SECRET = 'MATCHING_SECRET_TOKEN';
 
-    const testUpdate = { update_id: 8881002, message: { chat: { id: 123 }, text: '/tools' } };
+    const testUpdate = { update_id: 8881004, message: { chat: { id: 123 }, text: '/tools' } };
     const res = await handleTelegramWebhookUpdate(testUpdate, 'MATCHING_SECRET_TOKEN');
 
     assert.strictEqual(res.ok, true);
@@ -279,18 +329,24 @@ async function runTests() {
   });
 
   await test('Duplicate updates: Idempotent processing ignores re-delivered update_id', async () => {
+    const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    process.env.TELEGRAM_WEBHOOK_SECRET = 'DEDUP_TEST_SECRET';
+
     const uniqueUpdateId = 9992000 + Math.floor(Math.random() * 10000);
     const testUpdate = { update_id: uniqueUpdateId, message: { chat: { id: 123 }, text: '/coupon' } };
 
     // First execution
-    const firstRes = await handleTelegramWebhookUpdate(testUpdate);
+    const firstRes = await handleTelegramWebhookUpdate(testUpdate, 'DEDUP_TEST_SECRET');
     assert.strictEqual(firstRes.ok, true);
     assert.strictEqual(firstRes.handled, 'faq_reply');
 
     // Duplicate execution with identical update_id
-    const dupRes = await handleTelegramWebhookUpdate(testUpdate);
+    const dupRes = await handleTelegramWebhookUpdate(testUpdate, 'DEDUP_TEST_SECRET');
     assert.strictEqual(dupRes.ok, true);
     assert.strictEqual(dupRes.handled, 'duplicate_ignored');
+
+    if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
+    else delete process.env.TELEGRAM_WEBHOOK_SECRET;
   });
 
   await test('Owner forwarding: Persistent mapping stores owner message ID to customer chat', async () => {
@@ -310,7 +366,9 @@ async function runTests() {
   });
 
   await test('Owner-only replies: Non-owner cannot trigger support reply flow', async () => {
+    const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
     const origOwner = process.env.TELEGRAM_OWNER_CHAT_ID;
+    process.env.TELEGRAM_WEBHOOK_SECRET = 'OWNER_TEST_SECRET';
     process.env.TELEGRAM_OWNER_CHAT_ID = '111222333'; // Configured owner
 
     // An arbitrary customer sends a message with reply_to_message
@@ -324,17 +382,21 @@ async function runTests() {
       },
     };
 
-    const res = await handleTelegramWebhookUpdate(nonOwnerUpdate);
+    const res = await handleTelegramWebhookUpdate(nonOwnerUpdate, 'OWNER_TEST_SECRET');
     // Should be treated as a customer inquiry (or forwarded), NOT an owner reply
     assert.strictEqual(res.ok, true);
     assert.strictEqual(res.handled, 'customer_inquiry_forwarded');
 
+    if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
+    else delete process.env.TELEGRAM_WEBHOOK_SECRET;
     if (origOwner) process.env.TELEGRAM_OWNER_CHAT_ID = origOwner;
     else delete process.env.TELEGRAM_OWNER_CHAT_ID;
   });
 
   await test('Owner-only replies: Configured owner reply without mapping returns informative guidance', async () => {
+    const origSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
     const origOwner = process.env.TELEGRAM_OWNER_CHAT_ID;
+    process.env.TELEGRAM_WEBHOOK_SECRET = 'OWNER_TEST_SECRET';
     process.env.TELEGRAM_OWNER_CHAT_ID = '111222333';
 
     // Owner replies to an unknown message ID (no mapping found)
@@ -348,10 +410,12 @@ async function runTests() {
       },
     };
 
-    const res = await handleTelegramWebhookUpdate(ownerUpdate);
+    const res = await handleTelegramWebhookUpdate(ownerUpdate, 'OWNER_TEST_SECRET');
     assert.strictEqual(res.ok, true);
     assert.strictEqual(res.handled, 'owner_mapping_not_found');
 
+    if (origSecret) process.env.TELEGRAM_WEBHOOK_SECRET = origSecret;
+    else delete process.env.TELEGRAM_WEBHOOK_SECRET;
     if (origOwner) process.env.TELEGRAM_OWNER_CHAT_ID = origOwner;
     else delete process.env.TELEGRAM_OWNER_CHAT_ID;
   });
@@ -433,11 +497,34 @@ async function runTests() {
     process.cwd(),
     'supabase',
     'migrations',
+    '20261010194346_add_100_percent_coupon_and_support_tickets.sql'
+  );
+
+  const legacyMigrationPath = path.join(
+    process.cwd(),
+    'supabase',
+    'migrations',
     '20261011000000_add_100_percent_coupon_and_support_tickets.sql'
   );
 
-  await test('Migration 20261011000000 exists on disk', () => {
-    assert.ok(fs.existsSync(migrationPath), 'Migration file must exist');
+  await test('Reconciled migration 20261010194346 exists on disk matching remote production version', () => {
+    assert.ok(fs.existsSync(migrationPath), 'Migration file 20261010194346 must exist');
+    assert.strictEqual(fs.existsSync(legacyMigrationPath), false, 'Legacy un-reconciled migration 20261011000000 must not exist');
+  });
+
+  await test('Exactly one migration file matches coupon and support tickets in supabase/migrations', () => {
+    const migrationsDir = path.join(process.cwd(), 'supabase', 'migrations');
+    const files = fs.readdirSync(migrationsDir).filter(f => f.includes('add_100_percent_coupon_and_support_tickets'));
+    assert.strictEqual(files.length, 1, 'Must have exactly one matching local migration file');
+    assert.strictEqual(files[0], '20261010194346_add_100_percent_coupon_and_support_tickets.sql');
+  });
+
+  await test('Migration includes security hardening (search_path, revoke execution from public/anon/auth, grant to service_role, RLS query caching)', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf-8');
+    assert.ok(sql.includes('set search_path = public, pg_temp'), 'Must set secure search_path on functions');
+    assert.ok(sql.includes('revoke all on function public.redeem_zero_cost_coupon_atomic'), 'Must revoke public execution');
+    assert.ok(sql.includes('grant execute on function public.redeem_zero_cost_coupon_atomic(uuid, uuid, text) to service_role'), 'Must grant execution to service_role');
+    assert.ok(sql.includes('(select auth.uid()) = user_id'), 'Must optimize RLS ownership policy query caching');
   });
 
   await test('Migration relaxes chk_coupon_discount_bounds to discount_value <= 100', () => {

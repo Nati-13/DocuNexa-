@@ -59,7 +59,7 @@ drop policy if exists "Users can view own support tickets" on public.support_tic
 create policy "Users can view own support tickets"
   on public.support_tickets for select
   to authenticated
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- Service role has full access (read, write, update, delete)
 drop policy if exists "Service role manages support tickets" on public.support_tickets;
@@ -112,6 +112,7 @@ create or replace function public.redeem_zero_cost_coupon_atomic(
 returns jsonb
 language plpgsql
 security definer
+set search_path = public, pg_temp
 as $$
 declare
   v_coupon record;
@@ -196,3 +197,9 @@ begin
   return jsonb_build_object('success', true, 'order_id', p_order_id, 'payment_order_id', v_payment_order_id);
 end;
 $$;
+
+-- Revoke public execution of redeem_zero_cost_coupon_atomic; available strictly to service_role
+revoke all on function public.redeem_zero_cost_coupon_atomic(uuid, uuid, text) from public;
+revoke all on function public.redeem_zero_cost_coupon_atomic(uuid, uuid, text) from anon;
+revoke all on function public.redeem_zero_cost_coupon_atomic(uuid, uuid, text) from authenticated;
+grant execute on function public.redeem_zero_cost_coupon_atomic(uuid, uuid, text) to service_role;
