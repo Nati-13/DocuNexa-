@@ -66,11 +66,13 @@ async function runVerification() {
   console.log('\n--- 2. PASSWORD RESET FAIL-CLOSED & ENUMERATION RESISTANCE ---');
 
   const origEnv = process.env.NODE_ENV;
-  const origResendKey = process.env.RESEND_API_KEY;
+  const origSmtpUser = process.env.SMTP_USER;
+  const origSmtpPass = process.env.SMTP_PASS;
 
-  // Simulate production without RESEND_API_KEY
+  // Simulate production without SMTP configuration
   (process.env as any).NODE_ENV = 'production';
-  delete process.env.RESEND_API_KEY;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
 
   // Check non-existing user
   const nonExistingResult = await requestPasswordReset('nobody-1234567@example.com', '127.0.0.1');
@@ -113,7 +115,8 @@ async function runVerification() {
 
   // Restore environment
   (process.env as any).NODE_ENV = origEnv;
-  if (origResendKey) process.env.RESEND_API_KEY = origResendKey;
+  if (origSmtpUser) process.env.SMTP_USER = origSmtpUser;
+  if (origSmtpPass) process.env.SMTP_PASS = origSmtpPass;
 
   console.log('\n======================================================');
   console.log(`TOTAL CHECKS: ${passed} | PASSED: ${passed} | FAILED: 0`);

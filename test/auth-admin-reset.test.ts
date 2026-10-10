@@ -201,13 +201,124 @@ async function runTests() {
   if (origServiceKey) process.env.SUPABASE_SERVICE_ROLE_KEY = origServiceKey;
   if (origSecretKey) process.env.SUPABASE_SECRET_KEY = origSecretKey;
 
-  const { sendPasswordResetEmail } = await import('../src/lib/auth/email');
+  const { sendPasswordResetEmail, isSmtpConfigured, getSmtpConfig } = await import('../src/lib/auth/email');
+  const nodemailer = (await import('nodemailer')).default;
+
+  // 7A: Missing SMTP credentials fails closed
   const origEnv = process.env.NODE_ENV;
+  const origUser = process.env.SMTP_USER;
+  const origPass = process.env.SMTP_PASS;
   (process.env as any).NODE_ENV = 'production';
-  delete process.env.RESEND_API_KEY;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
+
   const missingEmailRes = await sendPasswordResetEmail({ to: 'test@example.com', code: '1234AB' });
-  assert(!missingEmailRes.success, 'sendPasswordResetEmail treats missing RESEND_API_KEY as unavailable (no silent success)');
+  assert(!missingEmailRes.success, 'sendPasswordResetEmail treats missing SMTP credentials as unavailable (no silent success)');
+  assert(!isSmtpConfigured(), 'isSmtpConfigured returns false when credentials are removed');
   (process.env as any).NODE_ENV = origEnv;
+
+  // 7B: Successful email dispatch with custom/mock transporter
+  let sentOptions: any = null;
+  const mockSuccessTransporter = {
+    sendMail: async (opts: any) => {
+      sentOptions = opts;
+      return { messageId: '<test-message-id@docunexa>' };
+    },
+  } as any;
+
+  const successRes = await sendPasswordResetEmail({
+    to: 'recipient@example.com',
+    code: '9876CD',
+    transporter: mockSuccessTransporter,
+  });
+  assert(successRes.success, 'sendPasswordResetEmail succeeds with mock transporter');
+  assert(
+    sentOptions &&
+      sentOptions.to === 'recipient@example.com' &&
+      sentOptions.subject.includes('Password Reset') &&
+      sentOptions.text.includes('9876CD') &&
+      sentOptions.html.includes('9876CD'),
+    'Transporter receives correct recipient, subject, text, and html containing recovery code'
+  );
+
+  // 7C: SMTP authentication rejection (EAUTH / 535)
+  const mockAuthFailTransporter = {
+    sendMail: async () => {
+      const err: any = new Error('Invalid login: 535-5.7.8 Username and Password not accepted');
+      err.code = 'EAUTH';
+      err.responseCode = 535;
+      throw err;
+    },
+  } as any;
+
+  const authFailRes = await sendPasswordResetEmail({
+    to: 'test@example.com',
+    code: '1234AB',
+    transporter: mockAuthFailTransporter,
+  });
+  assert(!authFailRes.success, 'sendPasswordResetEmail reports failure on SMTP authentication rejection');
+  assert(
+    (authFailRes.error || '').toLowerCase().includes('authentication failed'),
+    'Returns truthful authentication failure error message without exposing secrets'
+  );
+
+  // 7D: SMTP network error (ECONNECTION / ETIMEDOUT)
+  const mockNetworkFailTransporter = {
+    sendMail: async () => {
+      const err: any = new Error('Connection timeout to smtp.gmail.com:465');
+      err.code = 'ETIMEDOUT';
+      throw err;
+    },
+  } as any;
+
+  const networkFailRes = await sendPasswordResetEmail({
+    to: 'test@example.com',
+    code: '1234AB',
+    transporter: mockNetworkFailTransporter,
+  });
+  assert(!networkFailRes.success, 'sendPasswordResetEmail reports failure on network connection timeout');
+  assert(
+    (networkFailRes.error || '').toLowerCase().includes('network error'),
+    'Returns truthful network error message'
+  );
+
+  // 7E: Recovery-code invalidation on message delivery failure
+  const failEmail = 'delivery_fail_user@example.com';
+  const deliveryFailRes = await requestPasswordReset(failEmail, '127.0.0.1', {
+    transporter: mockAuthFailTransporter,
+  });
+  assert(!deliveryFailRes.success, 'requestPasswordReset reports failure when SMTP dispatch fails');
+  // Attempting to verify any code for this request must fail because newly generated code was invalidated
+  const invalidVerify = await verifyRecoveryCode(failEmail, '1234AB');
+  assert(!invalidVerify.success, 'Recovery code is strictly invalidated on delivery failure (cannot be verified)');
+
+  // Restore credentials & environment
+  if (origUser) process.env.SMTP_USER = origUser;
+  if (origPass) process.env.SMTP_PASS = origPass;
+  (process.env as any).NODE_ENV = origEnv;
+
+  // 7F: Live Gmail SMTP connection check (if configured in .env.local)
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const config = getSmtpConfig();
+    const liveTransporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      auth: {
+        user: config.user,
+        pass: config.pass,
+      },
+      connectionTimeout: 10000,
+    });
+    let liveVerified = false;
+    try {
+      await liveTransporter.verify();
+      liveVerified = true;
+    } catch (e: any) {
+      console.warn('Live SMTP verify warning:', e?.code || e?.message);
+    }
+    assert(liveVerified, 'Live Gmail SMTP authentication successfully verified (smtp.gmail.com:465)');
+  }
 
   console.log('\n======================================================');
   console.log(`TOTAL: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);

@@ -167,10 +167,15 @@ async function runPipeline() {
     console.log('\n--- F. FORGOT PASSWORD REQUEST / VERIFY / COMPLETE ---');
     // Test fail-closed when email service is unconfigured
     const origEnv = process.env.NODE_ENV;
+    const origUser = process.env.SMTP_USER;
+    const origPass = process.env.SMTP_PASS;
     (process.env as any).NODE_ENV = 'production';
-    delete process.env.RESEND_API_KEY;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
     const missingResendRes = await requestPasswordReset(testEmail, '127.0.0.1');
-    assert(!missingResendRes.success, 'requestPasswordReset fails clearly when RESEND_API_KEY is unavailable');
+    assert(!missingResendRes.success, 'requestPasswordReset fails clearly when SMTP credentials are unavailable');
+    if (origUser) process.env.SMTP_USER = origUser;
+    if (origPass) process.env.SMTP_PASS = origPass;
 
     // Test full flow in test mode
     (process.env as any).NODE_ENV = 'test';

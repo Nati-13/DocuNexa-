@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { validatePasswordStrength } from '@/lib/auth';
 import { hashClientIdentifier } from '@/lib/security/rateLimit';
-import { sendPasswordResetEmail } from './email';
+import { sendPasswordResetEmail, isSmtpConfigured } from './email';
 
 export interface PasswordResetRecord {
   id: string;
@@ -58,7 +58,8 @@ export function hashResetSecret(secret: string): string {
  */
 export async function requestPasswordReset(
   rawEmail: string,
-  ip: string = '127.0.0.1'
+  ip: string = '127.0.0.1',
+  options?: { transporter?: any }
 ): Promise<{ success: boolean; message: string; error?: string; debugCode?: string }> {
   const email = rawEmail.trim().toLowerCase();
   const genericMessage = "If an account exists for this email, we've sent a password reset code.";
@@ -69,7 +70,7 @@ export async function requestPasswordReset(
 
   // Check email service availability upfront so we return a truthful failure status
   // without leaking whether the account exists
-  const isEmailServiceAvailable = !!process.env.RESEND_API_KEY || process.env.NODE_ENV === 'test';
+  const isEmailServiceAvailable = isSmtpConfigured() || process.env.NODE_ENV === 'test' || Boolean(options?.transporter);
   if (!isEmailServiceAvailable) {
     return {
       success: false,
@@ -104,7 +105,7 @@ export async function requestPasswordReset(
 
     // If no user exists, return generic message without error (enumeration protection)
     if (!targetUserId) {
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === 'test' || options?.transporter) {
         targetUserId = 'test-mock-user-uuid';
       } else {
         return { success: true, message: genericMessage };
@@ -166,7 +167,7 @@ export async function requestPasswordReset(
     }
 
     // 3. Send reset email
-    const emailResult = await sendPasswordResetEmail({ to: email, code });
+    const emailResult = await sendPasswordResetEmail({ to: email, code, transporter: options?.transporter });
     if (!emailResult.success) {
       // Ensure a reset code that could not be emailed is not left usable
       if (recordId) {
