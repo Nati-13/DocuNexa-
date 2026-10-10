@@ -23,7 +23,8 @@
     "test:audit": "tsx test/full-tool-audit.test.ts",
     "test:conversions": "tsx test/test-conversions.test.ts",
     "test:sample": "tsx test/generate-sample-pdf.ts",
-    "test:unit-workflow": "tsx test/unit-cutter-workflow.test.ts"
+    "test:unit-workflow": "tsx test/unit-cutter-workflow.test.ts",
+    "test:aptos": "tsx test/aptos-payments.test.ts"
   },
   "dependencies": {
     "@pdfsmaller/pdf-decrypt": "^1.0.1",

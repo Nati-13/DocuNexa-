@@ -29,7 +29,7 @@ export interface PaymentOrderData {
   couponCode?: string | null;
   formattedDiscount?: string | null;
   currency: string; // "USDT"
-  network: string; // "Polygon"
+  network: 'Polygon' | 'Aptos'; // "Polygon" | "Aptos"
   destinationAddress: string; // "0x..."
   expiresAt: string; // ISO string
   expiresInSeconds: number;
@@ -39,7 +39,7 @@ interface BybitPaymentModalProps {
   order: PaymentOrderData;
   onClose: () => void;
   onConfirmed: () => void;
-  onNewOrder: (couponCode?: string) => void;
+  onNewOrder: (couponCode?: string, network?: 'Polygon' | 'Aptos') => void;
 }
 
 export function BybitPaymentModal({
@@ -55,10 +55,15 @@ export function BybitPaymentModal({
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [networkSwitching, setNetworkSwitching] = useState(false);
   const [status, setStatus] = useState<
     'pending' | 'detected' | 'confirmed' | 'expired' | 'amount_mismatch' | 'late_payment'
   >('pending');
-  const [statusMessage, setStatusMessage] = useState('Waiting for transfer on Polygon network...');
+  const [statusMessage, setStatusMessage] = useState(
+    order.network === 'Aptos'
+      ? 'Waiting for transfer on Aptos mainnet...'
+      : 'Waiting for transfer on Polygon network...'
+  );
   const [txId, setTxId] = useState<string | null>(null);
   const [confirmations, setConfirmations] = useState<string | null>(null);
 
@@ -204,7 +209,7 @@ export function BybitPaymentModal({
         <div className="sticky top-0 z-20 px-5 sm:px-6 pt-4 pb-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck size={14} /> Direct Bybit USDT
+              <ShieldCheck size={14} /> USDT ({order.network})
             </div>
             <span className="text-xs text-slate-400 dark:text-slate-500 font-mono hidden sm:inline">
               #{order.orderId.slice(0, 8)}
@@ -244,17 +249,72 @@ export function BybitPaymentModal({
               </p>
               {txId && (
                 <a
-                  href={`https://polygonscan.com/tx/${txId}`}
+                  href={
+                    order.network === 'Aptos'
+                      ? `https://explorer.aptoslabs.com/txn/${txId}?network=mainnet`
+                      : `https://polygonscan.com/tx/${txId}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-mono hover:underline pt-1"
                 >
-                  View on PolygonScan <ExternalLink size={12} />
+                  View on {order.network === 'Aptos' ? 'Aptos Explorer' : 'PolygonScan'} <ExternalLink size={12} />
                 </a>
               )}
             </div>
           ) : (
             <>
+              {/* Network Selection Control */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    Payment Network
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Choose network to pay
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
+                  <button
+                    type="button"
+                    disabled={networkSwitching}
+                    onClick={async () => {
+                      if (order.network === 'Polygon') return;
+                      setNetworkSwitching(true);
+                      await onNewOrder(order.couponCode || undefined, 'Polygon');
+                      setNetworkSwitching(false);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      order.network === 'Polygon'
+                        ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-sm border border-purple-200 dark:border-purple-800'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
+                    <span>USDT — Polygon</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={networkSwitching}
+                    onClick={async () => {
+                      if (order.network === 'Aptos') return;
+                      setNetworkSwitching(true);
+                      await onNewOrder(order.couponCode || undefined, 'Aptos');
+                      setNetworkSwitching(false);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      order.network === 'Aptos'
+                        ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-teal-200 dark:border-teal-800'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-teal-500 inline-block" />
+                    <span>USDT — Aptos</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Pricing Breakdown & Coupon Entry */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
                 {order.couponCode ? (
@@ -265,7 +325,7 @@ export function BybitPaymentModal({
                       </span>
                       <button
                         type="button"
-                        onClick={() => onNewOrder('')}
+                        onClick={() => onNewOrder('', order.network)}
                         className="text-xs font-semibold text-rose-500 hover:text-rose-600 hover:underline cursor-pointer"
                       >
                         Remove
@@ -308,7 +368,7 @@ export function BybitPaymentModal({
                           });
                           const vData = await vRes.json();
                           if (!vRes.ok) throw new Error(vData.error || 'Invalid coupon');
-                          onNewOrder(trimmed.toUpperCase());
+                          onNewOrder(trimmed.toUpperCase(), order.network);
                         } catch (err: any) {
                           setCouponError(err.message || 'Invalid coupon code');
                         } finally {
@@ -425,28 +485,37 @@ export function BybitPaymentModal({
                 </button>
               </div>
 
-              {/* Verbatim Customer Warning Banner */}
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-1.5">
-                <div className="flex items-center gap-2 font-bold text-amber-950 dark:text-amber-100">
-                  <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>Important Payment Warning</span>
+              {/* Prominent Network Warning Banner */}
+              <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
+                order.network === 'Aptos'
+                  ? 'bg-teal-50/70 dark:bg-teal-950/40 border-teal-300 dark:border-teal-800/70 text-teal-950 dark:text-teal-200'
+                  : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
+              }`}>
+                <div className="flex items-center gap-2 font-bold">
+                  <AlertTriangle size={16} className={order.network === 'Aptos' ? 'text-teal-600 dark:text-teal-400 shrink-0' : 'text-amber-600 dark:text-amber-400 shrink-0'} />
+                  <span>Important {order.network} Payment Warning</span>
                 </div>
                 <p className="leading-relaxed">
-                  Send <strong>EXACTLY {order.amount} USDT</strong> using the <strong>Polygon</strong> network.
+                  Send <strong>EXACTLY {order.amount} USDT</strong> using the <strong>{order.network === 'Aptos' ? 'Aptos Mainnet' : 'Polygon PoS'}</strong> network.
                 </p>
-                <p className="leading-relaxed text-amber-800 dark:text-amber-300 text-[11px]">
-                  Sending another amount or another network may cause the payment to require manual review.
+                <p className="leading-relaxed text-[11px] font-medium opacity-90">
+                  <strong>CRITICAL:</strong> The selected network ({order.network}) must match the network used in your wallet or exchange. Never send {order.network === 'Aptos' ? 'Polygon or Ethereum' : 'Aptos'} tokens to this address!
                 </p>
+                {order.network === 'Aptos' && (
+                  <p className="text-[10px] font-mono text-teal-800 dark:text-teal-300 pt-0.5 break-all">
+                    Official Tether USDt Fungible Asset Metadata ID: 0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b
+                  </p>
+                )}
               </div>
 
               {/* Destination Address & QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Bybit Deposit Address (Polygon PoS)
+                    {order.network === 'Aptos' ? 'Aptos Receiving Address' : 'Bybit Deposit Address (Polygon PoS)'}
                   </span>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    Network: Polygon
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    Network: {order.network}
                   </span>
                 </div>
 
@@ -503,7 +572,7 @@ export function BybitPaymentModal({
               {(status === 'expired' || status === 'late_payment' || status === 'amount_mismatch') && (
                 <div className="pt-2">
                   <button
-                    onClick={() => onNewOrder()}
+                    onClick={() => onNewOrder(order.couponCode || undefined, order.network)}
                     className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <RefreshCw size={16} /> Generate New Payment Order
@@ -513,7 +582,7 @@ export function BybitPaymentModal({
 
               {/* Honest Disclosure Caveat */}
               <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 leading-relaxed">
-                Waiting for blockchain and Bybit confirmation. Deposits are credited automatically once confirmed by the Bybit on-chain deposit processor.
+                Waiting for {order.network} blockchain confirmation. Deposits are credited automatically once verified by the server.
               </p>
             </>
           )}

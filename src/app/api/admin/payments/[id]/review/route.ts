@@ -89,6 +89,7 @@ export async function POST(
         reason,
         metadata: {
           orderId: order.order_id,
+          network: order.network,
           previousStatus: order.status,
           paymentAmountUsdt: order.payment_amount_usdt,
           evidenceTxId: effectiveTxId,

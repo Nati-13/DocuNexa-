@@ -35,8 +35,8 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
   const checkoutParam = searchParams.get('checkout');
   const orderIdParam = searchParams.get('order_id');
 
-  // Handle starting a Bybit USDT order (with optional coupon)
-  const handleStartCheckout = useCallback(async (couponCode?: string) => {
+  // Handle starting a USDT payment order (with optional coupon and network)
+  const handleStartCheckout = useCallback(async (couponCode?: string, network?: 'Polygon' | 'Aptos') => {
     setCheckoutLoading(true);
     setCheckoutError(null);
 
@@ -44,7 +44,10 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
       const res = await fetch('/api/payments/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ couponCode: couponCode || undefined }),
+        body: JSON.stringify({
+          couponCode: couponCode || undefined,
+          network: network || 'Polygon',
+        }),
       });
 
       const data = await res.json();
@@ -70,7 +73,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
         couponCode: data.couponCode || null,
         formattedDiscount: data.formattedDiscount || null,
         currency: data.currency || 'USDT',
-        network: data.network || 'Polygon',
+        network: data.network === 'Aptos' ? 'Aptos' : 'Polygon',
         destinationAddress: data.destinationAddress,
         expiresAt: data.expiresAt,
         expiresInSeconds: data.expiresInSeconds || 1200,
@@ -230,7 +233,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                 )}
               </button>
               <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-1.5">
-                $2.00 USD one-time Bybit USDT deposit on Polygon PoS. Never billed again.
+                $2.00 USD one-time USDT deposit on Polygon PoS or Aptos Mainnet. Never billed again.
               </p>
             </div>
           )}
@@ -298,9 +301,15 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                         {p.payment_amount_usdt} USDT
                       </td>
                       <td className="py-3 px-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-medium text-[11px]">
-                          Polygon
-                        </span>
+                        {p.network === 'Aptos' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-medium text-[11px]">
+                            Aptos
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-medium text-[11px]">
+                            Polygon
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3">
                         {isConfirmed ? (
@@ -328,7 +337,11 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                       <td className="py-3 px-3">
                         {p.tx_id ? (
                           <a
-                            href={`https://polygonscan.com/tx/${p.tx_id}`}
+                            href={
+                              p.network === 'Aptos'
+                                ? `https://explorer.aptoslabs.com/txn/${p.tx_id}?network=mainnet`
+                                : `https://polygonscan.com/tx/${p.tx_id}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] font-mono text-brand-600 dark:text-brand-400 hover:underline"
@@ -348,13 +361,13 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
         )}
       </div>
 
-      {/* Interactive Bybit Payment Modal */}
+      {/* Interactive USDT Payment Modal */}
       {activeOrder && (
         <BybitPaymentModal
           order={activeOrder}
           onClose={() => setActiveOrder(null)}
           onConfirmed={handleOrderConfirmed}
-          onNewOrder={(code) => handleStartCheckout(code)}
+          onNewOrder={(code, net) => handleStartCheckout(code, net)}
         />
       )}
     </div>

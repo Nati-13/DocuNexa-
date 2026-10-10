@@ -23,6 +23,7 @@ export default function AdminPaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [networkFilter, setNetworkFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
@@ -48,6 +49,7 @@ export default function AdminPaymentsPage() {
       });
       if (search.trim()) params.set('search', search.trim());
       if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (networkFilter !== 'all') params.set('network', networkFilter);
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
 
@@ -62,12 +64,13 @@ export default function AdminPaymentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter, startDate, endDate]);
+  }, [page, search, statusFilter, networkFilter, startDate, endDate]);
 
   const handleExportCsv = () => {
     const params = new URLSearchParams();
     if (search.trim()) params.set('search', search.trim());
     if (statusFilter !== 'all') params.set('status', statusFilter);
+    if (networkFilter !== 'all') params.set('network', networkFilter);
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     window.open(`/api/admin/payments/export?${params.toString()}`, '_blank');
@@ -197,6 +200,19 @@ export default function AdminPaymentsPage() {
               <option value="expired">Expired</option>
               <option value="cancelled">Cancelled</option>
             </select>
+
+            <select
+              value={networkFilter}
+              onChange={(e) => {
+                setNetworkFilter(e.target.value);
+                setPage(1);
+              }}
+              className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="all">All Networks</option>
+              <option value="Polygon">Polygon (PoS)</option>
+              <option value="Aptos">Aptos (Mainnet)</option>
+            </select>
           </div>
 
           <button
@@ -232,6 +248,7 @@ export default function AdminPaymentsPage() {
                   <th className="py-3 px-3">Coupon</th>
                   <th className="py-3 px-3">Required USDT</th>
                   <th className="py-3 px-3">Received USDT</th>
+                  <th className="py-3 px-3">Network</th>
                   <th className="py-3 px-3">Status</th>
                   <th className="py-3 px-3">Tx Hash</th>
                   <th className="py-3 px-3 text-right">Action</th>
@@ -287,6 +304,17 @@ export default function AdminPaymentsPage() {
                         )}
                       </td>
                       <td className="py-3 px-3">
+                        {p.network === 'Aptos' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-semibold text-[10px]">
+                            Aptos
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold text-[10px]">
+                            Polygon
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3">
                         {isConfirmed ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">
                             <CheckCircle2 size={10} /> Confirmed
@@ -320,10 +348,15 @@ export default function AdminPaymentsPage() {
                       <td className="py-3 px-3">
                         {p.txId ? (
                           <a
-                            href={`https://polygonscan.com/tx/${p.txId}`}
+                            href={
+                              p.network === 'Aptos'
+                                ? `https://explorer.aptoslabs.com/txn/${p.txId}?network=mainnet`
+                                : `https://polygonscan.com/tx/${p.txId}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] font-mono text-brand-600 dark:text-brand-400 hover:underline"
+                            title={p.txId}
                           >
                             {p.txId.slice(0, 8)}... <ExternalLink size={10} />
                           </a>
@@ -401,6 +434,10 @@ export default function AdminPaymentsPage() {
             {/* Diagnostic Snapshot */}
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs space-y-1">
               <div className="flex justify-between">
+                <span className="text-slate-500">Network:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{reviewOrder.network || 'Polygon'}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-500">Expected USDT:</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-white">{reviewOrder.paymentAmountUsdt}</span>
               </div>
@@ -454,7 +491,7 @@ export default function AdminPaymentsPage() {
 
               <div className="space-y-1.5">
                 <label className="block font-semibold text-slate-700 dark:text-slate-300">
-                  Polygon Tx Hash / Verification Evidence
+                  {reviewOrder.network || 'Polygon'} Tx Hash / Verification Evidence
                 </label>
                 <input
                   type="text"

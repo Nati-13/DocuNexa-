@@ -32,6 +32,8 @@ export type PaymentOrderStatus =
 
 export type CouponDiscountType = 'percent' | 'fixed_usdt';
 
+export type PaymentNetwork = 'Polygon' | 'Aptos';
+
 export type DbPaymentOrder = {
   id: string; // uuid
   user_id: string; // uuid
@@ -40,7 +42,7 @@ export type DbPaymentOrder = {
   base_amount_usd: number | string;
   payment_amount_usdt: number | string;
   currency: 'USDT';
-  network: 'Polygon';
+  network: PaymentNetwork;
   destination_address: string;
   status: PaymentOrderStatus;
   expires_at: string;
@@ -145,7 +147,7 @@ export type Database = {
           base_amount_usd?: number | string;
           payment_amount_usdt: number | string;
           currency?: 'USDT';
-          network?: 'Polygon';
+          network?: PaymentNetwork;
           destination_address: string;
           status?: PaymentOrderStatus;
           expires_at: string;
@@ -174,7 +176,7 @@ export type Database = {
           base_amount_usd?: number | string;
           payment_amount_usdt?: number | string;
           currency?: 'USDT';
-          network?: 'Polygon';
+          network?: PaymentNetwork;
           destination_address?: string;
           status?: PaymentOrderStatus;
           expires_at?: string;

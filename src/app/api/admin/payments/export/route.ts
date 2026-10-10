@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
-import { PaymentOrderStatus } from '@/lib/supabase/types';
+import { PaymentOrderStatus, PaymentNetwork } from '@/lib/supabase/types';
 import { guardApiRequest } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +43,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const search = (searchParams.get('search') || '').trim();
     const status = searchParams.get('status');
+    const network = searchParams.get('network');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
@@ -53,6 +54,10 @@ export async function GET(req: NextRequest) {
 
     if (status && status !== 'all') {
       query = query.eq('status', status as PaymentOrderStatus);
+    }
+
+    if (network && network !== 'all') {
+      query = query.eq('network', network as PaymentNetwork);
     }
 
     if (startDate) {

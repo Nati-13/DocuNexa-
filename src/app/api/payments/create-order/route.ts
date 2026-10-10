@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
 import { generateUniquePaymentAmount, getBybitConfig, normalizeAmount } from '@/lib/payments/bybit';
+import { getAptosConfig, isValidAptosAddress } from '@/lib/payments/aptos';
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
-import { CouponDiscountType } from '@/lib/supabase/types';
+import { CouponDiscountType, PaymentNetwork } from '@/lib/supabase/types';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
@@ -39,6 +40,28 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => ({}));
     const rawCouponCode = body?.couponCode || body?.code;
+    const requestedNetwork: PaymentNetwork = body?.network === 'Aptos' ? 'Aptos' : 'Polygon';
+
+    let destinationAddress: string;
+    if (requestedNetwork === 'Aptos') {
+      const aptosConfig = getAptosConfig();
+      if (!aptosConfig.receivingAddress || !isValidAptosAddress(aptosConfig.receivingAddress)) {
+        return NextResponse.json(
+          { error: 'Aptos payments are temporarily unavailable. Please try again later.' },
+          { status: 503 }
+        );
+      }
+      destinationAddress = aptosConfig.receivingAddress;
+    } else {
+      const { depositAddress } = getBybitConfig();
+      if (!depositAddress) {
+        return NextResponse.json(
+          { error: 'Polygon payments are temporarily unavailable. Please try again later.' },
+          { status: 503 }
+        );
+      }
+      destinationAddress = depositAddress;
+    }
 
     let couponId: string | null = null;
     let couponCode: string | null = null;
@@ -89,11 +112,12 @@ export async function POST(req: Request) {
         Math.floor((new Date(activeOrder.expires_at).getTime() - Date.now()) / 1000)
       );
 
-      // Check if requested coupon matches existing order coupon terms
+      // Check if requested coupon matches existing order coupon terms AND network matches
       const existingCoupon = activeOrder.coupon_code ? normalizeCouponCode(activeOrder.coupon_code) : null;
       const requestedCoupon = couponCode ? normalizeCouponCode(couponCode) : null;
+      const activeNetwork = activeOrder.network || 'Polygon';
 
-      if (existingCoupon === requestedCoupon && remainingSeconds > 120) {
+      if (existingCoupon === requestedCoupon && activeNetwork === requestedNetwork && remainingSeconds > 120) {
         return NextResponse.json({
           success: true,
           orderId: activeOrder.order_id,
@@ -104,28 +128,25 @@ export async function POST(req: Request) {
           discountAmountUsdt: activeOrder.discount_amount_usdt?.toString() || '0.000000',
           couponCode: activeOrder.coupon_code || null,
           currency: 'USDT',
-          network: 'Polygon',
+          network: activeNetwork,
           destinationAddress: activeOrder.destination_address,
           expiresAt: activeOrder.expires_at,
           expiresInSeconds: remainingSeconds,
         });
       } else {
-        // User changed coupon terms: cancel older pending order to avoid conflicting active amounts
+        // User changed coupon terms or switched network: cancel older pending order
         if (activeOrder.status === 'pending') {
           await admin
             .from('payment_orders')
-            .update({ status: 'cancelled', failure_reason: 'Superseded by updated coupon checkout' })
+            .update({
+              status: 'cancelled',
+              failure_reason: activeNetwork !== requestedNetwork
+                ? `Superseded by network switch to ${requestedNetwork}`
+                : 'Superseded by updated coupon checkout',
+            })
             .eq('id', activeOrder.id);
         }
       }
-    }
-
-    const { depositAddress } = getBybitConfig();
-    if (!depositAddress) {
-      return NextResponse.json(
-        { error: 'Payment processing is temporarily unavailable. Please try again later.' },
-        { status: 503 }
-      );
     }
 
     // Query all currently active amounts across all users to guarantee collision prevention
@@ -160,8 +181,8 @@ export async function POST(req: Request) {
       discount_type: discountType,
       payment_amount_usdt: uniqueAmount,
       currency: 'USDT',
-      network: 'Polygon',
-      destination_address: depositAddress,
+      network: requestedNetwork,
+      destination_address: destinationAddress,
       status: 'pending',
       expires_at: expiresAt,
       created_at: nowIso,
@@ -194,8 +215,8 @@ export async function POST(req: Request) {
       couponCode,
       formattedDiscount,
       currency: 'USDT',
-      network: 'Polygon',
-      destinationAddress: depositAddress,
+      network: requestedNetwork,
+      destinationAddress,
       expiresAt,
       expiresInSeconds: 1200,
     });
