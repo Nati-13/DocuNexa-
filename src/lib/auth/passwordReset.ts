@@ -67,8 +67,22 @@ export async function requestPasswordReset(
     return { success: true, message: genericMessage };
   }
 
+  // Check email service availability upfront so we return a truthful failure status
+  // without leaking whether the account exists
+  const isEmailServiceAvailable = !!process.env.RESEND_API_KEY || process.env.NODE_ENV === 'test';
+  if (!isEmailServiceAvailable) {
+    return {
+      success: false,
+      error: 'Password reset email service is currently not configured or unavailable.',
+      message: 'Password reset email service is currently not configured or unavailable.',
+    };
+  }
+
+  let recordId: string | null = null;
+  let admin: any = null;
+
   try {
-    const admin = createAdminSupabaseClient();
+    admin = createAdminSupabaseClient();
 
     // 1. Check if user exists in profiles or auth
     const { data: profile } = await admin
@@ -83,7 +97,7 @@ export async function requestPasswordReset(
       // Fallback check against auth.users
       const { data: userList } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 });
       const foundUser = userList?.users?.find(
-        (u) => u.email?.toLowerCase() === email
+        (u: any) => u.email?.toLowerCase() === email
       );
       targetUserId = foundUser?.id;
     }
@@ -103,7 +117,7 @@ export async function requestPasswordReset(
     const now = Date.now();
     const expiresAt = now + 10 * 60 * 1000; // 10 minutes
     const ipHash = hashClientIdentifier(ip, 'reset-request', 'pwd-reset');
-    const recordId = crypto.randomUUID();
+    recordId = crypto.randomUUID();
 
     // Invalidate previous in-memory codes for this email
     for (const [id, rec] of memoryResetVault.entries()) {
@@ -154,6 +168,17 @@ export async function requestPasswordReset(
     // 3. Send reset email
     const emailResult = await sendPasswordResetEmail({ to: email, code });
     if (!emailResult.success) {
+      // Ensure a reset code that could not be emailed is not left usable
+      if (recordId) {
+        memoryResetVault.delete(recordId);
+        try {
+          await admin
+            .from('password_resets')
+            .update({ used_at: new Date().toISOString() })
+            .eq('id', recordId);
+        } catch {}
+      }
+
       return {
         success: false,
         error: emailResult.error || 'Password reset email service is currently unavailable.',
@@ -168,6 +193,18 @@ export async function requestPasswordReset(
       debugCode: process.env.NODE_ENV === 'test' ? code : undefined,
     };
   } catch (err: any) {
+    if (recordId) {
+      memoryResetVault.delete(recordId);
+      if (admin) {
+        try {
+          await admin
+            .from('password_resets')
+            .update({ used_at: new Date().toISOString() })
+            .eq('id', recordId);
+        } catch {}
+      }
+    }
+
     if (err?.message?.includes('secret key') || err?.message?.includes('server secret')) {
       return {
         success: false,

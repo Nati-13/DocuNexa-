@@ -4,7 +4,13 @@ import { cookies } from 'next/headers';
 import { Database, Profile } from './types';
 
 export async function createServerSupabaseClient() {
-  const cookieStore = await cookies();
+  let cookieStore: any = null;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    // Graceful fallback when invoked outside Next.js request scope (e.g. unit tests, CLI scripts)
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
@@ -14,13 +20,15 @@ export async function createServerSupabaseClient() {
   return createServerClient<Database>(url, key, {
     cookies: {
       getAll() {
-        return cookieStore.getAll();
+        return cookieStore ? cookieStore.getAll() : [];
       },
       setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          if (cookieStore) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          }
         } catch {
           // The `setAll` method was called from a Server Component.
           // This can be ignored if you have middleware refreshing user sessions.

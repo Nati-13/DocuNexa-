@@ -28,7 +28,10 @@ export function LoginForm() {
   // Unconfirmed email resend state
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resending, setResending] = useState(false);
-  const [resendFeedback, setResendFeedback] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // Success message (e.g. from password reset or confirmation)
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
@@ -45,7 +48,7 @@ export function LoginForm() {
     e.preventDefault();
     setError(null);
     setNeedsConfirmation(false);
-    setResendFeedback(null);
+    setResendStatus(null);
 
     if (!email || !password) {
       setError('Please enter both your email address and password.');
@@ -86,7 +89,7 @@ export function LoginForm() {
       return;
     }
     setResending(true);
-    setResendFeedback(null);
+    setResendStatus(null);
     try {
       const res = await fetch('/api/auth/resend-confirmation', {
         method: 'POST',
@@ -95,11 +98,17 @@ export function LoginForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Unable to resend confirmation email.');
+        throw new Error(data.error || 'Unable to resend confirmation email. Please wait a moment and try again.');
       }
-      setResendFeedback('Confirmation email resent! Please check your inbox.');
+      setResendStatus({
+        type: 'success',
+        message: data.message || 'If an unconfirmed account exists for this email, a confirmation link has been sent.',
+      });
     } catch (err: any) {
-      setResendFeedback(err.message || 'Error resending confirmation. Please wait a moment.');
+      setResendStatus({
+        type: 'error',
+        message: err.message || 'Unable to resend confirmation email. Please wait a moment and try again.',
+      });
     } finally {
       setResending(false);
     }
@@ -160,13 +169,21 @@ export function LoginForm() {
         </div>
       )}
 
-      {resendFeedback && (
+      {resendStatus && (
         <div
-          role="status"
-          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2"
+          role={resendStatus.type === 'error' ? 'alert' : 'status'}
+          className={`p-3.5 rounded-2xl flex items-start gap-2.5 text-xs ${
+            resendStatus.type === 'error'
+              ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300'
+              : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+          }`}
         >
-          <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-          <span>{resendFeedback}</span>
+          {resendStatus.type === 'error' ? (
+            <AlertCircle size={16} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          ) : (
+            <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-emerald-600" />
+          )}
+          <span>{resendStatus.message}</span>
         </div>
       )}
 
