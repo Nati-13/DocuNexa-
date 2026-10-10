@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
-import { fetchBybitDeposits, matchDepositToOrder } from '@/lib/payments/bybit';
+import { fetchBybitDeposits, matchDepositToOrder, formatPaymentAmount } from '@/lib/payments/bybit';
 import { fetchAptosUsdtDeposits, matchAptosDepositToOrder } from '@/lib/payments/aptos';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         orderId: order.order_id,
         txId: order.tx_id,
         confirmedAt: order.confirmed_at,
-        amount: order.payment_amount_usdt,
+        amount: formatPaymentAmount(order.payment_amount_usdt),
         currency: order.currency,
         network: order.network,
       });
@@ -185,10 +185,10 @@ export async function GET(req: NextRequest) {
           orderId: order.order_id,
           txId: txHash,
           confirmedAt: nowIso,
-          amount: order.payment_amount_usdt,
-          originalPriceUsd: order.original_amount_usd || '2.00',
-          finalPriceUsdt: order.final_amount_usdt || order.payment_amount_usdt,
-          discountAmountUsdt: order.discount_amount_usdt || '0.000000',
+          amount: formatPaymentAmount(order.payment_amount_usdt),
+          originalPriceUsd: formatPaymentAmount(order.original_amount_usd || '2.00'),
+          finalPriceUsdt: formatPaymentAmount(order.final_amount_usdt || order.payment_amount_usdt),
+          discountAmountUsdt: formatPaymentAmount(order.discount_amount_usdt || '0.0000'),
           couponCode: order.coupon_code || null,
           currency: 'USDT',
           network: 'Aptos',
@@ -277,7 +277,7 @@ export async function GET(req: NextRequest) {
         status: order.status,
         isAdFree: false,
         orderId: order.order_id,
-        amount: order.payment_amount_usdt,
+        amount: formatPaymentAmount(order.payment_amount_usdt),
         currency: order.currency,
         network: 'Aptos',
         destinationAddress: order.destination_address,
@@ -382,10 +382,10 @@ export async function GET(req: NextRequest) {
         orderId: order.order_id,
         txId: dep.txID,
         confirmedAt: nowIso,
-        amount: order.payment_amount_usdt,
-        originalPriceUsd: order.original_amount_usd || '2.00',
-        finalPriceUsdt: order.final_amount_usdt || order.payment_amount_usdt,
-        discountAmountUsdt: order.discount_amount_usdt || '0.000000',
+        amount: formatPaymentAmount(order.payment_amount_usdt),
+        originalPriceUsd: formatPaymentAmount(order.original_amount_usd || '2.00'),
+        finalPriceUsdt: formatPaymentAmount(order.final_amount_usdt || order.payment_amount_usdt),
+        discountAmountUsdt: formatPaymentAmount(order.discount_amount_usdt || '0.0000'),
         couponCode: order.coupon_code || null,
         currency: 'USDT',
         network: 'Polygon',
@@ -491,7 +491,7 @@ export async function GET(req: NextRequest) {
       status: order.status,
       isAdFree: false,
       orderId: order.order_id,
-      amount: order.payment_amount_usdt,
+      amount: formatPaymentAmount(order.payment_amount_usdt),
       currency: order.currency,
       network: order.network,
       destinationAddress: order.destination_address,

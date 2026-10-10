@@ -1,5 +1,5 @@
 import { DbCoupon, CouponDiscountType } from '@/lib/supabase/types';
-import { parseExactUsdt } from '@/lib/payments/bybit';
+import { parseExactUsdt, roundMicroUnitsTo4Decimals } from '@/lib/payments/bybit';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 
 export const AD_FREE_BASE_PRICE_USD = '2.000000';
@@ -81,7 +81,10 @@ export function calculateCouponDiscount(
     };
   }
 
-  const baseMicro = baseParsed.microUnits;
+  let baseMicro = baseParsed.microUnits;
+  if (baseMicro % 100n !== 0n) {
+    baseMicro = roundMicroUnitsTo4Decimals(baseMicro);
+  }
   let discountMicro = 0n;
   let formattedDiscount = '';
 
@@ -117,6 +120,10 @@ export function calculateCouponDiscount(
 
     // Exact arithmetic: discountMicro = (baseMicro * percentMicro) / 100_000_000n
     discountMicro = (baseMicro * parsedPercent.microUnits) / 100000000n;
+    // Deterministic round-half-up if discount produces > 4 decimal places
+    if (discountMicro % 100n !== 0n) {
+      discountMicro = roundMicroUnitsTo4Decimals(discountMicro);
+    }
     formattedDiscount = `${(Number(parsedPercent.microUnits) / 1000000).toFixed(0)}% off`;
   } else if (discountType === 'fixed_usdt') {
     const parsedFixed = parseExactUsdt(discountValue);
@@ -148,6 +155,9 @@ export function calculateCouponDiscount(
     }
 
     discountMicro = parsedFixed.microUnits;
+    if (discountMicro % 100n !== 0n) {
+      discountMicro = roundMicroUnitsTo4Decimals(discountMicro);
+    }
     formattedDiscount = `${formatMicroUnits(discountMicro)} USDT off`;
   } else {
     return {

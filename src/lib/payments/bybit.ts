@@ -1,4 +1,14 @@
 import crypto from 'crypto';
+import {
+  parseExactUsdt,
+  format4DecimalUsdt,
+  roundMicroUnitsTo4Decimals,
+  formatPaymentAmount,
+  exactAmountsMatch,
+  normalizeAmount,
+} from './format';
+
+export * from './format';
 
 export interface BybitConfig {
   apiKey: string;
@@ -30,13 +40,6 @@ export interface DepositMatchResult {
   reason?: string;
 }
 
-export interface ExactUsdtParseResult {
-  valid: boolean;
-  microUnits: bigint;
-  normalized: string;
-  hasExtraPrecision: boolean;
-}
-
 /**
  * Returns current Bybit configuration from server environment variables.
  * NEVER expose BYBIT_API_SECRET to the client.
@@ -66,41 +69,72 @@ export function generateBybitV5Signature(
   return crypto.createHmac('sha256', apiSecret).update(signString).digest('hex');
 }
 
+
 /**
- * Generates a unique USDT payment amount with a 6-decimal fractional suffix.
+ * Generates a unique USDT payment amount with exactly 4 digits after the decimal point.
  * Base price defaults to 2.00 USDT, or the discounted final price when a coupon is applied.
- * Produces amounts such as 2.004821, 1.504821, 1.751537, etc.
- * Uses exact integer micro-units to prevent binary floating-point inaccuracy.
+ * Adds a small unique surcharge between 0.0010 and 0.0099 USDT (offsets 10..99 in 100 micro-units).
+ * Produces amounts such as 2.0010, 2.0048, or 2.0099.
+ *
+ * All calculations use integer micro-units (1 USDT = 1,000,000 micro-units) to prevent binary
+ * floating-point inaccuracy.
+ *
+ * Normalizes active amounts numerically so representations like "2.0048" and "2.004800"
+ * count as identical amounts.
+ *
+ * If all 90 applicable candidates are occupied, throws a clear recoverable Error instead of
+ * returning a duplicate amount or using a six-decimal fallback.
  *
  * @param activeAmounts Existing active amounts to prevent collisions.
  * @param baseAmountUsd The payable base amount (e.g. 2.00 or discounted 1.50).
  */
 export function generateUniquePaymentAmount(
-  activeAmounts?: Set<string> | string[],
+  activeAmounts?: Iterable<string | number | bigint> | null,
   baseAmountUsd: string | number = '2.00'
 ): string {
-  const existingSet = activeAmounts instanceof Set ? activeAmounts : new Set(activeAmounts || []);
-  const baseParsed = parseExactUsdt(baseAmountUsd);
-  const baseMicro = baseParsed.valid ? baseParsed.microUnits : 2000000n;
-
-  for (let attempt = 0; attempt < 100; attempt++) {
-    // Generate random 4-digit fraction between 1000 and 9999 (0.001000 to 0.009999)
-    const randomSuffix = BigInt(Math.floor(1000 + Math.random() * 8999));
-    const candidateMicro = baseMicro + randomSuffix;
-    const intPart = candidateMicro / 1000000n;
-    const fracPart = (candidateMicro % 1000000n).toString().padStart(6, '0');
-    const candidate = `${intPart}.${fracPart}`;
-    if (!existingSet.has(candidate)) {
-      return candidate;
+  const activeMicroSet = new Set<bigint>();
+  if (activeAmounts) {
+    for (const item of activeAmounts) {
+      if (typeof item === 'bigint') {
+        activeMicroSet.add(item);
+      } else {
+        const parsed = parseExactUsdt(item);
+        if (parsed.valid) {
+          activeMicroSet.add(parsed.microUnits);
+        }
+      }
     }
   }
 
-  // Fallback high-entropy suffix
-  const highEntropy = BigInt(1000 + (Date.now() % 8999));
-  const fallbackMicro = baseMicro + highEntropy;
-  const intPart = fallbackMicro / 1000000n;
-  const fracPart = (fallbackMicro % 1000000n).toString().padStart(6, '0');
-  return `${intPart}.${fracPart}`;
+  const baseParsed = parseExactUsdt(baseAmountUsd);
+  let baseMicro = baseParsed.valid ? baseParsed.microUnits : 2000000n;
+
+  // Apply deterministic round-half-up if base amount has > 4 decimal places
+  if (baseMicro % 100n !== 0n) {
+    baseMicro = roundMicroUnitsTo4Decimals(baseMicro);
+  }
+
+  // Candidate surcharges between 0.0010 and 0.0099 USDT (90 discrete offsets: 10..99)
+  const availableOffsets: number[] = [];
+  for (let offset = 10; offset <= 99; offset++) {
+    const candidateMicro = baseMicro + BigInt(offset) * 100n;
+    if (!activeMicroSet.has(candidateMicro)) {
+      availableOffsets.push(offset);
+    }
+  }
+
+  if (availableOffsets.length === 0) {
+    throw new Error(
+      'All unique payment amounts for this price tier are currently allocated. Please wait a few minutes for pending orders to settle or expire.'
+    );
+  }
+
+  // Select uniformly at random among available candidate offsets
+  const randomIndex = Math.floor(Math.random() * availableOffsets.length);
+  const chosenOffset = availableOffsets[randomIndex];
+  const chosenMicro = baseMicro + BigInt(chosenOffset) * 100n;
+
+  return format4DecimalUsdt(chosenMicro);
 }
 
 /**
@@ -113,60 +147,6 @@ export function isPolygonNetwork(chainName: string): boolean {
   return c.includes('matic') || c.includes('polygon') || c === 'pos';
 }
 
-/**
- * Parses a decimal amount string into exact integer micro-units (1 USDT = 1,000,000 micro-units).
- * Employs exact decimal string arithmetic to prevent IEEE-754 binary floating-point rounding errors.
- */
-export function parseExactUsdt(amount: string | number): ExactUsdtParseResult {
-  if (amount === undefined || amount === null) {
-    return { valid: false, microUnits: 0n, normalized: '0.000000', hasExtraPrecision: false };
-  }
-  const str = String(amount).trim();
-  const match = str.match(/^(\d+)(?:\.(\d+))?$/);
-  if (!match) {
-    return { valid: false, microUnits: 0n, normalized: '0.000000', hasExtraPrecision: false };
-  }
-
-  const intPart = match[1];
-  const rawFrac = match[2] || '';
-  const frac6 = rawFrac.padEnd(6, '0').slice(0, 6);
-  const extraDecimals = rawFrac.length > 6 ? rawFrac.slice(6) : '';
-  const hasExtraPrecision = extraDecimals.length > 0 && !/^0+$/.test(extraDecimals);
-
-  const microUnits = BigInt(intPart) * 1000000n + BigInt(frac6);
-  const normalized = `${intPart}.${frac6}`;
-
-  return {
-    valid: true,
-    microUnits,
-    normalized,
-    hasExtraPrecision,
-  };
-}
-
-/**
- * Strict exact decimal comparison between expected order amount and received deposit amount.
- * - Rejects binary floating-point comparisons
- * - Rejects any extra precision beyond 6 decimal places (e.g. 2.0048211 != 2.004821)
- * - Returns true ONLY if micro-units match exactly
- */
-export function exactAmountsMatch(expected: string | number, received: string | number): boolean {
-  const exp = parseExactUsdt(expected);
-  const rec = parseExactUsdt(received);
-
-  if (!exp.valid || !rec.valid) return false;
-  if (exp.hasExtraPrecision || rec.hasExtraPrecision) return false;
-
-  return exp.microUnits === rec.microUnits;
-}
-
-/**
- * Normalizes an amount representation to standard 6-decimal string.
- */
-export function normalizeAmount(amount: string | number): string {
-  const parsed = parseExactUsdt(amount);
-  return parsed.valid ? parsed.normalized : '0.000000';
-}
 
 /**
  * Queries Bybit V5 Asset Deposit Records API.
@@ -352,7 +332,7 @@ export function matchDepositToOrder(
       matched: false,
       status: 'amount_mismatch',
       deposit: possibleMismatchDeposit,
-      reason: `Deposit of ${possibleMismatchDeposit.amount} USDT does not match required ${normalizeAmount(order.payment_amount_usdt)} USDT.`,
+      reason: `Deposit of ${possibleMismatchDeposit.amount} USDT does not match required ${formatPaymentAmount(order.payment_amount_usdt)} USDT.`,
     };
   }
 

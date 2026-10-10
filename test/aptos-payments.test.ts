@@ -189,6 +189,48 @@ async function runTests() {
   );
   console.log('✓ Network separation verified.');
 
+  // Test 10: 4-decimal Aptos order verification and historical 6-decimal compatibility
+  console.log('10. Testing 4-decimal Aptos order verification (e.g. 2.0048 vs 2.004800 micro-units)...');
+  const fourDecimalOrder = {
+    payment_amount_usdt: '2.0048',
+    destination_address: DEFAULT_APTOS_RECEIVING_ADDRESS,
+    created_at: new Date(now - 120000).toISOString(),
+    expires_at: new Date(now + 18 * 60000).toISOString(),
+  };
+
+  const fourDecimalActivities: AptosFungibleActivity[] = [
+    {
+      transaction_version: 7500000500,
+      transaction_timestamp: new Date(now - 60000).toISOString(),
+      amount: '2004800', // 2.0048 USDT in 6-decimal micro-units
+      asset_type: OFFICIAL_APTOS_USDT_METADATA,
+      type: '0x1::fungible_asset::Deposit',
+      owner_address: DEFAULT_APTOS_RECEIVING_ADDRESS,
+      is_transaction_success: true,
+    },
+  ];
+
+  const match4Dec = await matchAptosDepositToOrder(fourDecimalOrder, fourDecimalActivities);
+  assert(match4Dec.matched === true, '4-decimal order 2.0048 must match 2004800 micro-units on Aptos');
+  assert(match4Dec.status === 'confirmed', 'Status must be confirmed');
+
+  // Mismatch check: 2004700 micro-units (2.0047 USDT) must be rejected
+  const mismatch4DecActivities: AptosFungibleActivity[] = [
+    {
+      transaction_version: 7500000501,
+      transaction_timestamp: new Date(now - 60000).toISOString(),
+      amount: '2004700', // 2.0047 USDT
+      asset_type: OFFICIAL_APTOS_USDT_METADATA,
+      type: '0x1::fungible_asset::Deposit',
+      owner_address: DEFAULT_APTOS_RECEIVING_ADDRESS,
+      is_transaction_success: true,
+    },
+  ];
+  const matchMismatch4 = await matchAptosDepositToOrder(fourDecimalOrder, mismatch4DecActivities);
+  assert(matchMismatch4.matched === false, '2.0047 USDT must not match 2.0048 order');
+  assert(matchMismatch4.status === 'amount_mismatch', 'Must classify as amount_mismatch');
+  console.log('✓ 4-decimal Aptos order matching and rejection verified.');
+
   console.log('\n--- ALL APTOS PAYMENT TESTS PASSED ---\n');
 }
 

@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { BybitPaymentModal, PaymentOrderData } from '@/components/payments/BybitPaymentModal';
+import { formatPaymentAmount } from '@/lib/payments/format';
 
 interface AccountViewProps {
   user: User;
@@ -281,7 +282,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                         {p.order_id}
                       </td>
                       <td className="py-3 px-3 font-mono text-slate-500">
-                        ${p.original_amount_usd ? Number(p.original_amount_usd).toFixed(2) : '2.00'}
+                        ${formatPaymentAmount(p.original_amount_usd || '2.00')}
                       </td>
                       <td className="py-3 px-3">
                         {p.coupon_code ? (
@@ -290,7 +291,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                               {p.coupon_code}
                             </span>
                             <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-                              -{Number(p.discount_amount_usdt || 0).toFixed(2)} USDT
+                              -{formatPaymentAmount(p.discount_amount_usdt || '0.0000')} USDT
                             </span>
                           </div>
                         ) : (
@@ -298,7 +299,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                         )}
                       </td>
                       <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white font-mono">
-                        {p.payment_amount_usdt} USDT
+                        {formatPaymentAmount(p.payment_amount_usdt)} USDT
                       </td>
                       <td className="py-3 px-3">
                         {p.network === 'Aptos' ? (

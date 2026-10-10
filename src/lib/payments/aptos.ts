@@ -8,7 +8,7 @@
  * - Mainnet Fullnode REST API: https://api.mainnet.aptoslabs.com/v1
  */
 
-import { parseExactUsdt, normalizeAmount } from './bybit';
+import { parseExactUsdt, normalizeAmount, formatPaymentAmount } from './bybit';
 
 export const OFFICIAL_APTOS_USDT_METADATA =
   '0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b';
@@ -306,7 +306,7 @@ export async function matchAptosDepositToOrder(
       status: 'amount_mismatch',
       activity: possibleMismatchActivity,
       depositId: `aptos:${possibleMismatchActivity.transaction_version}`,
-      reason: `Deposit of ${receivedFormatted} USDT does not match required ${normalizeAmount(order.payment_amount_usdt)} USDT.`,
+      reason: `Deposit of ${receivedFormatted} USDT does not match required ${formatPaymentAmount(order.payment_amount_usdt)} USDT.`,
     };
   }
 

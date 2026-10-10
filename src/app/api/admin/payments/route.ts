@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { PaymentOrderStatus, PaymentNetwork } from '@/lib/supabase/types';
+import { formatPaymentAmount } from '@/lib/payments/format';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
@@ -72,13 +73,13 @@ export async function GET(req: NextRequest) {
       userId: o.user_id,
       userEmail: o.profiles?.email || 'Unknown User',
       product: o.product,
-      originalAmountUsd: o.original_amount_usd || '2.00',
+      originalAmountUsd: formatPaymentAmount(o.original_amount_usd || '2.00'),
       couponCode: o.coupon_code || null,
       discountType: o.discount_type || null,
-      discountAmountUsdt: o.discount_amount_usdt || '0.000000',
-      finalAmountUsdt: o.final_amount_usdt || o.payment_amount_usdt,
-      paymentAmountUsdt: o.payment_amount_usdt,
-      receivedAmount: o.received_amount || null,
+      discountAmountUsdt: formatPaymentAmount(o.discount_amount_usdt || '0.0000'),
+      finalAmountUsdt: formatPaymentAmount(o.final_amount_usdt || o.payment_amount_usdt),
+      paymentAmountUsdt: formatPaymentAmount(o.payment_amount_usdt),
+      receivedAmount: o.received_amount ? formatPaymentAmount(o.received_amount) : null,
       status: o.status,
       network: o.network,
       currency: o.currency,

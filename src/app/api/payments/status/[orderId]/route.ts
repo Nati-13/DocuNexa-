@@ -1,4 +1,5 @@
 import { getCurrentProfile, createServerSupabaseClient } from '@/lib/supabase/server';
+import { formatPaymentAmount } from '@/lib/payments/format';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,7 @@ export async function GET(
     return secureJsonResponse({
       orderId: order.order_id,
       status: order.status,
-      amount: order.payment_amount_usdt,
+      amount: formatPaymentAmount(order.payment_amount_usdt),
       currency: order.currency,
       network: order.network,
       destinationAddress: order.destination_address,

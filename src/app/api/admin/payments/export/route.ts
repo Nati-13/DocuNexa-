@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { PaymentOrderStatus, PaymentNetwork } from '@/lib/supabase/types';
+import { formatPaymentAmount } from '@/lib/payments/format';
 import { guardApiRequest } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
@@ -107,8 +108,8 @@ export async function GET(req: NextRequest) {
         sanitizeCsvCell(o.user_id),
         sanitizeCsvCell(o.profiles?.email || 'Unknown User'),
         sanitizeCsvCell(o.product || 'ad_free'),
-        sanitizeCsvCell(o.payment_amount_usdt),
-        sanitizeCsvCell(o.received_amount || o.payment_amount_usdt || '0.00'),
+        sanitizeCsvCell(formatPaymentAmount(o.payment_amount_usdt)),
+        sanitizeCsvCell(formatPaymentAmount(o.received_amount || o.payment_amount_usdt || '0.0000')),
         sanitizeCsvCell(o.currency || 'USDT'),
         sanitizeCsvCell(o.network || 'Polygon'),
         sanitizeCsvCell(o.status),

@@ -18,6 +18,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { QrCode } from './QrCode';
+import { formatPaymentAmount } from '@/lib/payments/format';
 
 export interface PaymentOrderData {
   orderId: string;
@@ -111,10 +112,12 @@ export function BybitPaymentModal({
     } catch {}
   };
 
+  const displayAmount = formatPaymentAmount(order.amount);
+
   // Copy exact amount helper
   const handleCopyAmount = async () => {
     try {
-      await navigator.clipboard.writeText(order.amount);
+      await navigator.clipboard.writeText(displayAmount);
       setCopiedAmount(true);
       setTimeout(() => setCopiedAmount(false), 2000);
     } catch {}
@@ -335,15 +338,15 @@ export function BybitPaymentModal({
                     <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                       <div className="flex justify-between">
                         <span>Original Price</span>
-                        <span className="line-through text-slate-400">${order.originalPriceUsd || order.basePriceUsd || '2.00'}</span>
+                        <span className="line-through text-slate-400">${formatPaymentAmount(order.originalPriceUsd || order.basePriceUsd || '2.00')}</span>
                       </div>
                       <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
                         <span>Coupon Discount</span>
-                        <span>-{order.discountAmountUsdt} USDT</span>
+                        <span>-{formatPaymentAmount(order.discountAmountUsdt || '0.0000')} USDT</span>
                       </div>
                       <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-sm">
                         <span>You Pay</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-mono">${order.finalPriceUsdt} USD</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-mono">${formatPaymentAmount(order.finalPriceUsdt || order.amount)} USD</span>
                       </div>
                     </div>
                   </div>
@@ -411,7 +414,7 @@ export function BybitPaymentModal({
                   </span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl sm:text-2xl font-black text-brand-600 dark:text-brand-400 font-mono">
-                      {order.amount}
+                      {displayAmount}
                     </span>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
                       USDT
@@ -496,7 +499,7 @@ export function BybitPaymentModal({
                   <span>Important {order.network} Payment Warning</span>
                 </div>
                 <p className="leading-relaxed">
-                  Send <strong>EXACTLY {order.amount} USDT</strong> using the <strong>{order.network === 'Aptos' ? 'Aptos Mainnet' : 'Polygon PoS'}</strong> network.
+                  Send <strong>EXACTLY {displayAmount} USDT</strong> using the <strong>{order.network === 'Aptos' ? 'Aptos Mainnet' : 'Polygon PoS'}</strong> network.
                 </p>
                 <p className="leading-relaxed text-[11px] font-medium opacity-90">
                   <strong>CRITICAL:</strong> The selected network ({order.network}) must match the network used in your wallet or exchange. Never send {order.network === 'Aptos' ? 'Polygon or Ethereum' : 'Aptos'} tokens to this address!

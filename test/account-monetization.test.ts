@@ -16,6 +16,8 @@ import {
   fetchBybitDeposits,
   matchDepositToOrder,
   BybitDepositRecord,
+  formatPaymentAmount,
+  roundMicroUnitsTo4Decimals,
 } from '../src/lib/payments/bybit';
 import {
   normalizeCouponCode,
@@ -184,20 +186,43 @@ async function runTests() {
     assert.notStrictEqual(sig, sigDifferentQuery);
   });
 
-  test('Unique payment amount generator produces >= 2.00 USDT with 6 decimal places', () => {
-    for (let i = 0; i < 20; i++) {
+  test('Unique payment amount generator produces exact 4 decimal digits between 2.0010 and 2.0099 USDT', () => {
+    for (let i = 0; i < 50; i++) {
       const amount = generateUniquePaymentAmount();
       const num = parseFloat(amount);
-      assert.ok(num >= 2.00, `Amount ${amount} must be >= 2.00`);
-      assert.ok(num < 2.02, `Amount ${amount} must remain close to 2.00`);
-      assert.ok(/^\d+\.\d{6}$/.test(amount), `Amount ${amount} must have exact 6 decimals`);
+      assert.ok(num >= 2.0010, `Amount ${amount} must be >= 2.0010`);
+      assert.ok(num <= 2.0099, `Amount ${amount} must be <= 2.0099`);
+      assert.ok(/^\d+\.\d{4}$/.test(amount), `Amount ${amount} must have exactly 4 decimal places`);
+      assert.strictEqual(amount.length, 6, `Amount ${amount} must have length 6 (e.g. 2.0048)`);
     }
   });
 
-  test('Unique payment amount generator prevents collisions with active orders', () => {
-    const active = new Set(['2.001234', '2.005678', '2.009999']);
-    const candidate = generateUniquePaymentAmount(active);
-    assert.strictEqual(active.has(candidate), false, 'Generated amount must not collide with active amounts');
+  test('Unique payment amount generator normalizes active orders across alternate decimal representations', () => {
+    // Both 4-decimal and 6-decimal representation of 2.0048 and 2.0050
+    const active = new Set(['2.0048', '2.005000', '2.00990000', '2.0010']);
+    for (let i = 0; i < 40; i++) {
+      const candidate = generateUniquePaymentAmount(active);
+      assert.notStrictEqual(candidate, '2.0048', 'Must not generate 2.0048 when occupied');
+      assert.notStrictEqual(candidate, '2.0050', 'Must not generate 2.0050 when 2.005000 is occupied');
+      assert.notStrictEqual(candidate, '2.0099', 'Must not generate 2.0099 when 2.00990000 is occupied');
+      assert.notStrictEqual(candidate, '2.0010', 'Must not generate 2.0010 when occupied');
+      assert.ok(/^\d+\.\d{4}$/.test(candidate), 'Must have exact 4 decimal places');
+    }
+  });
+
+  test('Unique payment amount generator safely throws recoverable error when all 90 candidates are exhausted', () => {
+    // Populate all 90 candidates from 2.0010 to 2.0099
+    const allCandidates = new Set<string>();
+    for (let k = 10; k <= 99; k++) {
+      allCandidates.add(`2.00${k}`);
+    }
+    assert.strictEqual(allCandidates.size, 90);
+
+    assert.throws(
+      () => generateUniquePaymentAmount(allCandidates),
+      /All unique payment amounts for this price tier are currently allocated/,
+      'Must throw clear recoverable error when all 90 unique amounts are occupied'
+    );
   });
 
   test('isPolygonNetwork correctly identifies Polygon PoS aliases and rejects other chains', () => {
@@ -220,22 +245,44 @@ async function runTests() {
   });
 
   test('exactAmountsMatch enforces exact decimal equality without binary floating point or silent rounding', () => {
-    // Exact match
+    // Exact match (including 4-decimal vs 6-decimal representation of same amount)
+    assert.strictEqual(exactAmountsMatch('2.0048', '2.004800'), true);
+    assert.strictEqual(exactAmountsMatch('2.004800', '2.0048'), true);
+    assert.strictEqual(exactAmountsMatch('2.0048', '2.0048'), true);
     assert.strictEqual(exactAmountsMatch('2.004821', '2.004821'), true);
     assert.strictEqual(exactAmountsMatch('2.00', '2.000000'), true);
     assert.strictEqual(exactAmountsMatch('2', '2.000000'), true);
 
     // Mismatched amount
+    assert.strictEqual(exactAmountsMatch('2.0048', '2.0047'), false);
+    assert.strictEqual(exactAmountsMatch('2.0048', '2.004700'), false);
     assert.strictEqual(exactAmountsMatch('2.004821', '2.004820'), false);
     assert.strictEqual(exactAmountsMatch('2.004821', '2.000000'), false);
 
     // Extra decimal precision beyond 6 places must NOT be silently rounded down
+    assert.strictEqual(exactAmountsMatch('2.0048', '2.0048001'), false);
     assert.strictEqual(exactAmountsMatch('2.004821', '2.0048211'), false);
     assert.strictEqual(exactAmountsMatch('2.004821', '2.0048219'), false);
     assert.strictEqual(exactAmountsMatch('2.0048211', '2.004821'), false);
 
     // Trailing non-significant zeroes after 6 decimal places evaluate equally
     assert.strictEqual(exactAmountsMatch('2.004821', '2.00482100'), true);
+  });
+
+  test('formatPaymentAmount formats 4-decimal amounts and preserves historical 6-decimal orders', () => {
+    // 4-decimal amounts format with exactly 4 fractional digits
+    assert.strictEqual(formatPaymentAmount('2.0048'), '2.0048');
+    assert.strictEqual(formatPaymentAmount('2.004800'), '2.0048');
+    assert.strictEqual(formatPaymentAmount(2.0048), '2.0048');
+    assert.strictEqual(formatPaymentAmount('2.0010'), '2.0010');
+    assert.strictEqual(formatPaymentAmount('2.0099'), '2.0099');
+    assert.strictEqual(formatPaymentAmount('2.00'), '2.0000');
+    assert.strictEqual(formatPaymentAmount(2), '2.0000');
+
+    // Historical 6-decimal orders preserve all fractional digits
+    assert.strictEqual(formatPaymentAmount('2.004821'), '2.004821');
+    assert.strictEqual(formatPaymentAmount('1.504821'), '1.504821');
+    assert.strictEqual(formatPaymentAmount('2.001234'), '2.001234');
   });
 
   test('Wallet address is loaded strictly from BYBIT_USDT_POLYGON_ADDRESS with zero hardcoded address in bybit.ts', () => {
@@ -761,26 +808,42 @@ async function runTests() {
   // --------------------------------------------------------------------------
   console.log('\n--- 10. UNIQUE PAYMENT AMOUNT WITH COUPON DISCOUNTS ---');
 
-  test('Unique payment amount generator produces discounted candidate matching base price', () => {
+  test('Unique payment amount generator produces discounted candidate matching base price with 4 decimal places', () => {
     // Generate off $1.50 base (after 25% coupon)
     const discountedAmount = generateUniquePaymentAmount(new Set(), '1.500000');
     assert.ok(discountedAmount.startsWith('1.50'), `Amount must start with 1.50, got: ${discountedAmount}`);
-    assert.strictEqual(discountedAmount.length, 8, 'Must have 6 decimal places (e.g. 1.504821)');
+    assert.strictEqual(discountedAmount.length, 6, 'Must have 4 decimal places (e.g. 1.5048)');
+    assert.ok(/^\d+\.\d{4}$/.test(discountedAmount), 'Must have exact 4 decimal digits');
+    const numDisc = parseFloat(discountedAmount);
+    assert.ok(numDisc >= 1.5010 && numDisc <= 1.5099, 'Discounted amount must be between 1.5010 and 1.5099');
     assert.ok(!discountedAmount.startsWith('2.00'), 'Must not generate 2.00 amount when discounted');
 
     // Generate off $1.00 base (after 50% coupon)
     const halfAmount = generateUniquePaymentAmount(new Set(), '1.000000');
     assert.ok(halfAmount.startsWith('1.00'), `Amount must start with 1.00, got: ${halfAmount}`);
+    assert.strictEqual(halfAmount.length, 6, 'Must have 4 decimal places (e.g. 1.0048)');
+    assert.ok(/^\d+\.\d{4}$/.test(halfAmount), 'Must have exact 4 decimal digits');
+
+    // Deterministic round-half-up for custom base amount with > 4 decimal places
+    const customBase = generateUniquePaymentAmount(new Set(), '1.333333');
+    // 1.333333 rounds to 1.3333; surcharge 0.0010..0.0099 produces 1.3343..1.3432
+    assert.ok(/^\d+\.\d{4}$/.test(customBase), 'Must have exact 4 decimal digits');
+    const numCustom = parseFloat(customBase);
+    assert.ok(numCustom >= 1.3343 && numCustom <= 1.3432, 'Rounded base plus surcharge is between 1.3343 and 1.3432');
 
     // Default without baseAmount parameter remains 2.00
     const normalAmount = generateUniquePaymentAmount();
     assert.ok(normalAmount.startsWith('2.00'), `Default amount must start with 2.00, got: ${normalAmount}`);
   });
 
-  test('Unique payment amount generator prevents collisions across active orders', () => {
-    const active = new Set(['1.501234', '1.505678']);
+  test('Unique payment amount generator prevents collisions across active orders with coupon amounts', () => {
+    const active = new Set(['1.5010', '1.5048', '1.509900']);
     const candidate = generateUniquePaymentAmount(active, '1.500000');
     assert.ok(!active.has(candidate), 'Candidate must not collide with active amounts');
+    assert.notStrictEqual(candidate, '1.5010');
+    assert.notStrictEqual(candidate, '1.5048');
+    assert.notStrictEqual(candidate, '1.5099');
+    assert.ok(/^\d+\.\d{4}$/.test(candidate));
   });
 
   // --------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
-import { generateUniquePaymentAmount, getBybitConfig, normalizeAmount } from '@/lib/payments/bybit';
+import { generateUniquePaymentAmount, getBybitConfig, normalizeAmount, formatPaymentAmount } from '@/lib/payments/bybit';
 import { getAptosConfig, isValidAptosAddress } from '@/lib/payments/aptos';
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
 import { CouponDiscountType, PaymentNetwork } from '@/lib/supabase/types';
@@ -66,9 +66,9 @@ export async function POST(req: Request) {
     let couponId: string | null = null;
     let couponCode: string | null = null;
     let discountType: CouponDiscountType | null = null;
-    let discountAmountUsdt = '0.000000';
-    let originalAmountUsd = '2.000000';
-    let finalAmountUsdt = '2.000000';
+    let discountAmountUsdt = '0.0000';
+    let originalAmountUsd = '2.0000';
+    let finalAmountUsdt = '2.0000';
     let formattedDiscount: string | null = null;
 
     // Strict server-side revalidation of coupon code
@@ -86,9 +86,9 @@ export async function POST(req: Request) {
       couponId = validation.coupon.id;
       couponCode = validation.coupon.code;
       discountType = validation.calculation.discountType;
-      discountAmountUsdt = validation.calculation.discountAmountUsdt;
-      originalAmountUsd = validation.calculation.originalAmountUsd;
-      finalAmountUsdt = validation.calculation.finalAmountUsdt;
+      discountAmountUsdt = formatPaymentAmount(validation.calculation.discountAmountUsdt);
+      originalAmountUsd = formatPaymentAmount(validation.calculation.originalAmountUsd);
+      finalAmountUsdt = formatPaymentAmount(validation.calculation.finalAmountUsdt);
       formattedDiscount = validation.calculation.formattedDiscount;
     }
 
@@ -121,11 +121,11 @@ export async function POST(req: Request) {
         return NextResponse.json({
           success: true,
           orderId: activeOrder.order_id,
-          amount: activeOrder.payment_amount_usdt.toString(),
-          basePriceUsd: activeOrder.original_amount_usd?.toString() || '2.00',
-          originalPriceUsd: activeOrder.original_amount_usd?.toString() || '2.00',
-          finalPriceUsdt: activeOrder.final_amount_usdt?.toString() || activeOrder.payment_amount_usdt.toString(),
-          discountAmountUsdt: activeOrder.discount_amount_usdt?.toString() || '0.000000',
+          amount: formatPaymentAmount(activeOrder.payment_amount_usdt),
+          basePriceUsd: formatPaymentAmount(activeOrder.original_amount_usd || '2.00'),
+          originalPriceUsd: formatPaymentAmount(activeOrder.original_amount_usd || '2.00'),
+          finalPriceUsdt: formatPaymentAmount(activeOrder.final_amount_usdt || activeOrder.payment_amount_usdt),
+          discountAmountUsdt: formatPaymentAmount(activeOrder.discount_amount_usdt || '0.0000'),
           couponCode: activeOrder.coupon_code || null,
           currency: 'USDT',
           network: activeNetwork,
@@ -159,11 +159,13 @@ export async function POST(req: Request) {
     const activeAmounts = new Set<string>();
     if (activeOrders) {
       for (const ord of activeOrders) {
-        activeAmounts.add(normalizeAmount(ord.payment_amount_usdt));
+        if (ord.payment_amount_usdt !== null && ord.payment_amount_usdt !== undefined) {
+          activeAmounts.add(ord.payment_amount_usdt.toString());
+        }
       }
     }
 
-    // Crucial requirement: generate unique amount based on final discounted payable price
+    // Crucial requirement: generate unique amount based on final discounted payable price with exact 4 decimals
     const uniqueAmount = generateUniquePaymentAmount(activeAmounts, finalAmountUsdt);
     const orderId = `DNX-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     const expiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString();
@@ -221,9 +223,10 @@ export async function POST(req: Request) {
       expiresInSeconds: 1200,
     });
   } catch (err: any) {
+    const isExhausted = err?.message?.includes('All unique payment amounts');
     return NextResponse.json(
       { error: err.message || 'Error generating payment order' },
-      { status: 500 }
+      { status: isExhausted ? 409 : 500 }
     );
   }
 }

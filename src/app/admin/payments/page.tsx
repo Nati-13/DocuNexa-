@@ -17,6 +17,7 @@ import {
   X,
   Download,
 } from 'lucide-react';
+import { formatPaymentAmount } from '@/lib/payments/format';
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -275,7 +276,7 @@ export default function AdminPaymentsPage() {
                         {p.userEmail}
                       </td>
                       <td className="py-3 px-3 font-mono text-slate-400">
-                        ${Number(p.originalAmountUsd || 2.00).toFixed(2)}
+                        ${formatPaymentAmount(p.originalAmountUsd || 2.00)}
                       </td>
                       <td className="py-3 px-3">
                         {p.couponCode ? (
@@ -284,7 +285,7 @@ export default function AdminPaymentsPage() {
                               {p.couponCode}
                             </span>
                             <span className="block text-[10px] text-emerald-600 font-mono">
-                              -{Number(p.discountAmountUsdt || 0).toFixed(2)} USDT
+                              -{formatPaymentAmount(p.discountAmountUsdt || 0)} USDT
                             </span>
                           </div>
                         ) : (
@@ -292,12 +293,12 @@ export default function AdminPaymentsPage() {
                         )}
                       </td>
                       <td className="py-3 px-3 font-mono font-black text-brand-600 dark:text-brand-400">
-                        {p.paymentAmountUsdt}
+                        {formatPaymentAmount(p.paymentAmountUsdt)}
                       </td>
                       <td className="py-3 px-3 font-mono">
                         {p.receivedAmount ? (
                           <span className={isMismatch ? 'text-rose-600 font-bold' : 'text-emerald-600'}>
-                            {p.receivedAmount}
+                            {formatPaymentAmount(p.receivedAmount)}
                           </span>
                         ) : (
                           <span className="text-slate-400">—</span>
@@ -439,11 +440,11 @@ export default function AdminPaymentsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Expected USDT:</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">{reviewOrder.paymentAmountUsdt}</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{formatPaymentAmount(reviewOrder.paymentAmountUsdt)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Received USDT:</span>
-                <span className="font-mono font-bold text-brand-600">{reviewOrder.receivedAmount || 'Not detected'}</span>
+                <span className="font-mono font-bold text-brand-600">{reviewOrder.receivedAmount ? formatPaymentAmount(reviewOrder.receivedAmount) : 'Not detected'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Address:</span>

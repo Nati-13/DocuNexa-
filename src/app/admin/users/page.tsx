@@ -24,6 +24,7 @@ import {
   Check,
   Copy,
 } from 'lucide-react';
+import { formatPaymentAmount } from '@/lib/payments/format';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -504,7 +505,7 @@ export default function AdminUsersPage() {
                           </div>
                           <div className="text-right">
                             <span className="font-mono font-bold text-slate-900 dark:text-white">
-                              {p.payment_amount_usdt} USDT
+                              {formatPaymentAmount(p.payment_amount_usdt)} USDT
                             </span>
                             <div>
                               <span
