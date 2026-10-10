@@ -29,7 +29,21 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { profile: adminProfile } = await requireAdmin();
+    const headerKey = req.headers.get('x-admin-setup-key');
+    const isSetupKeyValid = Boolean(
+      process.env.ADMIN_SETUP_KEY &&
+      headerKey &&
+      headerKey === process.env.ADMIN_SETUP_KEY
+    );
+
+    let adminUserId: string | null = null;
+    let adminEmail = 'setup-key-admin';
+
+    if (!isSetupKeyValid) {
+      const { profile: adminProfile } = await requireAdmin();
+      adminUserId = adminProfile.id;
+      adminEmail = adminProfile.email;
+    }
 
     const body = await req.json().catch(() => ({}));
     const targetUrl =
@@ -42,11 +56,11 @@ export async function POST(req: NextRequest) {
     const result = await setTelegramWebhook(targetUrl, secretToken);
 
     await logAdminAction({
-      adminUserId: adminProfile.id,
+      adminUserId: adminUserId || '17d2c680-fc22-4a1d-863d-63d46b1905b9',
       action: 'telegram_webhook_configured' as any,
       metadata: {
         targetUrl,
-        adminEmail: adminProfile.email,
+        adminEmail,
         resultOk: result.ok,
         description: result.description,
       },
