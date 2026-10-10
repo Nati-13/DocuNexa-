@@ -153,19 +153,32 @@ export default function PdfUnitCutterPage() {
 
     const totalPages = fileInfo?.totalPages || structure.totalPages || 1;
     const allSections = structure.sections;
-    const level1Sections = allSections.filter((s) => s.level === 1);
 
-    if (level1Sections.length > 0) {
-      return level1Sections.map((u, i) => {
-        const nextU = level1Sections[i + 1];
-        // Calculate true end page of unit spanning all its content
+    // Helper to identify generic subsections or non-unit titles
+    const isGenericSub = (title: string) => {
+      return /^\s*(summary|unit summary|chapter summary|summary of unit|example|examples|input|output|review|unit review|chapter review|review exercises|exercises|key terms|glossary|self-test|self-assessment|activity|activities|project|revision)\b/i.test(
+        title.trim()
+      );
+    };
+
+    // Level 1 candidate sections
+    const level1Sections = allSections.filter((s) => s.level === 1);
+    // Prefer genuine major units (Unit, Chapter, Module, or non-generic numbered sections)
+    const genuineUnits = level1Sections.filter((s) => !isGenericSub(s.title));
+    const parentUnits = genuineUnits.length > 0 ? genuineUnits : level1Sections;
+
+    if (parentUnits.length > 0) {
+      return parentUnits.map((u, i) => {
+        const nextU = parentUnits[i + 1];
+        // Calculate true end page of unit spanning all its content up to the next genuine peer
         const computedEnd = nextU 
           ? Math.max(u.startPage, nextU.startPage - 1) 
           : Math.max(u.startPage, totalPages);
 
         const uIdx = allSections.indexOf(u);
         const nextUIdx = nextU ? allSections.indexOf(nextU) : allSections.length;
-        const sub = allSections.slice(uIdx + 1, nextUIdx).filter((s) => s.level > 1);
+        // Subsections include any intermediate sections between u and nextU (or sections with level > 1)
+        const sub = allSections.slice(uIdx + 1, nextUIdx).filter((s) => s.id !== u.id);
 
         return {
           id: u.id,
@@ -496,22 +509,32 @@ export default function PdfUnitCutterPage() {
     const baseName = fileInfo.name.replace(/\.[^/.]+$/, '');
 
     if (scopeMode === 'units') {
-      return unitGroups
-        .filter((g) => selectedUnitIds.has(g.id))
-        .map((g) => {
-          const safeStart = Math.max(1, Math.min(g.startPage, fileInfo.totalPages));
-          const safeEnd = Math.max(safeStart, Math.min(g.endPage, fileInfo.totalPages));
-          return {
-            id: g.id,
-            title: g.title,
-            startPage: safeStart,
-            endPage: safeEnd,
-            pageCount: safeEnd - safeStart + 1,
-            filename: sanitizeFilename(`${baseName} - ${g.title}.pdf`),
-            source: g.source,
-            confidence: g.confidence >= 85 ? 'High' : g.confidence >= 70 ? 'Medium' : 'Low',
-          };
-        });
+      const selected = unitGroups.filter((g) => selectedUnitIds.has(g.id));
+      // In Complete Units mode, prevent accidental duplicate extraction of identical page ranges
+      const seenRanges = new Set<string>();
+      const dedupedUnits: UnitGroup[] = [];
+      for (const g of selected) {
+        const rangeKey = `${g.startPage}-${g.endPage}`;
+        if (!seenRanges.has(rangeKey)) {
+          seenRanges.add(rangeKey);
+          dedupedUnits.push(g);
+        }
+      }
+
+      return dedupedUnits.map((g) => {
+        const safeStart = Math.max(1, Math.min(g.startPage, fileInfo.totalPages));
+        const safeEnd = Math.max(safeStart, Math.min(g.endPage, fileInfo.totalPages));
+        return {
+          id: g.id,
+          title: g.title,
+          startPage: safeStart,
+          endPage: safeEnd,
+          pageCount: safeEnd - safeStart + 1,
+          filename: sanitizeFilename(`${baseName} - ${g.title}.pdf`),
+          source: g.source,
+          confidence: g.confidence >= 85 ? 'High' : g.confidence >= 70 ? 'Medium' : 'Low',
+        };
+      });
     }
 
     if (scopeMode === 'sections') {
@@ -559,9 +582,55 @@ export default function PdfUnitCutterPage() {
     return [];
   }, [fileInfo, scopeMode, unitGroups, selectedUnitIds, selectedSectionIds, manualRanges]);
 
-  const totalPagesToExtract = useMemo(() => {
+  // Calculate selected-page totals using the UNION of selected page ranges
+  // so overlapping pages are not counted repeatedly
+  const uniqueSelectedPagesSet = useMemo(() => {
+    const pageSet = new Set<number>();
+    for (const item of reviewItems) {
+      for (let p = item.startPage; p <= item.endPage; p++) {
+        pageSet.add(p);
+      }
+    }
+    return pageSet;
+  }, [reviewItems]);
+
+  const totalPagesToExtract = uniqueSelectedPagesSet.size;
+
+  const rawPagesSum = useMemo(() => {
     return reviewItems.reduce((acc, item) => acc + item.pageCount, 0);
   }, [reviewItems]);
+
+  // Detect overlapping page ranges among selected items
+  const overlappingItems = useMemo(() => {
+    const overlaps: {
+      itemA: ExtractionReviewItem;
+      itemB: ExtractionReviewItem;
+      sharedStart: number;
+      sharedEnd: number;
+      sharedCount: number;
+    }[] = [];
+
+    for (let i = 0; i < reviewItems.length; i++) {
+      for (let j = i + 1; j < reviewItems.length; j++) {
+        const a = reviewItems[i];
+        const b = reviewItems[j];
+        const start = Math.max(a.startPage, b.startPage);
+        const end = Math.min(a.endPage, b.endPage);
+        if (start <= end) {
+          overlaps.push({
+            itemA: a,
+            itemB: b,
+            sharedStart: start,
+            sharedEnd: end,
+            sharedCount: end - start + 1,
+          });
+        }
+      }
+    }
+    return overlaps;
+  }, [reviewItems]);
+
+  const hasOverlappingRanges = overlappingItems.length > 0;
 
   const selectedCount = reviewItems.length;
 
@@ -1442,7 +1511,9 @@ export default function PdfUnitCutterPage() {
                   {selectedCount > 0 ? (
                     <>
                       <strong>{selectedCount}</strong> {selectedCount === 1 ? 'item' : 'items'} selected (
-                      <strong>{totalPagesToExtract}</strong> pages total)
+                      <strong>{totalPagesToExtract}</strong> unique {totalPagesToExtract === 1 ? 'page' : 'pages'}
+                      {hasOverlappingRanges && ` · ${rawPagesSum} across files`}
+                      )
                     </>
                   ) : (
                     'Please select at least one unit or section to proceed.'
@@ -1511,6 +1582,11 @@ export default function PdfUnitCutterPage() {
                   <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                     {totalPagesToExtract} of {fileInfo.totalPages}
                   </div>
+                  {hasOverlappingRanges && (
+                    <div className="text-[10px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">
+                      ({rawPagesSum} pages across files)
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -1518,10 +1594,27 @@ export default function PdfUnitCutterPage() {
                     Doc Coverage
                   </div>
                   <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                    {Math.round((totalPagesToExtract / Math.max(1, fileInfo.totalPages)) * 100)}%
+                    {Math.min(100, Math.round((totalPagesToExtract / Math.max(1, fileInfo.totalPages)) * 100))}%
                   </div>
                 </div>
               </div>
+
+              {/* Overlapping Ranges Alert */}
+              {hasOverlappingRanges && (
+                <div
+                  role="alert"
+                  className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-start gap-3 text-xs text-amber-800 dark:text-amber-300"
+                >
+                  <AlertTriangle size={18} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                  <div className="space-y-1">
+                    <div className="font-semibold">Overlapping Page Ranges Detected</div>
+                    <div className="leading-relaxed">
+                      {overlappingItems.length} {overlappingItems.length === 1 ? 'pair' : 'pairs'} of selected items share common pages (e.g., &quot;{overlappingItems[0].itemA.title}&quot; and &quot;{overlappingItems[0].itemB.title}&quot; share pages {overlappingItems[0].sharedStart}–{overlappingItems[0].sharedEnd}).
+                      A total of <strong>{totalPagesToExtract}</strong> unique PDF pages will be extracted across {selectedCount} items without duplicating page counts.
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Review Table */}
               <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 mt-4">
@@ -1536,31 +1629,41 @@ export default function PdfUnitCutterPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                    {reviewItems.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
-                          {item.title}
-                        </td>
-                        <td className="py-3 px-4 text-brand-600 dark:text-brand-400 font-semibold">
-                          Pages {item.startPage} – {item.endPage}
-                        </td>
-                        <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
-                          {item.pageCount}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate max-w-xs">
-                          {item.filename}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => handleOpenPreview(item)}
-                            title="Preview first page"
-                            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                          >
-                            <Eye size={15} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {reviewItems.map((item, idx) => {
+                      const isItemOverlapping = overlappingItems.some(
+                        (o) => o.itemA.id === item.id || o.itemB.id === item.id
+                      );
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                          <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                            {item.title}
+                          </td>
+                          <td className="py-3 px-4 text-brand-600 dark:text-brand-400 font-semibold">
+                            Pages {item.startPage} – {item.endPage}
+                            {isItemOverlapping && (
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-normal">
+                                Shared Pages
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                            {item.pageCount}
+                          </td>
+                          <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate max-w-xs">
+                            {item.filename}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() => handleOpenPreview(item)}
+                              title="Preview first page"
+                              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                            >
+                              <Eye size={15} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -37,12 +37,16 @@ export function parseNumberString(raw: string): number | null {
 // --------------------------------------------------------------------------
 // Contextual False Positive Rejector
 // --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// Contextual & Mathematical False Positive Rejector
+// --------------------------------------------------------------------------
 const FALSE_POSITIVE_PREFIXES = [
   /^(in|as|according to|refer to|see|look at|review|from|during|end of|summary of|questions for|exercises in|throughout|after|before)\s+/i,
   /^(we learned in|as discussed in|as seen in|as shown in|covered in|introduced in)\s+/i,
   /^(note:|important:|recall that|remember:)\s+/i,
   /^(figure|table|chart|box|diagram|plate|map|exhibit)\s+\d+/i,
   /^(exercise|question|problem|activity|assignment|quiz|practice|review)\s+\d+/i,
+  /^(step|hint|solution|answer|proof|sample\s+problem)\b/i,
 ];
 
 const FALSE_POSITIVE_POSTFIXES = [
@@ -50,6 +54,9 @@ const FALSE_POSITIVE_POSTFIXES = [
   /\b(review\s+questions|review\s+exercises|practice\s+problems|end\s+of\s+chapter|chapter\s+review|unit\s+review|self-test)\b/i,
 ];
 
+/**
+ * Rejects conversational sentences, paragraphs, and narrative prose.
+ */
 export function isConversationalSentence(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return true;
@@ -60,6 +67,60 @@ export function isConversationalSentence(line: string): boolean {
     if (regex.test(trimmed)) return true;
   }
   return false;
+}
+
+/**
+ * Rejects small mathematical expressions, coordinate pairs, isolated numbers,
+ * function machine terms (Input/Output), and homework problem stems.
+ */
+export function isMathematicalOrContentText(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+
+  // Coordinate pairs like (2, 4), (-1, 3), (x, y), (0, 0), (2.5, -4.1)
+  if (/^\(?\s*[-+]?\d*\.?\d+\s*,\s*[-+]?\d*\.?\d+\s*\)?$/i.test(trimmed)) return true;
+  if (/^\(?\s*[a-z]\s*,\s*[a-z]\s*\)?$/i.test(trimmed)) return true;
+  if (/^\s*\(?\s*[-+]?\d+\s*,\s*[-+]?\d+\s*\)\s*$/i.test(trimmed)) return true;
+
+  // Single small words or table headers: "Input", "Output", "Domain", "Range", "x", "y"
+  if (/^(input|output|domain|range|x|y|z|f\(x\)|g\(x\)|h\(x\)|value|total|sum|result)$/i.test(trimmed)) return true;
+
+  // Function tables / input-output pairs / coordinate pairs with values like "Input 1", "Output 2", "(2, 4) 5"
+  if (/^(input|output|domain|range)\s+[-+]?\d+/i.test(trimmed)) return true;
+  if (/^\(?\s*[-+]?\d+\s*,\s*[-+]?\d+\s*\)?\s+[-+]?\d+/i.test(trimmed)) return true;
+
+  // Pure isolated numbers: "1", "42", "130", "3.14"
+  if (/^[-+]?\d*\.?\d+$/.test(trimmed)) return true;
+
+  // Mathematical equations & formulas: e.g. "f(x) = ...", "y = mx + b", "x^2 + y^2 = 1"
+  if (/^[a-z]\([a-z]\)\s*=/i.test(trimmed)) return true;
+  if (/^[a-z]\s*=\s*[-+0-9a-z]/i.test(trimmed)) return true;
+  if (/[=<>≤≥]/.test(trimmed) && /[+\-*/^0-9]/.test(trimmed)) return true;
+  if (/[\^√π±≠≤≥]/.test(trimmed)) return true;
+  if (/^[0-9+\-*/=<>^√π±≠≤≥()\s.,]+$/.test(trimmed) && trimmed.length > 2) return true;
+
+  // Math homework / exercise problem stems (e.g. "Let f(x) be...", "1. Let f(x)...", "2. Find...")
+  if (
+    /^(?:\d{1,3}[.)]\s*)?(let|if|find|solve|calculate|suppose|given|show that|prove that|determine|evaluate|consider|assume|draw|graph|simplify|factor|expand|compute|express|verify)\b/i.test(
+      trimmed
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Textbook structural features that belong as subsections (Level 2) under a parent unit
+ * and must NEVER be treated as top-level (Level 1) unit headers.
+ */
+const GENERIC_SUBSECTION_REGEX =
+  /^\s*(summary|unit summary|chapter summary|summary of unit|review|unit review|chapter review|review exercises|practice exercises|exercises|key terms|key words|glossary|self-test|self-assessment|activity|activities|project|revision|checklist|example|examples)\b/i;
+
+export function isGenericSubsection(title: string): boolean {
+  const clean = title.trim();
+  return GENERIC_SUBSECTION_REGEX.test(clean);
 }
 
 // --------------------------------------------------------------------------
@@ -150,18 +211,25 @@ export async function extractOutlineStructure(
 
     if (flatSections.length === 0) return null;
 
-    // Fix end pages sequentially for resolved sections
+    // Fix end pages hierarchically based on peer boundaries (same or higher level)
     for (let i = 0; i < flatSections.length; i++) {
       if (flatSections[i].isUnresolved) continue;
 
-      let nextStart = totalPages + 1;
+      let nextPeerStart = totalPages + 1;
       for (let j = i + 1; j < flatSections.length; j++) {
-        if (!flatSections[j].isUnresolved && flatSections[j].startPage > flatSections[i].startPage) {
-          nextStart = flatSections[j].startPage;
+        if (
+          !flatSections[j].isUnresolved &&
+          flatSections[j].level <= flatSections[i].level &&
+          flatSections[j].startPage > flatSections[i].startPage
+        ) {
+          nextPeerStart = flatSections[j].startPage;
           break;
         }
       }
-      flatSections[i].endPage = Math.max(flatSections[i].startPage, nextStart - 1);
+      flatSections[i].endPage = Math.max(
+        flatSections[i].startPage,
+        Math.min(totalPages, nextPeerStart - 1)
+      );
     }
 
     return flatSections;
@@ -188,11 +256,19 @@ export function parseTocLines(lines: string[]): RawTocEntry[] {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed || isConversationalSentence(trimmed)) continue;
+    if (
+      !trimmed ||
+      isConversationalSentence(trimmed) ||
+      isMathematicalOrContentText(trimmed)
+    ) {
+      continue;
+    }
 
     let match = dotLeaderRegex.exec(trimmed);
+    let matchedWithDotLeader = true;
     if (!match) {
       match = trailingNumRegex.exec(trimmed);
+      matchedWithDotLeader = false;
     }
 
     if (match) {
@@ -201,10 +277,35 @@ export function parseTocLines(lines: string[]): RawTocEntry[] {
       const num = parseNumberString(rawPage);
 
       if (rawTitle.length >= 3 && num !== null && num > 0) {
+        // Reject if rawTitle itself is math text, single word Input/Output, coordinate, etc.
+        if (isMathematicalOrContentText(rawTitle) || isConversationalSentence(rawTitle)) {
+          continue;
+        }
+
+        // If matched without dot leaders, require a reasonable title pattern (not just any word ending in a number)
+        if (!matchedWithDotLeader) {
+          // Reject if title is just generic words like "Input", "Output", "Example", "Question", "Figure", "Table"
+          if (
+            /^(input|output|example|question|problem|figure|table|step|case|part|page|item)$/i.test(
+              rawTitle
+            )
+          ) {
+            continue;
+          }
+          // Reject if title contains math operators or coordinates
+          if (/[\(\)=+\-*/<>]/.test(rawTitle)) {
+            continue;
+          }
+        }
+
         let level = 1;
-        if (/^\s{2,}|\t/.test(line) || /^\d+\.\d+/.test(rawTitle)) {
+        // Generic subsections (Summary, Example, Review Exercises) are demoted to level 2
+        if (isGenericSubsection(rawTitle)) {
+          level = 2;
+        } else if (/^\s{2,}|\t/.test(line) || /^\d+\.\d+/.test(rawTitle)) {
           level = 2;
         }
+
         entries.push({
           title: rawTitle,
           printedPageRaw: rawPage,
@@ -224,19 +325,58 @@ export async function detectTocStructure(
 ): Promise<{ sections: DocumentSection[]; tocPages: number[]; pageOffset?: number } | null> {
   // 1. Identify TOC pages (usually within pages 1-25)
   const tocPages: number[] = [];
-  const tocEntries: RawTocEntry[] = [];
+  const rawTocEntries: RawTocEntry[] = [];
 
   for (const p of pagesText) {
     if (p.pageNumber > 25) break;
 
     const hasTocHeader = p.lines.some((l) =>
-      /^\s*(table of contents|contents|directory)\b/i.test(l.trim())
+      /^\s*(table of contents|contents|directory|sommaire|table des matières)\b/i.test(l.trim())
     );
     const parsed = parseTocLines(p.lines);
 
-    if (hasTocHeader || parsed.length >= 3) {
+    // If page has an explicit TOC header, parsed entries >= 2 are accepted.
+    // If NO TOC header, require strict TOC characteristics:
+    // - at least 4 entries
+    // - entries must have monotonically non-decreasing page numbers (>= 75% non-decreasing)
+    // - at least 2 entries with dot leaders or structured unit titles
+    let isCredibleTocPage = false;
+    if (hasTocHeader && parsed.length >= 2) {
+      isCredibleTocPage = true;
+    } else if (!hasTocHeader && parsed.length >= 4) {
+      let nonDecreasingCount = 0;
+      for (let k = 1; k < parsed.length; k++) {
+        if (parsed[k].printedPageNum >= parsed[k - 1].printedPageNum) {
+          nonDecreasingCount++;
+        }
+      }
+      const isMonotonic = nonDecreasingCount >= Math.floor((parsed.length - 1) * 0.75);
+      const hasStructureTitles = parsed.some(
+        (e) => MAJOR_HEADING_REGEX.test(e.title) || /^\d+(\.\d+)?\b/.test(e.title)
+      );
+      if (isMonotonic && hasStructureTitles) {
+        isCredibleTocPage = true;
+      }
+    }
+
+    if (isCredibleTocPage) {
       tocPages.push(p.pageNumber);
-      tocEntries.push(...parsed);
+      rawTocEntries.push(...parsed);
+    }
+  }
+
+  if (rawTocEntries.length < 2) {
+    return null;
+  }
+
+  // Deduplicate entries by normalized title and printed page number
+  const seenEntries = new Set<string>();
+  const tocEntries: RawTocEntry[] = [];
+  for (const entry of rawTocEntries) {
+    const key = `${entry.title.toLowerCase().replace(/[^a-z0-9]/g, '')}_${entry.printedPageNum}`;
+    if (!seenEntries.has(key)) {
+      seenEntries.add(key);
+      tocEntries.push(entry);
     }
   }
 
@@ -257,9 +397,18 @@ export async function detectTocStructure(
         const pageData = pagesText.find((p) => p.pageNumber === targetPdfPage);
         if (pageData) {
           const entryTitleLower = entry.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const majorMatch = MAJOR_HEADING_REGEX.exec(entry.title);
+          const prefixKey = majorMatch
+            ? `${majorMatch[1].toLowerCase()}${parseNumberString(majorMatch[2])}`
+            : '';
+
           const found = pageData.lines.some((l) => {
             const lineLower = l.toLowerCase().replace(/[^a-z0-9]/g, '');
-            return lineLower.includes(entryTitleLower) || (entryTitleLower.length > 8 && lineLower.includes(entryTitleLower.slice(0, 8)));
+            if (prefixKey && lineLower.includes(prefixKey)) return true;
+            return (
+              lineLower.includes(entryTitleLower) ||
+              (entryTitleLower.length > 8 && lineLower.includes(entryTitleLower.slice(0, 8)))
+            );
           });
           if (found) matches++;
         }
@@ -294,20 +443,30 @@ export async function detectTocStructure(
       title: entry.title,
       level: entry.level,
       startPage: safeStart,
-      endPage: safeStart, // will be resolved in next pass
+      endPage: safeStart, // will be resolved in peer pass below
       printedStartPage: entry.printedPageRaw,
       confidence,
       source: 'toc',
       notes: isOffsetConfident
         ? `Mapped from TOC with validated page offset (+${effectiveOffset} pages).`
-        : `Candidate from TOC; printed page ${entry.printedPageRaw}. Offset not verified against headings.`,
+        : `Candidate from TOC; printed page ${entry.printedPageRaw}. Offset (+${effectiveOffset}) not verified against headings.`,
     });
   }
 
-  // Set sequential end pages
+  // Set peer-based end pages:
+  // A section's end is determined by the next peer of the same or higher level
   for (let i = 0; i < sections.length; i++) {
-    const nextStart = (i < sections.length - 1) ? sections[i + 1].startPage : (totalPages + 1);
-    sections[i].endPage = Math.max(sections[i].startPage, nextStart - 1);
+    const current = sections[i];
+    let nextPeerStart = totalPages + 1;
+
+    for (let j = i + 1; j < sections.length; j++) {
+      if (sections[j].level <= current.level && sections[j].startPage > current.startPage) {
+        nextPeerStart = sections[j].startPage;
+        break;
+      }
+    }
+
+    current.endPage = Math.max(current.startPage, Math.min(totalPages, nextPeerStart - 1));
   }
 
   return {
@@ -325,15 +484,21 @@ export function detectHeadingsStructure(
   totalPages: number
 ): DocumentSection[] {
   const sections: DocumentSection[] = [];
+  const seenHeadings = new Set<string>();
   let lastMajorNumber: number | null = null;
   let sequentialCount = 0;
+
+  // Check if document has genuine major headings (Unit / Chapter)
+  const hasAnyMajorHeading = pagesText.some((p) =>
+    p.lines.some((l) => MAJOR_HEADING_REGEX.test(l.trim()) && !isConversationalSentence(l.trim()))
+  );
 
   for (const page of pagesText) {
     const { pageNumber, lines } = page;
 
     for (let lineIdx = 0; lineIdx < Math.min(lines.length, 12); lineIdx++) {
       const line = lines[lineIdx].trim();
-      if (!line || isConversationalSentence(line)) continue;
+      if (!line || isConversationalSentence(line) || isMathematicalOrContentText(line)) continue;
 
       // Check Major Headings (Unit, Chapter, Module)
       const majorMatch = MAJOR_HEADING_REGEX.exec(line);
@@ -341,10 +506,20 @@ export function detectHeadingsStructure(
         const prefix = majorMatch[1].toUpperCase();
         const numVal = parseNumberString(majorMatch[2]);
         const titleRest = majorMatch[3].trim();
-        const cleanTitle = titleRest ? `${prefix} ${majorMatch[2]}: ${titleRest}` : `${prefix} ${majorMatch[2]}`;
+        const cleanTitle = titleRest
+          ? `${prefix} ${majorMatch[2]}: ${titleRest}`
+          : `${prefix} ${majorMatch[2]}`;
+
+        // Skip if title rest indicates exercises/review/summary
+        const isGenericSub = isGenericSubsection(cleanTitle) || isGenericSubsection(titleRest);
+        const headingLevel = isGenericSub ? 2 : 1;
+
+        const dedupeKey = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '')}_${pageNumber}`;
+        if (seenHeadings.has(dedupeKey)) break;
+        seenHeadings.add(dedupeKey);
 
         let confidence = 85;
-        if (numVal !== null) {
+        if (numVal !== null && !isGenericSub) {
           if (lastMajorNumber !== null && numVal === lastMajorNumber + 1) {
             sequentialCount++;
             confidence = Math.min(95, 85 + sequentialCount * 2);
@@ -355,7 +530,7 @@ export function detectHeadingsStructure(
         sections.push({
           id: `heading-${sections.length + 1}`,
           title: cleanTitle,
-          level: 1,
+          level: headingLevel,
           startPage: pageNumber,
           endPage: pageNumber,
           confidence,
@@ -368,7 +543,15 @@ export function detectHeadingsStructure(
       // Check Numbered Subheadings (1.1, 1.2)
       const subMatch = SUB_SECTION_REGEX.exec(line);
       if (subMatch) {
-        const subTitle = `${subMatch[1]} ${subMatch[2]}`;
+        const subTitle = `${subMatch[1]} ${subMatch[2]}`.trim();
+        if (isMathematicalOrContentText(subTitle) || isConversationalSentence(subTitle)) {
+          continue;
+        }
+
+        const dedupeKey = `${subTitle.toLowerCase().replace(/[^a-z0-9]/g, '')}_${pageNumber}`;
+        if (seenHeadings.has(dedupeKey)) break;
+        seenHeadings.add(dedupeKey);
+
         sections.push({
           id: `subheading-${sections.length + 1}`,
           title: subTitle,
@@ -385,11 +568,29 @@ export function detectHeadingsStructure(
       // Check Simple Numbered Top-level (1. Introduction)
       const numMatch = NUMBERED_HEADING_REGEX.exec(line);
       if (numMatch && lineIdx < 4) {
-        const cleanTitle = `${numMatch[1]}. ${numMatch[2]}`;
+        const cleanTitle = `${numMatch[1]}. ${numMatch[2]}`.trim();
+
+        // Reject math problem instructions or conversational lines
+        if (isMathematicalOrContentText(cleanTitle) || isConversationalSentence(cleanTitle)) {
+          continue;
+        }
+
+        // If title is generic subsection (Summary, Example, Review), reject or demote
+        if (isGenericSubsection(numMatch[2])) {
+          continue;
+        }
+
+        const dedupeKey = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '')}_${pageNumber}`;
+        if (seenHeadings.has(dedupeKey)) break;
+        seenHeadings.add(dedupeKey);
+
+        // If document already uses Unit/Chapter headings, simple numbered headings are level 2
+        const assignedLevel = hasAnyMajorHeading ? 2 : 1;
+
         sections.push({
           id: `numheading-${sections.length + 1}`,
           title: cleanTitle,
-          level: 1,
+          level: assignedLevel,
           startPage: pageNumber,
           endPage: pageNumber,
           confidence: 76,
@@ -401,10 +602,17 @@ export function detectHeadingsStructure(
     }
   }
 
-  // Adjust end pages sequentially
+  // Adjust end pages hierarchically based on peer boundaries
   for (let i = 0; i < sections.length; i++) {
-    const nextStart = (i < sections.length - 1) ? sections[i + 1].startPage : (totalPages + 1);
-    sections[i].endPage = Math.max(sections[i].startPage, nextStart - 1);
+    const current = sections[i];
+    let nextPeerStart = totalPages + 1;
+    for (let j = i + 1; j < sections.length; j++) {
+      if (sections[j].level <= current.level && sections[j].startPage > current.startPage) {
+        nextPeerStart = sections[j].startPage;
+        break;
+      }
+    }
+    current.endPage = Math.max(current.startPage, Math.min(totalPages, nextPeerStart - 1));
   }
 
   return sections;
@@ -539,9 +747,37 @@ export async function detectDocumentStructure(
     };
   }
 
-  onProgress?.(80, 'Scanning text heading hierarchy...');
-
   // 4. Try Headings hierarchy (Priority 3)
+  // If TOC did not succeed and totalPages > 30, sample pages across the document for major unit headings
+  if ((!tocResult || tocResult.sections.length < 2) && totalPages > 30) {
+    onProgress?.(72, 'Scanning document pages for major unit headings...');
+    const step = totalPages > 150 ? 2 : 1;
+    for (let pNum = 31; pNum <= totalPages; pNum += step) {
+      try {
+        const page = await pdfDoc.getPage(pNum);
+        const content = await page.getTextContent();
+        const rawLines: string[] = [];
+        let currentLine = '';
+        for (const item of content.items) {
+          if ('str' in item) {
+            currentLine += item.str + ' ';
+            if (item.hasEOL) {
+              rawLines.push(currentLine.trim());
+              currentLine = '';
+            }
+          }
+        }
+        if (currentLine.trim()) rawLines.push(currentLine.trim());
+        const charCount = rawLines.reduce((acc, l) => acc + l.length, 0);
+        pagesText.push({ pageNumber: pNum, lines: rawLines, charCount });
+      } catch {
+        // Skip inaccessible page
+      }
+    }
+  }
+
+  onProgress?.(85, 'Scanning text heading hierarchy...');
+
   const headingSections = detectHeadingsStructure(pagesText, totalPages);
   if (headingSections.length >= 2) {
     onProgress?.(100, `Detected ${headingSections.length} units from heading hierarchy.`);

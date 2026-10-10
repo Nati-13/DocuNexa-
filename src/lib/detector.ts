@@ -66,6 +66,7 @@ const FALSE_POSITIVE_PREFIXES = [
   /^(in|as|according to|refer to|see|look at|review|from|during|end of|summary of|questions for|exercises in|throughout|after|before)\s+/i,
   /^(we learned in|as discussed in|as seen in|as shown in|covered in|introduced in)\s+/i,
   /^(note:|important:|recall that|remember:)\s+/i,
+  /^(step|hint|solution|answer|proof|sample\s+problem)\b/i,
 ];
 
 const FALSE_POSITIVE_POSTFIXES = [
@@ -73,6 +74,30 @@ const FALSE_POSITIVE_POSTFIXES = [
   /\b(review\s+questions|review\s+exercises|practice\s+problems|end\s+of\s+chapter|chapter\s+review|unit\s+review|study\s+guide|self-test|self-assessment)\b/i,
   /\b(exercises|questions|problems|summary|review|glossary|index|notes|page|pages|fig|figure|table)\s*$/i,
 ];
+
+function isMathematicalOrContentLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+  // Coordinate pairs
+  if (/^\(?\s*[-+]?\d*\.?\d+\s*,\s*[-+]?\d*\.?\d+\s*\)?$/i.test(trimmed)) return true;
+  if (/^\(?\s*[a-z]\s*,\s*[a-z]\s*\)?$/i.test(trimmed)) return true;
+  // Single table terms
+  if (/^(input|output|domain|range|x|y|z|f\(x\)|value|total|sum)$/i.test(trimmed)) return true;
+  if (/^(input|output)\s+[-+]?\d+/i.test(trimmed)) return true;
+  // Pure numbers
+  if (/^[-+]?\d*\.?\d+$/.test(trimmed)) return true;
+  // Math expressions
+  if (/^[a-z]\([a-z]\)\s*=/i.test(trimmed)) return true;
+  if (/^[a-z]\s*=\s*[-+0-9a-z]/i.test(trimmed)) return true;
+  if (/[=<>≤≥]/.test(trimmed) && /[+\-*/^0-9]/.test(trimmed)) return true;
+  if (/[\^√π±≠≤≥]/.test(trimmed)) return true;
+  if (/^[0-9+\-*/=<>^√π±≠≤≥()\s.,]+$/.test(trimmed) && trimmed.length > 2) return true;
+  // Math problem stems
+  if (/^(?:\d{1,3}[.)]\s*)?(let|if|find|solve|calculate|suppose|given|show that|prove that|determine|evaluate|consider|assume|draw|graph|simplify|factor|expand|compute|express|verify)\b/i.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
 
 /**
  * Regex for standard headings:
@@ -119,6 +144,9 @@ export function isGenuineHeading(
 ): RawHeadingMatch | null {
   const trimmed = line.trim();
   if (!trimmed || trimmed.length < 3) return null;
+
+  // Reject math and content expressions
+  if (isMathematicalOrContentLine(trimmed)) return null;
 
   // Rule 1: Check false positive sentence prefixes (e.g., "In Unit 2 we learned...")
   for (const regex of FALSE_POSITIVE_PREFIXES) {
