@@ -4,20 +4,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   LifeBuoy,
   Search,
-  Filter,
   CheckCircle2,
   Clock,
   AlertCircle,
   Loader2,
   X,
-  MessageSquare,
   Mail,
-  User,
-  Tag,
-  Calendar,
   Send,
   ExternalLink,
   RefreshCw,
+  Bot,
+  BellRing,
+  RotateCcw,
+  Sparkles,
+  ShieldCheck,
+  Radio,
 } from 'lucide-react';
 import { TELEGRAM_BOT_URL } from '@/lib/telegram/constants';
 
@@ -35,26 +36,46 @@ export default function AdminSupportInboxPage() {
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // Webhook sync state
-  const [webhookSyncing, setWebhookSyncing] = useState(false);
-  const [webhookResult, setWebhookResult] = useState<string | null>(null);
+  // Telegram Integration State
+  const [tgData, setTgData] = useState<any>(null);
+  const [tgLoading, setTgLoading] = useState(false);
+  const [tgActionLoading, setTgActionLoading] = useState<string | null>(null);
+  const [actionAlert, setActionAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const handleSyncWebhook = async () => {
-    setWebhookSyncing(true);
-    setWebhookResult(null);
+  const fetchTelegramDiagnostics = useCallback(async () => {
+    setTgLoading(true);
+    try {
+      const res = await fetch('/api/admin/support/telegram');
+      if (res.ok) {
+        const data = await res.json();
+        setTgData(data);
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setTgLoading(false);
+    }
+  }, []);
+
+  const handleTelegramAction = async (action: string, payload: any = {}) => {
+    setTgActionLoading(action);
+    setActionAlert(null);
     try {
       const res = await fetch('/api/admin/support/telegram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: 'https://docunexa.pro.et/api/telegram/webhook' }),
+        body: JSON.stringify({ action, ...payload }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to sync webhook');
-      setWebhookResult(data.message || 'Telegram webhook synced successfully!');
+      if (!res.ok) {
+        throw new Error(data.error || `Failed to execute ${action}`);
+      }
+      setActionAlert({ type: 'success', message: data.message || 'Action executed successfully.' });
+      fetchTelegramDiagnostics();
     } catch (err: any) {
-      setWebhookResult(`Error: ${err.message}`);
+      setActionAlert({ type: 'error', message: err.message || 'Operation failed.' });
     } finally {
-      setWebhookSyncing(false);
+      setTgActionLoading(null);
     }
   };
 
@@ -79,7 +100,8 @@ export default function AdminSupportInboxPage() {
 
   useEffect(() => {
     fetchTickets();
-  }, [fetchTickets]);
+    fetchTelegramDiagnostics();
+  }, [fetchTickets, fetchTelegramDiagnostics]);
 
   const handleOpenTicket = (t: any) => {
     setSelectedTicket(t);
@@ -127,28 +149,14 @@ export default function AdminSupportInboxPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <LifeBuoy className="text-brand-500" /> Support Inbox
+            <LifeBuoy className="text-brand-500" /> Support Inbox & Telegram Console
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Review user inquiries, textbook issues, coupon questions, and customer support tickets.
+            Review user inquiries, textbook issues, coupon questions, and bidirectional Telegram support routing.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          <button
-            onClick={handleSyncWebhook}
-            disabled={webhookSyncing}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
-            title="Registers the live webhook URL with Telegram Bot API"
-          >
-            {webhookSyncing ? (
-              <Loader2 size={13} className="animate-spin text-brand-500" />
-            ) : (
-              <RefreshCw size={13} className="text-slate-500" />
-            )}
-            Sync Webhook
-          </button>
-
           <a
             href={TELEGRAM_BOT_URL}
             target="_blank"
@@ -160,20 +168,205 @@ export default function AdminSupportInboxPage() {
         </div>
       </div>
 
-      {webhookResult && (
+      {/* Action Result Banner */}
+      {actionAlert && (
         <div
-          className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between gap-2 ${
-            webhookResult.startsWith('Error')
+          className={`p-3.5 rounded-2xl text-xs font-semibold border flex items-center justify-between gap-2 animate-fade-in ${
+            actionAlert.type === 'error'
               ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
               : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
           }`}
         >
-          <span>{webhookResult}</span>
-          <button onClick={() => setWebhookResult(null)} className="text-slate-400 hover:text-slate-600">
+          <div className="flex items-center gap-2">
+            {actionAlert.type === 'error' ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
+            <span>{actionAlert.message}</span>
+          </div>
+          <button
+            onClick={() => setActionAlert(null)}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+          >
             <X size={14} />
           </button>
         </div>
       )}
+
+      {/* Telegram Bot Diagnostic & Control Console */}
+      <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <Bot className="text-sky-500" size={20} />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              Telegram Bot Health & Outbox Diagnostics
+            </h2>
+            {tgLoading && <Loader2 size={13} className="animate-spin text-slate-400" />}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleTelegramAction('sync_webhook')}
+              disabled={tgActionLoading !== null}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+              title="Registers the live webhook URL with Telegram"
+            >
+              {tgActionLoading === 'sync_webhook' ? (
+                <Loader2 size={12} className="animate-spin text-brand-500" />
+              ) : (
+                <RefreshCw size={12} />
+              )}
+              Sync Webhook
+            </button>
+
+            <button
+              onClick={() => handleTelegramAction('sync_commands')}
+              disabled={tgActionLoading !== null}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-900/60 text-brand-700 dark:text-brand-300 font-semibold text-xs hover:bg-brand-100 transition-colors disabled:opacity-50 cursor-pointer"
+              title="Registers official commands and Mini App menu button with Telegram"
+            >
+              {tgActionLoading === 'sync_commands' ? (
+                <Loader2 size={12} className="animate-spin text-brand-500" />
+              ) : (
+                <Sparkles size={12} />
+              )}
+              Sync Commands & Mini App
+            </button>
+
+            <button
+              onClick={() => handleTelegramAction('test_notification')}
+              disabled={tgActionLoading !== null}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200/60 dark:border-sky-900/60 text-sky-700 dark:text-sky-300 font-semibold text-xs hover:bg-sky-100 transition-colors disabled:opacity-50 cursor-pointer"
+              title="Sends a live diagnostic ping message to the configured owner chat"
+            >
+              {tgActionLoading === 'test_notification' ? (
+                <Loader2 size={12} className="animate-spin text-sky-500" />
+              ) : (
+                <BellRing size={12} />
+              )}
+              Send Test Ping
+            </button>
+
+            <button
+              onClick={() => handleTelegramAction('retry_failed')}
+              disabled={tgActionLoading !== null}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
+              title="Retries all pending or failed Telegram support notifications"
+            >
+              {tgActionLoading === 'retry_failed' ? (
+                <Loader2 size={12} className="animate-spin text-amber-500" />
+              ) : (
+                <RotateCcw size={12} />
+              )}
+              Retry Outbox
+            </button>
+          </div>
+        </div>
+
+        {/* Configuration Status Indicators */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Bot Token</span>
+            <div className="flex items-center gap-1.5 font-bold">
+              {tgData?.status?.configured ? (
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <ShieldCheck size={13} /> Active
+                </span>
+              ) : (
+                <span className="text-rose-500 flex items-center gap-1">
+                  <AlertCircle size={13} /> Missing
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Owner Chat</span>
+            <div className="flex items-center gap-1.5 font-bold">
+              {tgData?.status?.ownerConfigured ? (
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 size={13} /> Configured
+                </span>
+              ) : (
+                <span className="text-amber-500 flex items-center gap-1">
+                  <AlertCircle size={13} /> Unset
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Webhook Secret</span>
+            <div className="flex items-center gap-1.5 font-bold">
+              {tgData?.status?.webhookSecretConfigured ? (
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <ShieldCheck size={13} /> Fail-Closed Active
+                </span>
+              ) : (
+                <span className="text-rose-500 flex items-center gap-1">
+                  <AlertCircle size={13} /> Unset
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Live Webhook</span>
+            <div className="flex items-center gap-1.5 font-bold">
+              {tgData?.webhookInfo?.configured ? (
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Radio size={13} className="animate-pulse" /> Registered
+                </span>
+              ) : (
+                <span className="text-slate-400 flex items-center gap-1">
+                  <AlertCircle size={13} /> Not Set
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Live Delivery Metrics */}
+        {tgData?.metrics && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <span className="text-[10px] font-semibold text-slate-400 uppercase">Total Tickets</span>
+              <p className="font-mono font-bold text-slate-900 dark:text-white text-base">
+                {tgData.metrics.totalTickets}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-emerald-500 uppercase">Delivered</span>
+              <p className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base">
+                {tgData.metrics.delivered}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-rose-500 uppercase">Failed Deliveries</span>
+              <p className="font-mono font-bold text-rose-600 dark:text-rose-400 text-base">
+                {tgData.metrics.failed}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-amber-500 uppercase">Pending Outbox</span>
+              <p className="font-mono font-bold text-amber-600 dark:text-amber-400 text-base">
+                {tgData.metrics.pending}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Sanitize and display webhook error if present */}
+        {tgData?.webhookInfo?.info?.lastErrorMessage && (
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+            <AlertCircle size={14} className="shrink-0" />
+            <span>
+              Telegram Webhook Last Error: {tgData.webhookInfo.info.lastErrorMessage} (
+              {tgData.webhookInfo.info.lastErrorDate
+                ? new Date(tgData.webhookInfo.info.lastErrorDate).toLocaleString()
+                : 'Recent'}
+              )
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -267,7 +460,6 @@ export default function AdminSupportInboxPage() {
                 {tickets.map((t) => {
                   const isOpen = t.status === 'open';
                   const isInProgress = t.status === 'in_progress';
-                  const isResolved = t.status === 'resolved' || t.status === 'closed';
 
                   return (
                     <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
@@ -347,7 +539,7 @@ export default function AdminSupportInboxPage() {
                 <span className="font-semibold text-slate-900 dark:text-white">{selectedTicket.name}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Email</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">Email / Contact</span>
                 <a href={`mailto:${selectedTicket.email}`} className="font-mono text-brand-600 dark:text-brand-400 hover:underline">
                   {selectedTicket.email}
                 </a>
@@ -394,13 +586,13 @@ export default function AdminSupportInboxPage() {
 
               <div className="space-y-1.5">
                 <label className="block font-bold text-slate-700 dark:text-slate-300">
-                  Internal Admin Notes (Optional):
+                  Internal Admin Notes:
                 </label>
                 <textarea
                   rows={3}
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Notes about resolutions, email replies sent, or bug tickets opened..."
+                  placeholder="Notes about resolutions, responses sent, or bug tickets opened..."
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
