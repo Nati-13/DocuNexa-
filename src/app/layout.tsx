@@ -138,18 +138,15 @@ export default async function RootLayout({
           <FloatingSupportButton />
           <Footer />
           <MonetagZone isAdFree={isAdFree} />
-          <MonetagServiceWorkerCleanup />
-        </AuthProvider>
-        {isAdFree ? (
-          <MonetagServiceWorkerCleanup />
-        ) : (
           <MonetagMainZone
+            isAdFree={isAdFree}
             src="https://quge5.com/88/tag.min.js"
             data-zone="289364"
             data-cfasync="false"
             strategy="afterInteractive"
           />
-        )}
+          <MonetagServiceWorkerCleanup />
+        </AuthProvider>
       </body>
     </html>
   );
