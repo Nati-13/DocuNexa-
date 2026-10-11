@@ -137,9 +137,8 @@ export default async function RootLayout({
           </div>
           <FloatingSupportButton />
           <Footer />
-          <MonetagZone isAdFree={isAdFree} />
+          <MonetagZone />
           <MonetagMainZone
-            isAdFree={isAdFree}
             src="https://quge5.com/88/tag.min.js"
             data-zone="289364"
             data-cfasync="false"
