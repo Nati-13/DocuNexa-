@@ -841,7 +841,7 @@ export default function HomePage() {
             DocuNexa is a free PDF toolkit built to make document work easier for everyone.
           </h2>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
-            No subscription required. No paid plans, no premium tier, and no paywalls. Built for students, teachers, researchers, and professionals worldwide.
+            No subscription required. All core PDF tools are free with zero paywalls. An optional one-time Ad-Free upgrade is available for users who prefer an ad-free workspace. Built for students, teachers, researchers, and professionals worldwide.
           </p>
         </div>
 

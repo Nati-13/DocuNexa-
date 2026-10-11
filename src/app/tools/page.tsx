@@ -198,6 +198,11 @@ export default function ToolsDirectoryPage() {
             })}
           </div>
 
+          {/* First-Party House Promotion / Ad Placement */}
+          <div className="pt-8 max-w-5xl mx-auto">
+            <AdSlot slotId="tools-directory-bottom" format="horizontal" />
+          </div>
+
           {filteredTools.length === 0 && (
             <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-md mx-auto space-y-3">
               <p className="text-base font-bold text-slate-900 dark:text-white">No tools found</p>
