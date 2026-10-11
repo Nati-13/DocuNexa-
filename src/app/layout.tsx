@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { getCurrentUser } from '@/lib/auth';
 import { AuthProvider } from '@/context/AuthContext';
 import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController';
+import { MonetagZone } from '@/components/ads/MonetagZone';
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { FloatingSupportButton } from '@/components/layout/FloatingSupportButton';
 
@@ -129,6 +130,7 @@ export default async function RootLayout({
           </div>
           <FloatingSupportButton />
           <Footer />
+          <MonetagZone isAdFree={isAdFree} />
         </AuthProvider>
         {isAdFree ? (
           <MonetagServiceWorkerCleanup />

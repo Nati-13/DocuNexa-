@@ -25,6 +25,7 @@ import {
   calculateCouponDiscount,
   formatMicroUnits,
 } from '../src/lib/coupons';
+import { isRouteExcludedFromAds } from '../src/components/ads/MonetagZone';
 
 console.log('================================================================');
 console.log('   DOCUNEXA — BYBIT DIRECT USDT PAYMENT & MONETIZATION TESTS    ');
@@ -543,6 +544,54 @@ async function runTests() {
     assert.ok(layoutContent.includes('strategy="afterInteractive"'), 'Must use afterInteractive strategy');
     assert.ok(layoutContent.includes('isAdFree'), 'Layout must conditionally render Monetag based on isAdFree');
     assert.ok(layoutContent.includes('MonetagServiceWorkerCleanup'), 'Layout must cleanup SW for Ad-Free users');
+  });
+
+  test('Monetag Advertising Zone 12002632 configuration matches exact zone, source, and deduplication ID', () => {
+    const zonePath = path.join(process.cwd(), 'src', 'components', 'ads', 'MonetagZone.tsx');
+    assert.ok(fs.existsSync(zonePath), 'MonetagZone component must exist');
+    const content = fs.readFileSync(zonePath, 'utf-8');
+    assert.ok(content.includes('data-zone="12002632"'), 'Zone 12002632 must be present');
+    assert.ok(content.includes('https://al5sm.com/tag.min.js'), 'Exact script URL must match');
+    assert.ok(content.includes('id="monetag-zone-12002632"'), 'Stable script ID must be present for deduplication');
+    assert.ok(content.includes('strategy="afterInteractive"'), 'Must use afterInteractive loading strategy');
+    assert.ok(content.includes('data-cfasync="false"'), 'data-cfasync="false" must be present');
+
+    const layoutPath = path.join(process.cwd(), 'src', 'app', 'layout.tsx');
+    const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
+    assert.ok(layoutContent.includes('MonetagZone'), 'RootLayout must mount MonetagZone');
+  });
+
+  test('Monetag Advertising Zone 12002632 route exclusion logic strictly guards private and sensitive paths', () => {
+    // Admin dashboards must be excluded
+    assert.strictEqual(isRouteExcludedFromAds('/admin'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/admin/settings'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/admin-setup'), true);
+
+    // Auth flows must be excluded
+    assert.strictEqual(isRouteExcludedFromAds('/login'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/signup'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/forgot-password'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/reset-password'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/auth/callback'), true);
+
+    // Private account & checkout flows must be excluded
+    assert.strictEqual(isRouteExcludedFromAds('/account'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/account/settings'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/choose-plan'), true);
+
+    // API routes must be excluded
+    assert.strictEqual(isRouteExcludedFromAds('/api/auth/login'), true);
+    assert.strictEqual(isRouteExcludedFromAds('/api/admin/overview'), true);
+
+    // Public pages and tools must NOT be excluded
+    assert.strictEqual(isRouteExcludedFromAds('/'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/tools'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/tools/pdf-unit-cutter'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/tools/split-pdf'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/about'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/privacy'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/terms'), false);
+    assert.strictEqual(isRouteExcludedFromAds('/contact'), false);
   });
 
   // --------------------------------------------------------------------------

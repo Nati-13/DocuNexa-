@@ -68,11 +68,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://quge5.com https://*.quge5.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://quge5.com https://*.quge5.com https://al5sm.com https://*.al5sm.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://sztdcptdaxsqbazfbvhh.supabase.co wss://sztdcptdaxsqbazfbvhh.supabase.co https://quge5.com https://*.quge5.com https://cdn.jsdelivr.net",
+              "connect-src 'self' https://sztdcptdaxsqbazfbvhh.supabase.co wss://sztdcptdaxsqbazfbvhh.supabase.co https://quge5.com https://*.quge5.com https://al5sm.com https://*.al5sm.com https://cdn.jsdelivr.net",
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",
             ].join('; '),
