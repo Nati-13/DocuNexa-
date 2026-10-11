@@ -28,7 +28,7 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
     name: 'PDF Unit Cutter',
     category: 'organize',
     isFlagship: true,
-    title: 'PDF Unit Cutter — Split Textbooks & Documents by Chapters | DocuNexa',
+    title: 'PDF Unit Cutter — Split Textbooks into Chapters | DocuNexa',
     description:
       'Extract chapters, units, and sections from PDF textbooks. Features outline detection, TOC parsing with printed-page offset calibration, visual preview, and PDF export.',
     h1: 'PDF Unit Cutter',

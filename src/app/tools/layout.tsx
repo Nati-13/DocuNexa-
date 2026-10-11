@@ -47,7 +47,7 @@ export default function ToolsLayout({
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://docunexa.pro.et',
+        item: 'https://docunexa.pro.et/',
       },
       {
         '@type': 'ListItem',

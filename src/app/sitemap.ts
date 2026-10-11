@@ -3,8 +3,11 @@ import { ALL_TOOLS } from '@/config/tools';
 
 const CANONICAL_BASE = 'https://docunexa.pro.et';
 
+// Stable release timestamp reflecting authentic content updates (Google Search Central best practice)
+const RELEASE_DATE = new Date('2026-10-11T00:00:00.000Z');
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const lastModified = RELEASE_DATE;
 
   const corePages: MetadataRoute.Sitemap = [
     {

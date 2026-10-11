@@ -147,6 +147,71 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
           </p>
         </div>
       </div>
+
+      {/* 5. Frequently Asked Questions & Helpful Tips */}
+      <div className="space-y-6 pt-4">
+        <div className="flex items-center gap-2.5 text-brand-600 dark:text-brand-400">
+          <HelpCircle size={20} className="shrink-0" />
+          <h3 className="font-bold text-xl text-slate-900 dark:text-white">
+            Frequently Asked Questions
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+              Are my documents uploaded to any remote server?
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              No. DocuNexa executes all operations entirely in your web browser memory via client-side WebAssembly and JavaScript engines. No files or document contents ever leave your device.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+              Is there a file size limit or cost to use {tool.name}?
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              {tool.name} is completely free with zero subscription paywalls, watermarks, or artificial limits. Processing capacity is determined solely by your device's available memory.
+            </p>
+          </div>
+
+          {tool.slug === 'pdf-unit-cutter' ? (
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2">
+              <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                How can I split a scanned textbook or syllabus with no digital text layer?
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                If your document contains scanned pages without a text layer, first run it through our{' '}
+                <Link href="/tools/ocr-pdf" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                  OCR PDF
+                </Link>{' '}
+                tool to generate searchable text and headings. After splitting, you can reduce chapter file sizes using{' '}
+                <Link href="/tools/compress-pdf" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                  Compress PDF
+                </Link>{' '}
+                or re-combine sections with{' '}
+                <Link href="/tools/merge-pdf" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                  Merge PDF
+                </Link>.
+              </p>
+            </div>
+          ) : (
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2">
+              <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                Need to split textbooks or long course documents into structured chapters?
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Try DocuNexa's flagship{' '}
+                <Link href="/tools/pdf-unit-cutter" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                  PDF Unit Cutter
+                </Link>{' '}
+                for automated outline detection, Table of Contents parsing with offset calibration, visual boundary preview, and one-click ZIP chapter export.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   );
 };

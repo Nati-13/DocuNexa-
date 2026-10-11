@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description:
     'Free, private client-side PDF tools in one clean workspace. Split textbooks into chapters with PDF Unit Cutter, merge, compress, convert, edit, and organize documents directly in your browser.',
   alternates: {
-    canonical: 'https://docunexa.pro.et',
+    canonical: 'https://docunexa.pro.et/',
   },
   keywords: [
     'DocuNexa',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     title: 'DocuNexa — Every PDF tool. One simple workspace.',
     description:
       'Free, private client-side PDF tools in one clean workspace. Split textbooks into chapters with PDF Unit Cutter, merge, compress, convert, edit, and organize documents directly in your browser.',
-    url: 'https://docunexa.pro.et',
+    url: 'https://docunexa.pro.et/',
     siteName: 'DocuNexa',
     locale: 'en_US',
     type: 'website',
@@ -75,6 +75,12 @@ export const metadata: Metadata = {
       { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
 };
 
 export default async function RootLayout({
@@ -91,8 +97,9 @@ export default async function RootLayout({
       {
         '@type': 'WebSite',
         '@id': 'https://docunexa.pro.et/#website',
-        url: 'https://docunexa.pro.et',
+        url: 'https://docunexa.pro.et/',
         name: 'DocuNexa',
+        alternateName: 'DocuNexa PDF Tools',
         description: 'DocuNexa — Every PDF tool. One simple workspace.',
         publisher: {
           '@id': 'https://docunexa.pro.et/#organization',
@@ -102,7 +109,7 @@ export default async function RootLayout({
         '@type': 'Organization',
         '@id': 'https://docunexa.pro.et/#organization',
         name: 'DocuNexa',
-        url: 'https://docunexa.pro.et',
+        url: 'https://docunexa.pro.et/',
         logo: 'https://docunexa.pro.et/icon.svg',
       },
     ],
