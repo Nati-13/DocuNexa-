@@ -141,14 +141,15 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
                 <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
                   {file.name}
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium block">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium block">
                   {CANONICAL_FORMATS[resolveFormat(file.name)]?.label || 'File'}
                 </span>
               </div>
             </div>
             <button
+              type="button"
               onClick={() => handleDownloadSingle(file)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-brand-500 text-slate-700 dark:text-slate-200 text-xs font-semibold shrink-0 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-brand-500 text-slate-700 dark:text-slate-200 text-xs font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Download size={13} />
               <span>Download</span>
@@ -162,17 +163,19 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
         {hasMultiple ? (
           <>
             <button
+              type="button"
               onClick={handleDownloadZip}
               disabled={isZipping}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Archive size={17} />
               <span>{isZipping ? 'Generating ZIP...' : 'Download All as ZIP'}</span>
             </button>
 
             <button
+              type="button"
               onClick={handleDownloadAll}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-all"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-all active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Download size={17} />
               <span>Download Files Individually</span>
@@ -180,8 +183,9 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
           </>
         ) : (
           <button
+            type="button"
             onClick={() => handleDownloadSingle(files[0])}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
           >
             <Download size={18} />
             <span>

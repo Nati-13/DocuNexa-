@@ -77,22 +77,26 @@ export default function ToolsDirectoryPage() {
 
           {/* Search Bar */}
           <div className="relative max-w-xl mx-auto pt-2">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" aria-hidden="true" />
             <input
               type="text"
+              id="tools-directory-search"
+              aria-label="Search all 34 PDF tools"
               placeholder="Search 34 PDF tools... (e.g. split, word, compress, unit, ocr)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg text-sm focus:outline-brand-500 transition-all placeholder:text-slate-400"
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md text-sm text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 transition-all placeholder:text-slate-600 dark:placeholder:text-slate-300"
             />
           </div>
         </div>
 
         {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start md:justify-center">
+        <div role="tablist" aria-label="Tool categories" className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start md:justify-center px-1">
           <button
+            role="tab"
+            aria-selected={activeCategory === 'all'}
             onClick={() => setActiveCategory('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
               activeCategory === 'all'
                 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
                 : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -103,8 +107,10 @@ export default function ToolsDirectoryPage() {
           {TOOL_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
+              role="tab"
+              aria-selected={activeCategory === cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                 activeCategory === cat.id
                   ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -126,10 +132,10 @@ export default function ToolsDirectoryPage() {
                 <Link
                   key={tool.id}
                   href={`/tools/${tool.slug}`}
-                  className={`group relative p-6 rounded-3xl transition-all duration-200 flex flex-col justify-between ${
+                  className={`group relative p-6 rounded-3xl transition-all duration-200 ease-out flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                     isFlagship
-                      ? 'bg-gradient-to-b from-brand-50/90 via-white to-white dark:from-brand-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-brand-500 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/20'
-                      : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-xl shadow-xs'
+                      ? 'bg-gradient-to-b from-brand-50/90 via-white to-white dark:from-brand-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-brand-500 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/25 hover:-translate-y-1'
+                      : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-xl hover:-translate-y-1 shadow-xs'
                   }`}
                 >
                   {/* Top bar with icon & star */}
@@ -159,12 +165,13 @@ export default function ToolsDirectoryPage() {
                         </span>
                       )}
                       <button
+                        type="button"
                         onClick={(e) => toggleFavorite(e, tool.id)}
-                        aria-label="Star favorite"
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        aria-label={isFav ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`}
+                        className={`p-2 rounded-lg cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                           isFav
                             ? 'text-amber-400 hover:text-amber-500'
-                            : 'text-slate-300 dark:text-slate-600 hover:text-slate-500'
+                            : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400'
                         }`}
                       >
                         <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
@@ -177,7 +184,7 @@ export default function ToolsDirectoryPage() {
                     <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                       {tool.name}
                     </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                       {tool.description}
                     </p>
                   </div>

@@ -27,7 +27,9 @@ import {
   Plus,
   RotateCw,
   FolderDown,
-  Check
+  Check,
+  GraduationCap,
+  Gift
 } from 'lucide-react';
 import { 
   ALL_TOOLS, 
@@ -537,25 +539,29 @@ export default function HomePage() {
 
           {/* Search Input */}
           <div className="relative max-w-md mx-auto pt-2">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" aria-hidden="true" />
             <input
               type="text"
+              id="search-tools-input"
+              aria-label="Search all 34 PDF tools"
               placeholder="Search PDF tools... (e.g. split, word, unit, compress)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-sm focus:outline-brand-500"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs text-sm text-slate-900 dark:text-white placeholder:text-slate-600 dark:placeholder:text-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 transition-all"
             />
           </div>
         </div>
 
         {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 justify-start sm:justify-center scrollbar-none">
+        <div role="tablist" aria-label="Tool categories" className="flex items-center gap-2 overflow-x-auto pb-2 justify-start sm:justify-center scrollbar-none px-1">
           <button
+            role="tab"
+            aria-selected={activeCategory === 'all'}
             onClick={() => setActiveCategory('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
               activeCategory === 'all'
                 ? 'bg-brand-600 text-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             All Tools ({ALL_TOOLS.length})
@@ -563,11 +569,13 @@ export default function HomePage() {
           {TOOL_CATEGORIES.map((c) => (
             <button
               key={c.id}
+              role="tab"
+              aria-selected={activeCategory === c.id}
               onClick={() => setActiveCategory(c.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                 activeCategory === c.id
                   ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {c.name}
@@ -585,10 +593,10 @@ export default function HomePage() {
               <Link
                 key={tool.id}
                 href={`/tools/${tool.slug}`}
-                className={`group relative p-6 rounded-3xl transition-all duration-200 flex flex-col justify-between ${
+                className={`group relative p-6 rounded-3xl transition-all duration-200 ease-out flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                   isFlagship
-                    ? 'bg-gradient-to-b from-brand-50/90 to-white dark:from-brand-950/40 dark:to-slate-900 border-2 border-brand-500 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/20'
-                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-400 hover:shadow-xl shadow-xs'
+                    ? 'bg-gradient-to-b from-brand-50/90 to-white dark:from-brand-950/40 dark:to-slate-900 border-2 border-brand-500 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/25 hover:-translate-y-1'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-400 hover:shadow-xl hover:-translate-y-1 shadow-xs'
                 }`}
               >
                 <div className="space-y-3">
@@ -618,12 +626,14 @@ export default function HomePage() {
                         </span>
                       )}
                       <button
+                        type="button"
                         onClick={(e) => toggleFavorite(e, tool.id)}
-                        className={`p-1 rounded-md ${
-                          isFav ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600 hover:text-slate-500'
+                        aria-label={isFav ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`}
+                        className={`p-2 rounded-lg cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+                          isFav ? 'text-amber-400 hover:text-amber-500' : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400'
                         }`}
                       >
-                        <Star size={15} fill={isFav ? 'currentColor' : 'none'} />
+                        <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
                     </div>
                   </div>
@@ -631,7 +641,7 @@ export default function HomePage() {
                   <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     {tool.name}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                     {tool.description}
                   </p>
                 </div>
@@ -849,8 +859,8 @@ export default function HomePage() {
           {/* Pillar 1: Students & Teachers */}
           <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-xl">
-                🎓
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+                <GraduationCap size={24} />
               </div>
               <h3 className="font-bold text-lg text-slate-900 dark:text-white">For Students & Education</h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -887,8 +897,8 @@ export default function HomePage() {
               </span>
             </div>
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xl">
-                🎁
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
+                <Gift size={24} />
               </div>
               <h3 className="font-bold text-lg text-slate-900 dark:text-white">Completely Free Workspace</h3>
               <div className="flex items-baseline gap-1">
@@ -924,8 +934,8 @@ export default function HomePage() {
           {/* Pillar 3: Privacy & Security */}
           <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black text-xl">
-                🔒
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs">
+                <ShieldCheck size={24} />
               </div>
               <h3 className="font-bold text-lg text-slate-900 dark:text-white">Privacy First</h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -981,14 +991,23 @@ export default function HomePage() {
                 className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden transition-all shadow-xs"
               >
                 <button
+                  type="button"
+                  id={`faq-trigger-${idx}`}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${idx}`}
                   onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-slate-900 dark:text-white hover:text-brand-600 transition-colors"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
                 >
                   <span>{faq.q}</span>
-                  <span className="text-slate-400 shrink-0 text-lg">{isOpen ? '−' : '+'}</span>
+                  <span className="text-slate-400 shrink-0 text-lg font-mono leading-none" aria-hidden="true">{isOpen ? '−' : '+'}</span>
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-5 text-xs text-slate-700 dark:text-slate-200 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3 animate-in fade-in duration-150">
+                  <div
+                    id={`faq-answer-${idx}`}
+                    role="region"
+                    aria-labelledby={`faq-trigger-${idx}`}
+                    className="px-5 pb-5 text-xs text-slate-700 dark:text-slate-200 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3 animate-in fade-in duration-150"
+                  >
                     {faq.a}
                   </div>
                 )}

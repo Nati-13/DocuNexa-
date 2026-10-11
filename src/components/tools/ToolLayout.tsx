@@ -23,22 +23,22 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 mb-6">
-          <Link href="/" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 mb-6">
+          <Link href="/" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1">
             Home
           </Link>
-          <ChevronRight size={13} />
-          <Link href="/tools" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+          <ChevronRight size={13} aria-hidden="true" />
+          <Link href="/tools" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1">
             Tools
           </Link>
-          <ChevronRight size={13} />
+          <ChevronRight size={13} aria-hidden="true" />
           {categoryInfo && (
             <>
-              <span className="text-slate-600 dark:text-slate-300">{categoryInfo.name}</span>
-              <ChevronRight size={13} />
+              <span className="text-slate-600 dark:text-slate-300 px-1">{categoryInfo.name}</span>
+              <ChevronRight size={13} aria-hidden="true" />
             </>
           )}
-          <span className="font-semibold text-slate-900 dark:text-white">{tool.name}</span>
+          <span className="font-semibold text-slate-900 dark:text-white px-1" aria-current="page">{tool.name}</span>
         </nav>
 
         {/* Tool Header Section */}
@@ -80,7 +80,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
               </h3>
               <Link
                 href="/tools"
-                className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1"
               >
                 <span>View all 34 tools</span>
                 <ArrowRight size={13} />
@@ -92,7 +92,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
                 <Link
                   key={rel.id}
                   href={`/tools/${rel.slug}`}
-                  className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500/60 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+                  className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500/60 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-out flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
                 >
                   <div className="space-y-2.5">
                     <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-brand-50 dark:group-hover:bg-brand-950/60 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex items-center justify-center transition-colors">
@@ -101,7 +101,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                       {rel.name}
                     </h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                       {rel.description}
                     </p>
                   </div>

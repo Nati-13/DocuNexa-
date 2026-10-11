@@ -80,8 +80,11 @@ export const Navbar: React.FC = () => {
                 onMouseEnter={() => setIsMegaMenuOpen(true)}
               >
                 <button
+                  type="button"
                   onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  aria-expanded={isMegaMenuOpen}
+                  aria-haspopup="true"
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                     isMegaMenuOpen || pathname.startsWith('/tools')
                       ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
                       : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
@@ -100,7 +103,7 @@ export const Navbar: React.FC = () => {
               {/* PDF Unit Cutter Featured Tab */}
               <Link
                 href="/tools/pdf-unit-cutter"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                   pathname === '/tools/pdf-unit-cutter'
                     ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
                     : 'text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
@@ -116,7 +119,7 @@ export const Navbar: React.FC = () => {
               {/* Document Intelligence */}
               <Link
                 href="/tools/ai-summarizer"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                   pathname === '/tools/ai-summarizer'
                     ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/40'
                     : 'text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
@@ -128,21 +131,21 @@ export const Navbar: React.FC = () => {
 
               <Link
                 href="/how-it-works"
-                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors"
+                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
               >
                 How It Works
               </Link>
 
               <Link
                 href="/about"
-                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors"
+                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
               >
                 About
               </Link>
 
               <Link
                 href="/support"
-                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
                   pathname === '/support'
                     ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
                     : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
@@ -157,8 +160,10 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2.5">
             {/* Quick Search Button */}
             <button
+              type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 text-slate-500 dark:text-slate-400 text-xs font-medium transition-colors border border-slate-200/50 dark:border-slate-700/50"
+              aria-label="Search tools (⌘K)"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300 text-xs font-medium transition-colors border border-slate-200/50 dark:border-slate-700/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Search size={14} />
               <span className="hidden sm:inline">Search tools...</span>
@@ -169,9 +174,10 @@ export const Navbar: React.FC = () => {
 
             {/* Dark / Light Mode Toggle */}
             <button
+              type="button"
               onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+              className="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               {isDarkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
             </button>

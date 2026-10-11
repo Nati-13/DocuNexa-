@@ -191,11 +191,15 @@ export function UnlockPdfTool() {
                 </div>
 
                 <div className="space-y-2 max-w-md">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  <label
+                    htmlFor="unlock-password-input"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                  >
                     PDF Password
                   </label>
                   <div className="relative">
                     <input
+                      id="unlock-password-input"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => {
@@ -203,13 +207,13 @@ export function UnlockPdfTool() {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="Enter the PDF password..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 pr-11"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500 pr-12 transition-all placeholder:text-slate-600 dark:placeholder:text-slate-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden transition-colors"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -220,7 +224,7 @@ export function UnlockPdfTool() {
                 </div>
 
                 {errorMessage && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                  <div role="alert" className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     <span>{errorMessage}</span>
                   </div>
@@ -231,9 +235,9 @@ export function UnlockPdfTool() {
                     type="button"
                     disabled={!isFormValid || isProcessing}
                     onClick={handleUnlockPdf}
-                    className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
+                    className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
                       isFormValid
-                        ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/25 cursor-pointer transform hover:-translate-y-0.5'
+                        ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/25 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0'
                         : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                     }`}
                   >

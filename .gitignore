@@ -41,3 +41,4 @@ temp/
 *.tsbuildinfo
 .data/
 supabase/.temp/
+.agents/

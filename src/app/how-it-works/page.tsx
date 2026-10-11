@@ -75,7 +75,7 @@ export default function HowItWorksPage() {
           {steps.map((s, idx) => (
             <div
               key={idx}
-              className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between"
+              className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-out relative overflow-hidden flex flex-col justify-between"
             >
               <div className="absolute top-4 right-4 text-4xl font-extrabold text-slate-100 dark:text-slate-800/80 pointer-events-none">
                 {s.step}
@@ -107,7 +107,7 @@ export default function HowItWorksPage() {
             </div>
             <Link
               href="/tools/pdf-unit-cutter"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-all self-start md:self-auto shrink-0"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-all self-start md:self-auto shrink-0 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <span>Launch Unit Cutter</span>
               <ArrowRight size={14} />
@@ -118,7 +118,7 @@ export default function HowItWorksPage() {
             {unitCutterSteps.map((uc, i) => (
               <div
                 key={i}
-                className="p-4 rounded-2xl bg-white/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-xs flex flex-col justify-between"
+                className="p-4 rounded-2xl bg-white/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <span className="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-bold text-xs flex items-center justify-center">

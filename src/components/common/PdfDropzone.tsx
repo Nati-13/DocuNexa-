@@ -57,11 +57,20 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
 
   return (
     <div
+      tabIndex={0}
+      role="button"
+      aria-label={`${title}. ${subtitle}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInputRef.current?.click();
+        }
+      }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
-      className={`group relative rounded-3xl border-2 border-dashed p-8 md:p-12 text-center cursor-pointer transition-all duration-200 ${
+      className={`group relative rounded-3xl border-2 border-dashed p-8 md:p-12 text-center cursor-pointer transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
         isDragOver
           ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 scale-[1.01]'
           : 'border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
