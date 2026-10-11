@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { getCurrentUser } from '@/lib/auth';
 import { AuthProvider } from '@/context/AuthContext';
 import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController';
-import { MonetagZone } from '@/components/ads/MonetagZone';
+import { MonetagZone, MonetagMainZone } from '@/components/ads/MonetagZone';
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { FloatingSupportButton } from '@/components/layout/FloatingSupportButton';
 
@@ -138,15 +138,15 @@ export default async function RootLayout({
           <FloatingSupportButton />
           <Footer />
           <MonetagZone isAdFree={isAdFree} />
+          <MonetagServiceWorkerCleanup />
         </AuthProvider>
         {isAdFree ? (
           <MonetagServiceWorkerCleanup />
         ) : (
-          <Script
+          <MonetagMainZone
             src="https://quge5.com/88/tag.min.js"
             data-zone="289364"
             data-cfasync="false"
-            async
             strategy="afterInteractive"
           />
         )}

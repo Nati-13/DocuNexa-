@@ -258,6 +258,19 @@ async function runTests() {
     assert.ok(monetagZoneContent.includes('data-zone="12002632"'), 'Must preserve zone 12002632');
   });
 
+  test('MonetagMainZone enforces identical route gating for zone 289364', () => {
+    assert.ok(monetagZoneContent.includes('export function MonetagMainZone'), 'MonetagMainZone must be exported');
+    assert.ok(monetagZoneContent.includes('isRouteExcludedFromAds(pathname)'), 'MonetagMainZone must check route exclusions');
+    assert.ok(monetagZoneContent.includes('isAdFree || user?.plan === \'ad_free\''), 'MonetagMainZone must check ad-free plan');
+  });
+
+  test('MonetagController cleanup unregisters SW and removes injected ads on excluded routes', () => {
+    const controllerPath = path.join(process.cwd(), 'src', 'components', 'ads', 'MonetagController.tsx');
+    const controllerContent = fs.readFileSync(controllerPath, 'utf-8');
+    assert.ok(controllerContent.includes('isRouteExcludedFromAds'), 'Cleanup must check route exclusions');
+    assert.ok(controllerContent.includes('unregister'), 'Cleanup must call unregister()');
+  });
+
   // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
