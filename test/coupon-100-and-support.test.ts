@@ -57,12 +57,18 @@ import {
   SUPPORT_CATEGORIES,
 } from '../src/lib/support';
 import { generateUniquePaymentAmount } from '../src/lib/payments/bybit';
+import {
+  setMockAdminSupabaseClient,
+  createMockAdminSupabaseClient,
+} from '../src/lib/supabase/server';
 
 console.log('================================================================');
 console.log('  DOCUNEXA — 100% COUPON, TELEGRAM & SUPPORT TEST SUITE        ');
 console.log('================================================================\n');
 
 async function runTests() {
+  const mockAdmin = createMockAdminSupabaseClient();
+  setMockAdminSupabaseClient(mockAdmin);
   let passed = 0;
   let total = 0;
 
@@ -635,6 +641,7 @@ async function runTests() {
     ], 'Rollback must unwind all prior operations in reverse order');
   });
 
+  setMockAdminSupabaseClient(null);
   console.log(`\n================================================================`);
   console.log(` ALL ${passed} OF ${total} TESTS PASSED (100%)!`);
   console.log(`================================================================\n`);

@@ -67,11 +67,35 @@ const memoryAnalyticsVault: MemoryEvent[] = [];
  * Computes a privacy-preserving daily rotating visitor hash.
  * Raw IP addresses are NEVER stored in memory or in the database.
  */
-export function hashVisitorIdentifier(ip: string = '127.0.0.1', dateStr: string = new Date().toISOString().slice(0, 10)): string {
-  const salt = process.env.ANALYTICS_SALT || 'docunexa-privacy-salt-2026';
+export function hashVisitorIdentifier(
+  ip: string = '127.0.0.1',
+  dateStr: string = new Date().toISOString().slice(0, 10)
+): string {
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production';
+
+  const salt = process.env.ANALYTICS_SALT?.trim();
+
+  if (!salt) {
+    if (isProduction) {
+      // In production, never fall back to any hardcoded public salt.
+      // Fail safely to protect visitor privacy without throwing runtime exceptions.
+      return 'anonymous-untracked';
+    }
+    // In local development or testing environments without an explicit secret, use local dev salt
+    const devSalt = 'docunexa-dev-local-salt';
+    return crypto
+      .createHmac('sha256', devSalt)
+      .update(ip + '-' + dateStr)
+      .digest('hex')
+      .slice(0, 32);
+  }
+
   return crypto
-    .createHash('sha256')
-    .update(`${ip}-${dateStr}-${salt}`)
+    .createHmac('sha256', salt)
+    .update(ip + '-' + dateStr)
     .digest('hex')
     .slice(0, 32);
 }
@@ -255,24 +279,31 @@ export async function getAnalyticsSummary(rangeDays: number = 30): Promise<Analy
 
     if (ev.eventType === 'pageview') {
       totalPageViews++;
-      allUniqueVisitors.add(ev.visitorIdHash);
-      dailyBuckets[dateKey].views++;
-      dailyBuckets[dateKey].visitors.add(ev.visitorIdHash);
+      // Visitors without a valid analytics hash must not be counted as one shared unique visitor
+      const isValidVisitorHash = Boolean(ev.visitorIdHash && ev.visitorIdHash !== 'anonymous-untracked');
+      if (isValidVisitorHash) {
+        allUniqueVisitors.add(ev.visitorIdHash);
+        dailyBuckets[dateKey].visitors.add(ev.visitorIdHash);
 
-      if (evTime >= fifteenMinutesAgo) {
-        activeVisitors15mSet.add(ev.visitorIdHash);
+        if (evTime >= fifteenMinutesAgo) {
+          activeVisitors15mSet.add(ev.visitorIdHash);
+        }
       }
 
       // Country stats
       const c = ev.countryCode || 'Unknown';
       countryPageViews[c] = (countryPageViews[c] || 0) + 1;
       if (!countryUniqueVisitors[c]) countryUniqueVisitors[c] = new Set();
-      countryUniqueVisitors[c].add(ev.visitorIdHash);
+      if (isValidVisitorHash) {
+        countryUniqueVisitors[c].add(ev.visitorIdHash);
+      }
 
       // Page stats
       pageViewsMap[ev.path] = (pageViewsMap[ev.path] || 0) + 1;
       if (!pageVisitorsMap[ev.path]) pageVisitorsMap[ev.path] = new Set();
-      pageVisitorsMap[ev.path].add(ev.visitorIdHash);
+      if (isValidVisitorHash) {
+        pageVisitorsMap[ev.path].add(ev.visitorIdHash);
+      }
     } else if (ev.eventType === 'login') {
       successfulLogins++;
       dailyBuckets[dateKey].logins++;

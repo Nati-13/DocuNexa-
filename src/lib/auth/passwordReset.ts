@@ -70,6 +70,20 @@ export async function requestPasswordReset(
 
   // Check email service availability upfront so we return a truthful failure status
   // without leaking whether the account exists
+  if (process.env.VERCEL_ENV !== 'production' && !options?.transporter) {
+    if (process.env.NODE_ENV !== 'test') {
+      const isPreview = process.env.VERCEL_ENV === 'preview';
+      const msg = isPreview
+        ? 'Password reset email service is disabled in preview deployments.'
+        : 'Password reset email service is permitted only on Vercel Production deployments.';
+      return {
+        success: false,
+        error: msg,
+        message: msg,
+      };
+    }
+  }
+
   const isEmailServiceAvailable = isSmtpConfigured() || process.env.NODE_ENV === 'test' || Boolean(options?.transporter);
   if (!isEmailServiceAvailable) {
     return {
@@ -120,29 +134,31 @@ export async function requestPasswordReset(
     const ipHash = hashClientIdentifier(ip, 'reset-request', 'pwd-reset');
     recordId = crypto.randomUUID();
 
-    // Invalidate previous in-memory codes for this email
-    for (const [id, rec] of memoryResetVault.entries()) {
-      if (rec.email === email && rec.usedAt === null) {
-        rec.usedAt = now;
+    // Memory-based reset storage is permitted strictly for unit test execution
+    if (process.env.NODE_ENV === 'test') {
+      for (const [id, rec] of memoryResetVault.entries()) {
+        if (rec.email === email && rec.usedAt === null) {
+          rec.usedAt = now;
+        }
       }
+
+      const memoryRecord: PasswordResetRecord = {
+        id: recordId,
+        userId: targetUserId,
+        email,
+        codeHash,
+        expiresAt,
+        attempts: 0,
+        maxAttempts: 5,
+        usedAt: null,
+        createdAt: now,
+        requestIpHash: ipHash,
+      };
+      memoryResetVault.set(recordId, memoryRecord);
     }
 
-    // Save in memory vault
-    const memoryRecord: PasswordResetRecord = {
-      id: recordId,
-      userId: targetUserId,
-      email,
-      codeHash,
-      expiresAt,
-      attempts: 0,
-      maxAttempts: 5,
-      usedAt: null,
-      createdAt: now,
-      requestIpHash: ipHash,
-    };
-    memoryResetVault.set(recordId, memoryRecord);
-
-    // Save in database table if available
+    // Save in database table
+    let dbPersisted = false;
     try {
       // Invalidate existing DB codes
       await admin
@@ -151,7 +167,7 @@ export async function requestPasswordReset(
         .eq('email', email)
         .is('used_at', null);
 
-      await admin.from('password_resets').insert({
+      const { error: insertError } = await admin.from('password_resets').insert({
         id: recordId,
         user_id: targetUserId,
         email,
@@ -162,8 +178,27 @@ export async function requestPasswordReset(
         created_at: new Date(now).toISOString(),
         request_ip_hash: ipHash,
       });
+
+      if (!insertError) {
+        dbPersisted = true;
+      }
     } catch {
-      // DB table not yet created; memory vault provides graceful failover
+      // Database failure handled below
+    }
+
+    const isTestEnv = process.env.NODE_ENV === 'test';
+
+    // Production durability guarantee: NEVER send a recovery email unless
+    // the reset record was successfully persisted to the database.
+    if (!dbPersisted && !isTestEnv) {
+      if (recordId) {
+        memoryResetVault.delete(recordId);
+      }
+      return {
+        success: false,
+        error: 'Password reset service is temporarily unavailable. Please try again later.',
+        message: 'Password reset service is temporarily unavailable. Please try again later.',
+      };
     }
 
     // 3. Send reset email
@@ -239,11 +274,12 @@ export async function verifyRecoveryCode(
 
   const codeHash = hashResetSecret(code);
   const now = Date.now();
-  const admin = createAdminSupabaseClient();
+  let admin: any = null;
+  let dbRecord: any = null;
 
   // Check Database first
-  let dbRecord: any = null;
   try {
+    admin = createAdminSupabaseClient();
     const { data } = await admin
       .from('password_resets')
       .select('*')
@@ -260,17 +296,19 @@ export async function verifyRecoveryCode(
     // Database table fallback
   }
 
-  // Check memory vault
+  // Check memory vault (allowed strictly for unit tests)
   let memoryRecord: PasswordResetRecord | null = null;
-  for (const rec of memoryResetVault.values()) {
-    if (rec.email === email && rec.usedAt === null && rec.expiresAt > now) {
-      if (!memoryRecord || rec.createdAt > memoryRecord.createdAt) {
-        memoryRecord = rec;
+  if (process.env.NODE_ENV === 'test') {
+    for (const rec of memoryResetVault.values()) {
+      if (rec.email === email && rec.usedAt === null && rec.expiresAt > now) {
+        if (!memoryRecord || rec.createdAt > memoryRecord.createdAt) {
+          memoryRecord = rec;
+        }
       }
     }
   }
 
-  const record = dbRecord || memoryRecord;
+  const record = dbRecord || (process.env.NODE_ENV === 'test' ? memoryRecord : null);
 
   if (!record) {
     return { success: false, error: 'Invalid or expired password reset request. Please request a new code.' };
@@ -362,11 +400,12 @@ export async function completePasswordReset(
 
   const tokenHash = hashResetSecret(resetToken);
   const now = Date.now();
-  const admin = createAdminSupabaseClient();
+  let admin: any = null;
+  let dbRecord: any = null;
 
   // Find record matching token
-  let dbRecord: any = null;
   try {
+    admin = createAdminSupabaseClient();
     const { data } = await admin
       .from('password_resets')
       .select('*')
@@ -383,14 +422,16 @@ export async function completePasswordReset(
   }
 
   let memoryRecord: PasswordResetRecord | null = null;
-  for (const rec of memoryResetVault.values()) {
-    if (rec.email === email && rec.verificationTokenHash === tokenHash && rec.usedAt === null) {
-      memoryRecord = rec;
-      break;
+  if (process.env.NODE_ENV === 'test') {
+    for (const rec of memoryResetVault.values()) {
+      if (rec.email === email && rec.verificationTokenHash === tokenHash && rec.usedAt === null) {
+        memoryRecord = rec;
+        break;
+      }
     }
   }
 
-  const record = dbRecord || memoryRecord;
+  const record = dbRecord || (process.env.NODE_ENV === 'test' ? memoryRecord : null);
   if (!record) {
     return { success: false, error: 'Invalid or expired password reset authorization. Please restart the reset process.' };
   }

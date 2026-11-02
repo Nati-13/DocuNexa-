@@ -40,6 +40,10 @@ import {
 } from '../src/lib/auth/passwordReset';
 import { isBootstrapAvailable, bootstrapFirstAdmin } from '../src/lib/admin/bootstrap';
 import { validatePasswordStrength } from '../src/lib/auth';
+import {
+  setMockAdminSupabaseClient,
+  createMockAdminSupabaseClient,
+} from '../src/lib/supabase/server';
 
 let passed = 0;
 let failed = 0;
@@ -58,6 +62,9 @@ async function runTests() {
   console.log('\n======================================================');
   console.log(' DOCUNEXA — AUTH + ADMIN + PASSWORD RESET TEST SUITE ');
   console.log('======================================================\n');
+
+  const mockAdmin = createMockAdminSupabaseClient();
+  setMockAdminSupabaseClient(mockAdmin);
 
   // --- SECTION 1: CUSTOM CODE FORMAT (4 digits + 2 letters) ---
   console.log('--- 1. CUSTOM RECOVERY CODE SPECIFICATION ---');
@@ -183,6 +190,9 @@ async function runTests() {
   // --- SECTION 7: FAIL CLOSED & PROVIDER CHECKS ---
   console.log('\n--- 7. PRIVILEGED SERVER SECRETS & FAIL CLOSED ---');
 
+  // Temporarily clear mock client to verify missing server secrets fail closed
+  setMockAdminSupabaseClient(null);
+
   const { createAdminSupabaseClient } = await import('../src/lib/supabase/server');
   const origServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const origSecretKey = process.env.SUPABASE_SECRET_KEY;
@@ -197,18 +207,21 @@ async function runTests() {
   }
   assert(threwWithoutSecret, 'createAdminSupabaseClient fails closed when server secret key is missing');
 
-  // Restore keys
+  // Restore keys and mock client for remaining test checks
   if (origServiceKey) process.env.SUPABASE_SERVICE_ROLE_KEY = origServiceKey;
   if (origSecretKey) process.env.SUPABASE_SECRET_KEY = origSecretKey;
+  setMockAdminSupabaseClient(mockAdmin);
 
   const { sendPasswordResetEmail, isSmtpConfigured, getSmtpConfig } = await import('../src/lib/auth/email');
   const nodemailer = (await import('nodemailer')).default;
 
   // 7A: Missing SMTP credentials fails closed
   const origEnv = process.env.NODE_ENV;
+  const origVercelEnv = process.env.VERCEL_ENV;
   const origUser = process.env.SMTP_USER;
   const origPass = process.env.SMTP_PASS;
   (process.env as any).NODE_ENV = 'production';
+  process.env.VERCEL_ENV = 'production';
   delete process.env.SMTP_USER;
   delete process.env.SMTP_PASS;
 
@@ -216,6 +229,8 @@ async function runTests() {
   assert(!missingEmailRes.success, 'sendPasswordResetEmail treats missing SMTP credentials as unavailable (no silent success)');
   assert(!isSmtpConfigured(), 'isSmtpConfigured returns false when credentials are removed');
   (process.env as any).NODE_ENV = origEnv;
+  if (origVercelEnv !== undefined) process.env.VERCEL_ENV = origVercelEnv;
+  else delete process.env.VERCEL_ENV;
 
   // 7B: Successful email dispatch with custom/mock transporter
   let sentOptions: any = null;
@@ -324,6 +339,7 @@ async function runTests() {
   console.log(`TOTAL: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
   console.log('======================================================\n');
 
+  setMockAdminSupabaseClient(null);
   if (failed > 0) {
     process.exit(1);
   }

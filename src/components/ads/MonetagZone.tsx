@@ -42,6 +42,9 @@ export function isLocalOrDevEnvironment(): boolean {
   if (process.env.NODE_ENV !== 'production') {
     return true;
   }
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV && process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production') {
+    return true;
+  }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (
@@ -84,8 +87,13 @@ export function MonetagZone({ isAdFree = false }: MonetagZoneProps) {
     }
   }, []);
 
-  // Suppress ads on dev/test/local environments
-  if (process.env.NODE_ENV !== 'production' || isClientLocal) {
+  // Monetag must load ONLY on actual Vercel Production deployments.
+  // Suppress on dev, test, local, and Vercel Preview environments.
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ||
+    isClientLocal
+  ) {
     return null;
   }
 
@@ -149,8 +157,13 @@ export function MonetagMainZone({
     }
   }, []);
 
-  // Suppress ads on dev/test/local environments
-  if (process.env.NODE_ENV !== 'production' || isClientLocal) {
+  // Monetag must load ONLY on actual Vercel Production deployments.
+  // Suppress on dev, test, local, and Vercel Preview environments.
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ||
+    isClientLocal
+  ) {
     return null;
   }
 

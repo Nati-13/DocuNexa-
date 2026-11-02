@@ -444,49 +444,64 @@ export async function saveTelegramMapping(
   const key = String(ownerMessageId);
   localMappingCache.set(key, data);
 
-  const admin = createAdminSupabaseClient();
   const nowIso = new Date().toISOString();
+  let admin: any = null;
+  try {
+    admin = createAdminSupabaseClient();
+  } catch {}
 
   // 1. Try dedicated telegram_support_mappings table
-  try {
-    const { error } = await (admin.from('telegram_support_mappings' as any) as any)
-      .upsert({
-        owner_message_id: key,
-        customer_chat_id: String(data.customer_chat_id),
-        customer_message_id: data.customer_message_id ? String(data.customer_message_id) : null,
-        customer_user_id: data.customer_user_id ? String(data.customer_user_id) : null,
-        customer_name: data.customer_name || null,
-        ticket_ref: data.ticket_ref,
-        created_at: nowIso,
-      });
-    if (!error) return { success: true };
-  } catch {
-    // Fall back to admin_audit_logs
+  if (admin) {
+    try {
+      const { error } = await (admin.from('telegram_support_mappings' as any) as any)
+        .upsert({
+          owner_message_id: key,
+          customer_chat_id: String(data.customer_chat_id),
+          customer_message_id: data.customer_message_id ? String(data.customer_message_id) : null,
+          customer_user_id: data.customer_user_id ? String(data.customer_user_id) : null,
+          customer_name: data.customer_name || null,
+          ticket_ref: data.ticket_ref,
+          created_at: nowIso,
+        });
+      if (!error) return { success: true };
+    } catch {
+      // Fall back to admin_audit_logs
+    }
   }
 
   // 2. Resilient fallback: store inside admin_audit_logs
-  try {
-    const { error } = await admin.from('admin_audit_logs').insert({
-      admin_user_id: null,
-      action: 'telegram_chat_mapping',
-      metadata: {
-        owner_message_id: key,
-        customer_chat_id: String(data.customer_chat_id),
-        customer_message_id: data.customer_message_id,
-        customer_user_id: data.customer_user_id,
-        customer_name: data.customer_name,
-        ticket_ref: data.ticket_ref,
-        createdAt: nowIso,
-      },
-      reason: `Telegram mapping: owner msg ${key} -> customer ${data.customer_chat_id} (${data.ticket_ref})`,
-    });
-    if (!error) return { success: true };
-  } catch (err: any) {
-    console.error('[tg-mapping-save] Fallback error:', err);
-    return { success: false, error: err.message };
+  if (admin) {
+    try {
+      const { error } = await admin.from('admin_audit_logs').insert({
+        admin_user_id: null,
+        action: 'telegram_chat_mapping',
+        metadata: {
+          owner_message_id: key,
+          customer_chat_id: String(data.customer_chat_id),
+          customer_message_id: data.customer_message_id,
+          customer_user_id: data.customer_user_id,
+          customer_name: data.customer_name,
+          ticket_ref: data.ticket_ref,
+          createdAt: nowIso,
+        },
+        reason: `Telegram mapping: owner msg ${key} -> customer ${data.customer_chat_id} (${data.ticket_ref})`,
+      });
+      if (!error) return { success: true };
+    } catch (err: any) {
+      console.error('[tg-mapping-save] Fallback error:', err);
+      return { success: false, error: err.message };
+    }
   }
 
-  return { success: true };
+  // Local memory cache is allowed as fallback strictly for unit tests
+  if (process.env.NODE_ENV === 'test') {
+    return { success: true };
+  }
+
+  return {
+    success: false,
+    error: 'Failed to durably persist Telegram chat mapping to database.',
+  };
 }
 
 /**
@@ -500,10 +515,14 @@ export async function getTelegramMapping(
     return localMappingCache.get(key)!;
   }
 
-  const admin = createAdminSupabaseClient();
+  let admin: any = null;
+  try {
+    admin = createAdminSupabaseClient();
+  } catch {}
 
   // 1. Try dedicated telegram_support_mappings table
-  try {
+  if (admin) {
+    try {
     const { data, error } = await (admin.from('telegram_support_mappings' as any) as any)
       .select('*')
       .eq('owner_message_id', key)
@@ -521,12 +540,14 @@ export async function getTelegramMapping(
       localMappingCache.set(key, result);
       return result;
     }
-  } catch {
-    // Fallback
+    } catch {
+      // Fallback
+    }
   }
 
   // 2. Try telegram_support_tickets table
-  try {
+  if (admin) {
+    try {
     const { data: ticketData, error: ticketErr } = await (admin.from('telegram_support_tickets' as any) as any)
       .select('*')
       .eq('owner_message_id', key)
@@ -544,33 +565,36 @@ export async function getTelegramMapping(
       localMappingCache.set(key, result);
       return result;
     }
-  } catch {
-    // Fallback
+    } catch {
+      // Fallback
+    }
   }
 
   // 3. Try admin_audit_logs
-  try {
-    const { data: auditData, error: auditErr } = await admin
-      .from('admin_audit_logs')
-      .select('metadata')
-      .eq('action', 'telegram_chat_mapping')
-      .filter('metadata->>owner_message_id', 'eq', key)
-      .limit(1);
+  if (admin) {
+    try {
+      const { data: auditData, error: auditErr } = await admin
+        .from('admin_audit_logs')
+        .select('metadata')
+        .eq('action', 'telegram_chat_mapping')
+        .filter('metadata->>owner_message_id', 'eq', key)
+        .limit(1);
 
-    if (!auditErr && auditData && auditData.length > 0) {
-      const meta = (auditData[0].metadata as any) || {};
-      const result: TelegramMappingData = {
-        customer_chat_id: meta.customer_chat_id,
-        customer_message_id: meta.customer_message_id ? Number(meta.customer_message_id) : undefined,
-        customer_name: meta.customer_name || undefined,
-        customer_user_id: meta.customer_user_id || undefined,
-        ticket_ref: meta.ticket_ref || 'TG-UNKNOWN',
-      };
-      localMappingCache.set(key, result);
-      return result;
+      if (!auditErr && auditData && auditData.length > 0) {
+        const meta = (auditData[0].metadata as any) || {};
+        const result: TelegramMappingData = {
+          customer_chat_id: meta.customer_chat_id,
+          customer_message_id: meta.customer_message_id ? Number(meta.customer_message_id) : undefined,
+          customer_name: meta.customer_name || undefined,
+          customer_user_id: meta.customer_user_id || undefined,
+          ticket_ref: meta.ticket_ref || 'TG-UNKNOWN',
+        };
+        localMappingCache.set(key, result);
+        return result;
+      }
+    } catch (err) {
+      console.error('[tg-mapping-get] Fallback query error:', err);
     }
-  } catch (err) {
-    console.error('[tg-mapping-get] Fallback query error:', err);
   }
 
   return null;
@@ -581,13 +605,17 @@ export async function getTelegramMapping(
  */
 export async function saveTelegramSupportTicket(
   ticket: TelegramTicketRecord
-): Promise<{ success: boolean; id?: string }> {
+): Promise<{ success: boolean; id?: string; error?: string }> {
   localTicketsCache.set(ticket.ticketRef, ticket);
-  const admin = createAdminSupabaseClient();
   const nowIso = new Date().toISOString();
+  let admin: any = null;
+  try {
+    admin = createAdminSupabaseClient();
+  } catch {}
 
   // Tier 1: Dedicated telegram_support_tickets table
-  try {
+  if (admin) {
+    try {
     const { data, error } = await (admin.from('telegram_support_tickets' as any) as any)
       .upsert(
         {
@@ -620,12 +648,14 @@ export async function saveTelegramSupportTicket(
       ticket.id = data.id;
       return { success: true, id: data.id };
     }
-  } catch {
-    // Continue to Tier 2
+    } catch {
+      // Continue to Tier 2
+    }
   }
 
   // Tier 2: public.support_tickets table
-  try {
+  if (admin) {
+    try {
     const emailHandle = ticket.customerUsername
       ? `${ticket.customerUsername.replace('@', '')}@telegram.docunexa.internal`
       : `chat_${ticket.customerChatId}@telegram.docunexa.internal`;
@@ -662,30 +692,42 @@ export async function saveTelegramSupportTicket(
       ticket.id = stData.id;
       return { success: true, id: stData.id };
     }
-  } catch {
-    // Continue to Tier 3
+    } catch {
+      // Continue to Tier 3
+    }
   }
 
   // Tier 3: admin_audit_logs fallback
-  try {
-    await admin.from('admin_audit_logs').insert({
-      admin_user_id: null,
-      action: 'telegram_support_ticket_saved',
-      metadata: {
-        ticketRef: ticket.ticketRef,
-        customerChatId: String(ticket.customerChatId),
-        customerName: ticket.customerName,
-        deliveryStatus: ticket.deliveryStatus,
-        messageText: ticket.messageText,
-        lastError: ticket.lastError,
-      },
-      reason: `Telegram Ticket #${ticket.ticketRef} saved with status ${ticket.deliveryStatus}`,
-    });
-    return { success: true, id: ticket.ticketRef };
-  } catch (err: any) {
-    console.error('[tg-ticket-save] Tier 3 fallback error:', err?.message || err);
+  if (admin) {
+    try {
+      await admin.from('admin_audit_logs').insert({
+        admin_user_id: null,
+        action: 'telegram_support_ticket_saved',
+        metadata: {
+          ticketRef: ticket.ticketRef,
+          customerChatId: String(ticket.customerChatId),
+          customerName: ticket.customerName,
+          deliveryStatus: ticket.deliveryStatus,
+          messageText: ticket.messageText,
+          lastError: ticket.lastError,
+        },
+        reason: `Telegram Ticket #${ticket.ticketRef} saved with status ${ticket.deliveryStatus}`,
+      });
+      return { success: true, id: ticket.ticketRef };
+    } catch (err: any) {
+      console.error('[tg-ticket-save] Tier 3 fallback error:', err?.message || err);
+    }
+  }
+
+  // Local memory cache is allowed as fallback strictly for unit tests
+  if (process.env.NODE_ENV === 'test') {
     return { success: true, id: ticket.ticketRef };
   }
+
+  return {
+    success: false,
+    error: 'Failed to durably persist Telegram support ticket across all database tiers.',
+  };
 }
 
 /**
@@ -701,10 +743,10 @@ export async function updateTelegramSupportTicket(
     existing.updatedAt = new Date().toISOString();
   }
 
-  const admin = createAdminSupabaseClient();
   const nowIso = new Date().toISOString();
 
   try {
+    const admin = createAdminSupabaseClient();
     const patch: any = { updated_at: nowIso };
     if (updates.deliveryStatus) patch.delivery_status = updates.deliveryStatus;
     if (updates.ownerMessageId) patch.owner_message_id = String(updates.ownerMessageId);
@@ -732,10 +774,9 @@ export async function getTelegramSupportTicket(
     return localTicketsCache.get(ticketRef)!;
   }
 
-  const admin = createAdminSupabaseClient();
-
   // Try telegram_support_tickets
   try {
+    const admin = createAdminSupabaseClient();
     const { data } = await (admin.from('telegram_support_tickets' as any) as any)
       .select('*')
       .eq('ticket_ref', ticketRef)
@@ -778,9 +819,8 @@ export async function getTelegramSupportTicket(
  * Lists recent Telegram tickets for inbox review and diagnostic reporting
  */
 export async function listRecentTelegramTickets(limit = 20): Promise<TelegramTicketRecord[]> {
-  const admin = createAdminSupabaseClient();
-
   try {
+    const admin = createAdminSupabaseClient();
     const { data } = await (admin.from('telegram_support_tickets' as any) as any)
       .select('*')
       .order('created_at', { ascending: false })
@@ -826,10 +866,9 @@ export async function isTelegramUpdateProcessed(updateId: number | string): Prom
   const key = String(updateId);
   if (processedUpdatesCache.has(key)) return true;
 
-  const admin = createAdminSupabaseClient();
-
   // Check telegram_processed_updates
   try {
+    const admin = createAdminSupabaseClient();
     const { data } = await (admin.from('telegram_processed_updates' as any) as any)
       .select('update_id')
       .eq('update_id', key)
@@ -853,10 +892,10 @@ export async function markTelegramUpdateProcessed(updateId: number | string): Pr
   const key = String(updateId);
   processedUpdatesCache.add(key);
 
-  const admin = createAdminSupabaseClient();
   const nowIso = new Date().toISOString();
 
   try {
+    const admin = createAdminSupabaseClient();
     await (admin.from('telegram_processed_updates' as any) as any)
       .insert({ update_id: key, processed_at: nowIso });
   } catch {

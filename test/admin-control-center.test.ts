@@ -165,9 +165,19 @@ async function runTests() {
     assert(calcFixed.discountAmountUsdt === '0.800000', 'Discount amount is 0.800000 USDT');
     assert(calcFixed.finalAmountUsdt === '1.200000', 'Final payable is exactly 1.200000 USDT');
 
-    // Zero or 100% discount rejection (must remain > 0)
+    // Valid 100% coupon produces exactly zero payable amount
     const calc100 = calculateCouponDiscount('percent', '100', '2.000000');
-    assert(!calc100.valid, '100% discount is rejected: payable amount must remain > 0 for payment order');
+    assert(calc100.valid, '100% coupon is valid');
+    assert(calc100.discountAmountUsdt === '2.000000', '100% of $2.00 is exactly 2.000000 USDT discount');
+    assert(calc100.finalAmountUsdt === '0.000000', '100% discount produces exactly zero payable amount (0.000000 USDT)');
+
+    // Reject negative, zero, and greater-than-100% discounts
+    const calcOver100 = calculateCouponDiscount('percent', '105', '2.000000');
+    assert(!calcOver100.valid, 'Discounts greater than 100% are rejected');
+    const calcNegative = calculateCouponDiscount('percent', '-15', '2.000000');
+    assert(!calcNegative.valid, 'Negative discounts are rejected');
+    const calcZero = calculateCouponDiscount('percent', '0', '2.000000');
+    assert(!calcZero.valid, 'Zero percent discount is rejected');
   }
 
   console.log('\n--- 5. RFC 4180 CSV EXPORT & FORMULA INJECTION DEFENSE ---');

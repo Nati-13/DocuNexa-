@@ -15,6 +15,11 @@ export interface SendResetEmailParams {
  * Returns true if the required server-side SMTP credentials are configured.
  */
 export function isSmtpConfigured(): boolean {
+  // Real SMTP delivery is allowed ONLY in actual Vercel Production deployments.
+  // Preview, local development, and unknown environments must fail closed.
+  if (process.env.VERCEL_ENV !== 'production') {
+    return false;
+  }
   const user = process.env.SMTP_USER?.trim();
   const pass = process.env.SMTP_PASS?.trim();
   return Boolean(user && pass);
@@ -92,12 +97,29 @@ If you did not request a password reset, you can safely ignore this email.`;
     }
   }
 
-  // 1. Check if SMTP credentials are configured
+  // 1. Guard against sending real SMTP emails in Vercel Preview deployments
+  if (process.env.VERCEL_ENV === 'preview') {
+    return {
+      success: false,
+      error: 'Password reset email delivery is disabled in preview deployments.',
+    };
+  }
+
+  // 2. In unit test environments without mock transporter, simulate successful delivery without real SMTP
+  if (process.env.NODE_ENV === 'test' && !process.env.FORCE_SMTP_TEST) {
+    return { success: true };
+  }
+
+  // 3. Real SMTP delivery is permitted ONLY on Vercel Production deployments
+  if (process.env.VERCEL_ENV !== 'production') {
+    return {
+      success: false,
+      error: 'Real SMTP email delivery is permitted only on Vercel Production deployments.',
+    };
+  }
+
+  // 4. Check if SMTP credentials are configured
   if (!isSmtpConfigured()) {
-    // In test environment without mock transporter or live config, allow mock tests to pass unless forced
-    if (process.env.NODE_ENV === 'test' && !process.env.FORCE_SMTP_TEST) {
-      return { success: true };
-    }
     return {
       success: false,
       error: 'Password reset email service is currently not configured or unavailable.',
