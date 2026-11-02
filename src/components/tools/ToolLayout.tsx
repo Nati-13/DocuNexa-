@@ -42,9 +42,12 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
         </nav>
 
         {/* Tool Header Section */}
-        <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+        <div className="relative text-center max-w-2xl mx-auto mb-10 space-y-3">
+          {/* Subtle luminous aurora glow behind header */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[220px] bg-gradient-to-tr from-brand-500/15 via-indigo-500/10 to-cyan-500/15 blur-3xl -z-10 pointer-events-none rounded-full" />
+
           {/* Tool Icon & Badge */}
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/60 dark:border-brand-800/60 shadow-md shadow-brand-500/10 mb-1">
+          <div className="inline-flex items-center justify-center p-3.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 text-brand-600 dark:text-brand-400 border border-brand-200/70 dark:border-brand-700/60 shadow-lg shadow-brand-500/15 mb-1 backdrop-blur-md">
             <DynamicIcon name={tool.iconName} size={30} />
           </div>
 

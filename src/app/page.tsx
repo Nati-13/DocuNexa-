@@ -147,11 +147,14 @@ export default function HomePage() {
       {/* 1. HERO SECTION */}
       {/* ============================================================ */}
       <section className="relative pt-12 md:pt-20 lg:pt-28 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
-        {/* Background glow effects */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-brand-500/15 via-indigo-500/10 to-rose-500/15 blur-3xl -z-10 pointer-events-none rounded-full" />
+        {/* Animated Aurora Shader-Inspired Backdrop */}
+        <div className="aurora-mesh opacity-60 dark:opacity-75 -z-20" />
+        <div className="absolute top-10 left-1/4 w-72 h-72 bg-indigo-500/15 dark:bg-indigo-500/25 rounded-full blur-3xl pointer-events-none float-light-1 -z-10" />
+        <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-cyan-500/12 dark:bg-cyan-500/20 rounded-full blur-3xl pointer-events-none float-light-2 -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-brand-500/20 via-indigo-500/15 to-cyan-500/15 blur-3xl -z-10 pointer-events-none rounded-full pulse-glow" />
 
         {/* Eyebrow */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800/80 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider shadow-xs">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-brand-300/70 dark:border-brand-700/70 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider shadow-sm shadow-brand-500/10 shimmer-card">
           <span className="w-2 h-2 rounded-full bg-brand-500 animate-ping" />
           <span>ALL-IN-ONE PDF WORKSPACE</span>
         </div>
@@ -171,7 +174,7 @@ export default function HomePage() {
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <a
             href="#quick-upload"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-xl shadow-brand-500/25 transition-all hover:scale-[1.02] hover:shadow-brand-500/40"
+            className="btn-aurora inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-sm shadow-xl transition-all"
           >
             <span>Start Using DocuNexa</span>
             <ArrowRight size={16} />
@@ -179,7 +182,7 @@ export default function HomePage() {
 
           <a
             href="#all-tools"
-            className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/70 text-slate-800 dark:text-slate-200 font-bold text-sm shadow-sm transition-all"
+            className="glass-panel-interactive inline-flex items-center gap-2 px-7 py-4 rounded-2xl text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
           >
             <span>Explore All 34 Tools</span>
           </a>
@@ -217,10 +220,10 @@ export default function HomePage() {
                 handleFileDrop(e.dataTransfer.files[0]);
               }
             }}
-            className={`relative p-8 md:p-14 rounded-3xl border-2 border-dashed text-center transition-all duration-200 cursor-pointer shadow-lg ${
+            className={`glass-panel relative p-8 md:p-14 rounded-3xl border-2 border-dashed text-center transition-all duration-300 cursor-pointer shadow-xl shimmer-card ${
               isDragOver
-                ? 'border-brand-500 bg-brand-50/80 dark:bg-brand-950/50 scale-[1.01]'
-                : 'border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 hover:border-brand-400 dark:hover:border-brand-500'
+                ? 'border-brand-500 bg-brand-50/90 dark:bg-brand-950/70 scale-[1.01] glow-brand'
+                : 'border-slate-300/80 dark:border-slate-700/80 hover:border-brand-400 dark:hover:border-brand-500'
             }`}
           >
             <input
@@ -234,7 +237,7 @@ export default function HomePage() {
             />
 
             <label htmlFor="hero-file-picker" className="cursor-pointer space-y-4 flex flex-col items-center">
-              <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-50 to-cyan-50 dark:from-brand-950/80 dark:to-cyan-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner border border-brand-200/60 dark:border-brand-800/60">
                 <UploadCloud size={32} />
               </div>
 
@@ -247,7 +250,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs md:text-sm shadow-md transition-colors">
+              <div className="btn-aurora inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs md:text-sm shadow-md">
                 <Plus size={16} />
                 <span>Choose a file</span>
               </div>

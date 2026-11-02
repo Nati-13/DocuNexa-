@@ -155,7 +155,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-6">
+    <div className="glass-panel rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden">
       {/* Top Bar: Mode Selection & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div className="flex items-center space-x-3">
@@ -165,8 +165,8 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               onClick={() => setSplitMode('auto')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 splitMode === 'auto'
-                  ? 'bg-white text-indigo-700 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'btn-aurora shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Auto Detect Units
@@ -176,8 +176,8 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               onClick={() => setSplitMode('manual')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 splitMode === 'manual'
-                  ? 'bg-white text-indigo-700 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'btn-aurora shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Manual Split
@@ -223,7 +223,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
 
       {/* Front Matter Suggestion Alert */}
       {hasFrontMatter && frontMatterRange && (
-        <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2">
+        <div className="p-4 bg-gradient-to-r from-indigo-500/10 via-brand-500/10 to-cyan-500/10 border border-indigo-200/80 dark:border-indigo-800/60 rounded-xl space-y-2 backdrop-blur-sm">
           <div className="flex items-start space-x-3">
             <Info className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
             <div className="text-xs text-indigo-950 flex-1">
@@ -526,7 +526,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/40 hover:bg-indigo-50 text-indigo-700 font-semibold text-xs sm:text-sm transition-all"
+          className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-dashed border-brand-300 dark:border-brand-700 hover:border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-semibold text-xs sm:text-sm transition-all shadow-xs hover:shadow-sm"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           + Add Part
@@ -544,7 +544,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       </div>
 
       {/* Output Destination & Execute Cut Section */}
-      <div className="pt-6 border-t border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/60 -mx-6 -mb-6 p-6 rounded-b-2xl">
+      <div className="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/80 dark:bg-slate-900/80 -mx-6 -mb-6 p-6 rounded-b-2xl backdrop-blur-md">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-semibold text-slate-700">Output Folder:</span>
@@ -573,7 +573,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
           type="button"
           disabled={parts.length === 0 || !validation.isValid}
           onClick={onCutPdf}
-          className="w-full md:w-auto px-8 py-3.5 rounded-xl font-bold text-base text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all transform active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          className="btn-aurora w-full md:w-auto px-8 py-3.5 rounded-xl font-bold text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer"
         >
           <Scissors className="w-5 h-5 -rotate-45" />
           <span>CUT PDF</span>
