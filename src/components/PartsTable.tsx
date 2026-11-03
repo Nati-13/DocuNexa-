@@ -51,6 +51,11 @@ interface PartsTableProps {
   selectedFolderText?: string;
   onChooseFolder?: () => void;
   isFolderSupported: boolean;
+  isUncertain?: boolean;
+  uncertaintyReason?: string;
+  overallConfidence?: ConfidenceLevel;
+  isBoundariesConfirmed?: boolean;
+  onConfirmBoundaries?: () => void;
 }
 
 export const PartsTable: React.FC<PartsTableProps> = ({
@@ -79,6 +84,11 @@ export const PartsTable: React.FC<PartsTableProps> = ({
   selectedFolderText,
   onChooseFolder,
   isFolderSupported,
+  isUncertain,
+  uncertaintyReason,
+  overallConfidence,
+  isBoundariesConfirmed,
+  onConfirmBoundaries,
 }) => {
   // Modal / Form state for adding custom part
   const [showAddModal, setShowAddModal] = useState(false);
@@ -130,6 +140,15 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       onUpdatePart(part.id, { filename: sanitizeFilename(generated) });
     });
   };
+
+  // Compute coverage statistics
+  const assignedPagesCount = parts.reduce((acc, p) => {
+    return acc + Math.max(0, (p.endPage || 0) - (p.startPage || 0) + 1);
+  }, 0);
+  const unassignedPagesCount = Math.max(0, totalPages - assignedPagesCount);
+  const computedConfidence: ConfidenceLevel = overallConfidence || (
+    parts.length > 0 && parts.every((p) => p.confidence === 'High') ? 'High' : 'Medium'
+  );
 
   const getConfidenceBadge = (confidence: ConfidenceLevel) => {
     switch (confidence) {
@@ -219,6 +238,131 @@ export const PartsTable: React.FC<PartsTableProps> = ({
             Reset
           </button>
         </div>
+      </div>
+
+      {/* Analysis & Physical Page Coverage Summary */}
+      <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              Analysis &amp; Coverage Summary
+            </h4>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-500">Overall Confidence:</span>
+            {getConfidenceBadge(computedConfidence)}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60">
+            <span className="text-slate-500 block text-[11px]">Total Physical Pages</span>
+            <span className="font-bold text-slate-900 dark:text-white text-sm">{totalPages}</span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60">
+            <span className="text-slate-500 block text-[11px]">Units Defined</span>
+            <span className="font-bold text-slate-900 dark:text-white text-sm">{parts.length}</span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60">
+            <span className="text-slate-500 block text-[11px]">Assigned Pages</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+              {assignedPagesCount} / {totalPages}
+            </span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60">
+            <span className="text-slate-500 block text-[11px]">Unassigned Pages</span>
+            <span className={`font-bold text-sm ${unassignedPagesCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400'}`}>
+              {unassignedPagesCount}
+            </span>
+          </div>
+        </div>
+
+        {/* Warning: Single Unit in Multi-Page Document */}
+        {parts.length === 1 && totalPages > 15 && (
+          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold">Review Recommended: Only 1 unit detected across {totalPages} pages.</span>
+              <p className="mt-0.5 text-amber-700 dark:text-amber-400">
+                Textbooks usually contain multiple units or chapters. If additional units are present, please use &ldquo;+ Add Part&rdquo; or switch to &ldquo;Manual Split&rdquo; to define individual unit boundaries before cutting.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Warning: Uncertain Mapping */}
+        {isUncertain && (
+          <div
+            className={`p-3.5 rounded-xl border text-xs transition-colors ${
+              isBoundariesConfirmed
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+            }`}
+          >
+            <div className="flex items-start gap-2.5">
+              {isBoundariesConfirmed ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              )}
+              <div className="space-y-1.5 flex-1">
+                <span className="font-bold block">
+                  {isBoundariesConfirmed
+                    ? 'Unit Boundaries Confirmed'
+                    : 'Manual Boundary Confirmation Required'}
+                </span>
+                <p className={isBoundariesConfirmed ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
+                  {uncertaintyReason || 'TOC-to-physical-page mapping could not be conclusively verified against physical headings.'}
+                </p>
+                {!isBoundariesConfirmed ? (
+                  <div className="space-y-3 pt-1">
+                    {/* Unit Boundaries Review List */}
+                    <div className="p-2.5 rounded-lg bg-amber-100/70 dark:bg-amber-900/30 border border-amber-200/80 dark:border-amber-800/80">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200 mb-1.5 flex items-center justify-between">
+                        <span>Unit Boundaries for Review ({parts.length} total):</span>
+                        <span className="text-[10px] font-normal lowercase">Physical page numbers</span>
+                      </div>
+                      <div className="max-h-36 overflow-y-auto space-y-1 pr-1 text-[11px]">
+                        {parts.map((p, idx) => (
+                          <div
+                            key={p.id || idx}
+                            className="flex items-center justify-between py-1 border-b border-amber-200/40 dark:border-amber-800/40 last:border-0"
+                          >
+                            <span className="font-medium truncate max-w-[280px] text-slate-900 dark:text-slate-100">
+                              {p.title}
+                            </span>
+                            <span className="font-mono font-bold text-amber-950 dark:text-amber-100 shrink-0 ml-2">
+                              Pages {p.startPage} – {p.endPage} ({Math.max(0, p.endPage - p.startPage + 1)} pp)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
+                      <p className="text-[11px] text-amber-800 dark:text-amber-300 max-w-md">
+                        Please review each unit&apos;s start and end pages above or edit them in the table below. Confirming approves these exact physical ranges for extraction.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={onConfirmBoundaries}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs shadow-md transition-all cursor-pointer"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Approve &amp; Confirm Displayed Page Boundaries</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-0.5 text-[11px] text-emerald-700 dark:text-emerald-300 font-medium flex items-center justify-between">
+                    <span>✓ Page boundaries reviewed and approved for all {parts.length} units. CUT PDF is unlocked.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Front Matter Suggestion Alert */}
@@ -464,9 +608,14 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                       {/* Individual Download Button */}
                       <button
                         type="button"
+                        disabled={Boolean(isUncertain) && !isBoundariesConfirmed}
                         onClick={() => onDownloadSinglePart(part)}
-                        title="Download this single PDF part now"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                        title={
+                          Boolean(isUncertain) && !isBoundariesConfirmed
+                            ? 'Please review and confirm page boundaries before downloading individual parts'
+                            : 'Download this single PDF part now'
+                        }
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
@@ -568,12 +717,24 @@ export const PartsTable: React.FC<PartsTableProps> = ({
           </p>
         </div>
 
+        {/* Helper message when cut is blocked due to unconfirmed uncertain boundaries */}
+        {isUncertain && !isBoundariesConfirmed && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-center md:text-right">
+            Confirmation required: review and confirm page boundaries above to enable CUT PDF.
+          </p>
+        )}
+
         {/* The Big CUT PDF Action Button */}
         <button
           type="button"
-          disabled={parts.length === 0 || !validation.isValid}
+          disabled={parts.length === 0 || !validation.isValid || (Boolean(isUncertain) && !isBoundariesConfirmed)}
           onClick={onCutPdf}
           className="btn-aurora w-full md:w-auto px-8 py-3.5 rounded-xl font-bold text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer"
+          title={
+            isUncertain && !isBoundariesConfirmed
+              ? 'Please confirm the unit page boundaries above before cutting.'
+              : undefined
+          }
         >
           <Scissors className="w-5 h-5 -rotate-45" />
           <span>CUT PDF</span>

@@ -199,7 +199,13 @@ async function runTests() {
     },
   ];
 
-  const cutItems = await executeCutPlan(pdfBuffer, selectedUnits, () => {});
+  const cutItems = await executeCutPlan(
+    pdfBuffer,
+    selectedUnits,
+    () => {},
+    undefined,
+    { isUncertain: false, isConfirmed: true }
+  );
   assert(cutItems.length === 2, 'Execution plan cuts ONLY the 2 explicitly selected units');
   assert(cutItems[0].status === 'done' && cutItems[1].status === 'done', 'All selected units cut successfully');
 
@@ -256,7 +262,13 @@ async function runTests() {
     if (emptySelection.length === 0) {
       throw new Error('Selection cannot be empty');
     }
-    await executeCutPlan(pdfBuffer, emptySelection, () => {});
+    await executeCutPlan(
+      pdfBuffer,
+      emptySelection,
+      () => {},
+      undefined,
+      { isUncertain: false, isConfirmed: true }
+    );
   } catch (err: any) {
     emptyPlanError = true;
   }

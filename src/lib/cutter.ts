@@ -7,7 +7,7 @@ import { sanitizeFilename } from './validator';
  * Extracts a specific range of pages (1-indexed, inclusive) into a new PDFDocument bytes
  */
 export async function extractPdfRange(
-  sourceBytes: ArrayBuffer,
+  sourceBytes: ArrayBuffer | Uint8Array,
   startPage: number,
   endPage: number
 ): Promise<Uint8Array> {
@@ -16,22 +16,46 @@ export async function extractPdfRange(
   }
   const safeBytes = sourceBytes.slice(0);
   const srcDoc = await PDFDocument.load(safeBytes);
-  const subDoc = await PDFDocument.create();
-
   const totalPages = srcDoc.getPageCount();
-  const safeStart = Math.max(1, Math.min(startPage, totalPages));
-  const safeEnd = Math.max(safeStart, Math.min(endPage, totalPages));
 
-  // Convert 1-indexed range to 0-indexed indices array
+  if (startPage < 1) {
+    throw new Error(
+      `Invalid page range [${startPage}..${endPage}]: startPage must be at least 1.`
+    );
+  }
+  if (endPage < startPage) {
+    throw new Error(
+      `Invalid page range [${startPage}..${endPage}]: endPage cannot be less than startPage.`
+    );
+  }
+  if (endPage > totalPages) {
+    throw new Error(
+      `Invalid page range [${startPage}..${endPage}]: endPage exceeds document total of ${totalPages} pages.`
+    );
+  }
+
+  const expectedPageCount = endPage - startPage + 1;
   const pageIndices: number[] = [];
-  for (let p = safeStart; p <= safeEnd; p++) {
+  for (let p = startPage; p <= endPage; p++) {
     pageIndices.push(p - 1);
   }
 
+  const subDoc = await PDFDocument.create();
   const copiedPages = await subDoc.copyPages(srcDoc, pageIndices);
   copiedPages.forEach((page) => subDoc.addPage(page));
 
-  return await subDoc.save();
+  const pdfBytes = await subDoc.save();
+
+  // Strict physical verification: reopen generated PDF bytes and verify exact page count
+  const verifyDoc = await PDFDocument.load(pdfBytes);
+  const actualCount = verifyDoc.getPageCount();
+  if (actualCount !== expectedPageCount) {
+    throw new Error(
+      `Extraction verification failed: Expected ${expectedPageCount} pages for range [${startPage}..${endPage}], but generated PDF has ${actualCount} pages.`
+    );
+  }
+
+  return pdfBytes;
 }
 
 import {
@@ -153,15 +177,104 @@ export async function saveFilesToDirectory(
   return { savedCount, errors };
 }
 
+export interface CutExecutionOptions {
+  isUncertain: boolean;
+  isConfirmed: boolean;
+}
+
+/**
+ * Resolves effective uncertainty:
+ * - In manual mode: explicitly returns false (user-defined ranges).
+ * - In auto mode: strictly requires a valid boolean; throws if undefined, null, or invalid.
+ */
+export function resolveEffectiveUncertainty(
+  splitMode: 'auto' | 'manual',
+  isUncertain: boolean | undefined | null
+): boolean {
+  if (splitMode === 'manual') {
+    return false;
+  }
+  if (typeof isUncertain !== 'boolean') {
+    throw new Error(
+      'Cannot execute cut: Automatic detection uncertainty state is missing or invalid. Please re-run analysis or switch to Manual Split.'
+    );
+  }
+  return isUncertain;
+}
+
+export interface CutDispatchParams {
+  buffer: ArrayBuffer | Uint8Array | null;
+  parts: DetectedPart[];
+  isValidRanges: boolean;
+  isUncertain: boolean;
+  isBoundariesConfirmed: boolean;
+  onProgress?: (state: CutProgressState) => void;
+  shouldCancel?: () => boolean;
+}
+
+/**
+ * High-level cut execution controller used by handleCutPdf to enforce
+ * fail-closed safety guards for uncertain documents.
+ */
+export async function dispatchCutExecution(params: CutDispatchParams): Promise<CutProgressItem[]> {
+  if (
+    !params ||
+    typeof params.isUncertain !== 'boolean' ||
+    typeof params.isBoundariesConfirmed !== 'boolean'
+  ) {
+    throw new Error(
+      'Cannot execute cut: Execution safety parameters { isUncertain, isBoundariesConfirmed } are mandatory and must be explicitly provided.'
+    );
+  }
+  if (!params.buffer || params.parts.length === 0) {
+    throw new Error('Cannot execute cut: PDF document or parts list is empty.');
+  }
+  if (!params.isValidRanges) {
+    throw new Error('Cannot execute cut: Page ranges contain validation errors.');
+  }
+  if (params.isUncertain && params.isBoundariesConfirmed !== true) {
+    throw new Error(
+      'Cannot execute cut: Uncertain page boundaries must be reviewed and confirmed before cutting.'
+    );
+  }
+  return executeCutPlan(
+    params.buffer,
+    params.parts,
+    params.onProgress || (() => {}),
+    params.shouldCancel || (() => false),
+    {
+      isUncertain: params.isUncertain,
+      isConfirmed: params.isBoundariesConfirmed,
+    }
+  );
+}
+
 /**
  * Slices all parts with responsive asynchronous progress updates
  */
 export async function executeCutPlan(
-  sourceBytes: ArrayBuffer,
+  sourceBytes: ArrayBuffer | Uint8Array,
   parts: DetectedPart[],
   onProgress: (state: CutProgressState) => void,
-  shouldCancel: () => boolean = () => false
+  shouldCancel: (() => boolean) | undefined,
+  options: CutExecutionOptions
 ): Promise<CutProgressItem[]> {
+  if (
+    !options ||
+    typeof options.isUncertain !== 'boolean' ||
+    typeof options.isConfirmed !== 'boolean'
+  ) {
+    throw new Error(
+      'Cannot execute cut: Execution safety options { isUncertain, isConfirmed } are mandatory and must be explicitly provided.'
+    );
+  }
+
+  if (options.isUncertain && options.isConfirmed !== true) {
+    throw new Error(
+      'Cannot execute cut: Uncertain page boundaries must be reviewed and confirmed before cutting.'
+    );
+  }
+
   const items: CutProgressItem[] = parts.map((part) => ({
     id: part.id,
     title: part.title,
@@ -189,8 +302,10 @@ export async function executeCutPlan(
   const srcDoc = await PDFDocument.load(safeBytes);
   const totalPages = srcDoc.getPageCount();
 
+  const cancelCheck = shouldCancel || (() => false);
+
   for (let i = 0; i < parts.length; i++) {
-    if (shouldCancel()) {
+    if (cancelCheck()) {
       state.isCancelled = true;
       state.isCutting = false;
       onProgress({ ...state });
@@ -207,11 +322,20 @@ export async function executeCutPlan(
 
     try {
       const part = parts[i];
-      const safeStart = Math.max(1, Math.min(part.startPage, totalPages));
-      const safeEnd = Math.max(safeStart, Math.min(part.endPage, totalPages));
+      if (
+        part.startPage < 1 ||
+        part.endPage < part.startPage ||
+        part.startPage > totalPages ||
+        part.endPage > totalPages
+      ) {
+        throw new Error(
+          `Invalid page range [${part.startPage}..${part.endPage}] for "${part.title}". Document has ${totalPages} pages.`
+        );
+      }
 
+      const expectedPageCount = part.endPage - part.startPage + 1;
       const pageIndices: number[] = [];
-      for (let p = safeStart; p <= safeEnd; p++) {
+      for (let p = part.startPage; p <= part.endPage; p++) {
         pageIndices.push(p - 1);
       }
 
@@ -228,6 +352,15 @@ export async function executeCutPlan(
       await new Promise((r) => setTimeout(r, 10));
 
       const pdfBytes = await subDoc.save();
+
+      // Strict physical verification: reopen generated PDF bytes and verify exact page count
+      const verifyDoc = await PDFDocument.load(pdfBytes);
+      const actualCount = verifyDoc.getPageCount();
+      if (actualCount !== expectedPageCount) {
+        throw new Error(
+          `Verification failed for "${part.title}": Expected ${expectedPageCount} pages, but generated PDF has ${actualCount} pages.`
+        );
+      }
 
       items[i].bytes = pdfBytes;
       items[i].status = 'done';

@@ -59,13 +59,23 @@ export interface RawHeadingMatch {
   source: 'heading' | 'toc';
 }
 
+export interface TocEntry {
+  prefix: string;
+  numberValue: number;
+  numberRaw: string;
+  title: string;
+  printedPage: number;
+  matchedLine: string;
+  sourcePageNumber: number;
+}
+
 /**
  * Words/patterns that indicate a conversational sentence rather than a true heading
  */
 const FALSE_POSITIVE_PREFIXES = [
-  /^(in|as|according to|refer to|see|look at|review|from|during|end of|summary of|questions for|exercises in|throughout|after|before)\s+/i,
-  /^(we learned in|as discussed in|as seen in|as shown in|covered in|introduced in)\s+/i,
-  /^(note:|important:|recall that|remember:)\s+/i,
+  /^(in|as|according to|refer to|see|look at|review|from|during|end of|summary of|questions for|exercises in|throughout|after|before)s+/i,
+  /^(we learned in|as discussed in|as seen in|as shown in|covered in|introduced in)s+/i,
+  /^(note:|important:|recall that|remember:)s+/i,
   /^(step|hint|solution|answer|proof|sample\s+problem)\b/i,
 ];
 
@@ -101,7 +111,6 @@ function isMathematicalOrContentLine(line: string): boolean {
 
 /**
  * Regex for standard headings:
- * Matches:
  * "UNIT 1: INTRODUCTION TO BIOLOGY"
  * "Unit 1 - Biology Basics"
  * "CHAPTER ONE   CELL STRUCTURE"
@@ -148,6 +157,16 @@ export function isGenuineHeading(
   // Reject math and content expressions
   if (isMathematicalOrContentLine(trimmed)) return null;
 
+  // Rule 0: Reject subsections (e.g. Section 1.2, Topic 3, Exercise 4)
+  if (/^\s*(SECTION|SUBSECTION|TOPIC|ACTIVITY|EXERCISE|REVIEW|SUMMARY|FIGURE|TABLE)\b/i.test(trimmed)) {
+    return null;
+  }
+
+  // Rule 0b: Reject decimal subsections (e.g. Unit 1.1, Chapter 2.4)
+  if (/^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+[0-9]+\.[0-9]+/i.test(trimmed)) {
+    return null;
+  }
+
   // Rule 1: Check false positive sentence prefixes (e.g., "In Unit 2 we learned...")
   for (const regex of FALSE_POSITIVE_PREFIXES) {
     if (regex.test(trimmed)) {
@@ -169,6 +188,11 @@ export function isGenuineHeading(
   const prefix = match[1].trim();
   const rawNum = match[2].trim();
   let title = match[3] ? match[3].trim() : '';
+
+  // Rule 4: Reject subsection decimals like Unit 1.1 or Chapter 2.4
+  if (/^\.\d+/.test(title)) {
+    return null;
+  }
 
   const numVal = parseUnitNumber(rawNum);
   if (numVal === null) return null;
@@ -213,118 +237,285 @@ export function isGenuineHeading(
 }
 
 /**
- * Checks for Table of Contents on early pages and extracts entries
+ * Identifies all Table of Contents pages (including multi-page / continued TOC).
  */
-export function extractTocEntries(pages: PageTextData[]): RawHeadingMatch[] {
-  const tocMatches: RawHeadingMatch[] = [];
+export function findTocPageNumbers(pages: PageTextData[]): Set<number> {
+  const tocPages = new Set<number>();
+  const scanLimit = Math.min(pages.length, 25);
 
-  // Inspect first 15 pages for TOC
-  const maxTocPages = Math.min(pages.length, 15);
-  for (let i = 0; i < maxTocPages; i++) {
+  for (let i = 0; i < scanLimit; i++) {
     const page = pages[i];
-    const upperText = page.rawText.toUpperCase();
-    const isTocPage =
-      upperText.includes('CONTENTS') ||
-      upperText.includes('TABLE OF CONTENTS') ||
-      upperText.includes('SOMMAIRE');
+    const lines = page.lines;
+    if (!lines || lines.length === 0) continue;
 
-    if (!isTocPage) continue;
+    // Check top 12 lines for TOC title
+    const hasExplicitTitle = lines.slice(0, 12).some((l) => {
+      const upper = l.trim().toUpperCase();
+      return /^(TABLE OF CONTENTS|CONTENTS|SOMMAIRE|TABLE DES MATI[ÈE]RES|INHALTSVERZEICHNIS)\b/.test(upper);
+    });
 
-    // Scan lines in TOC for entries like: "Unit 1: Basic Principles ..... 14"
+    const isContinuedTitle = lines.slice(0, 10).some((l) => {
+      const upper = l.trim().toUpperCase();
+      return /^(CONTENTS\s*\(CONTINUED\)|TABLE OF CONTENTS\s*\(CONT\)|CONTENTS\s*CONT|CONTINUED)\b/i.test(upper);
+    });
+
+    // Check for lines with dotted leaders or page numbers at the end
+    const tocEntryCount = lines.filter((l) => {
+      const t = l.trim();
+      return (
+        /[.\s_]{2,}\s*\d{1,4}\s*$/.test(t) ||
+        /^(UNIT|CHAPTER|MODULE|LESSON|PART)\s+\w+.*?[.\s_]{2,}\s*\d{1,4}\s*$/i.test(t)
+      );
+    }).length;
+
+    const prevPageWasToc = tocPages.has(page.pageNumber - 1);
+
+    if (
+      hasExplicitTitle ||
+      (isContinuedTitle && (tocEntryCount >= 1 || prevPageWasToc)) ||
+      (prevPageWasToc && tocEntryCount >= 2) ||
+      tocEntryCount >= 4
+    ) {
+      tocPages.add(page.pageNumber);
+    }
+  }
+
+  return tocPages;
+}
+
+/**
+ * Extracts structured entries from identified TOC pages.
+ */
+export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<number>): TocEntry[] {
+  const targetTocPages = tocPageNumbers || findTocPageNumbers(pages);
+  const entries: TocEntry[] = [];
+
+  const TOC_REGEX =
+    /^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)\b[:.\-–—\s]*(.*?)[.\s_]{2,}\s*(\d{1,4})\s*$/i;
+
+  const TOC_ALT_REGEX =
+    /^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)\b[:.\-–—\s]*(.*?)\s{2,}(\d{1,4})\s*$/i;
+
+  for (const page of pages) {
+    if (!targetTocPages.has(page.pageNumber)) continue;
+
     for (let l = 0; l < page.lines.length; l++) {
       const line = page.lines[l].trim();
-      const tocRegex =
-        /^(UNIT|CHAPTER|MODULE|LESSON|PART)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE)\b[:.\-–—\s]*(.*?)[.\s_]{2,}(\d{1,4})\s*$/i;
-      const tocMatch = line.match(tocRegex);
+      let match = line.match(TOC_REGEX);
+      if (!match) {
+        match = line.match(TOC_ALT_REGEX);
+      }
+      if (!match) continue;
 
-      if (tocMatch) {
-        const prefix = tocMatch[1];
-        const rawNum = tocMatch[2];
-        const rawTitle = tocMatch[3].trim();
-        const targetPage = parseInt(tocMatch[4], 10);
-        const numVal = parseUnitNumber(rawNum);
+      const prefix = match[1].trim();
+      const rawNum = match[2].trim();
+      let title = match[3] ? match[3].trim() : '';
+      const printedPage = parseInt(match[4], 10);
+      const numVal = parseUnitNumber(rawNum);
 
-        if (numVal !== null && !isNaN(targetPage) && targetPage > 0) {
-          tocMatches.push({
-            pageNumber: targetPage,
-            prefix,
-            numberValue: numVal,
-            numberRaw: rawNum,
-            title: rawTitle ? `${prefix} ${rawNum} – ${rawTitle}` : `${prefix} ${rawNum}`,
+      if (numVal !== null && !isNaN(printedPage) && printedPage > 0) {
+        title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+        entries.push({
+          prefix,
+          numberValue: numVal,
+          numberRaw: rawNum,
+          title: title ? `${prefix} ${rawNum} – ${title}` : `${prefix} ${rawNum}`,
+          printedPage,
+          matchedLine: line,
+          sourcePageNumber: page.pageNumber,
+        });
+      }
+    }
+  }
+
+  return entries;
+}
+
+export interface UnitDetectionResult {
+  parts: DetectedPart[];
+  hasFrontMatter: boolean;
+  frontMatterRange?: { start: number; end: number };
+  isUncertain: boolean;
+  uncertaintyReason?: string;
+  assignedPagesCount: number;
+  unassignedPagesCount: number;
+  overallConfidence: ConfidenceLevel;
+}
+
+/**
+ * Scans all physical pages to detect units and chapters, skips TOC pages during heading scan,
+ * establishes printed-to-physical page offset when matching evidence exists,
+ * and creates contiguous, verified page ranges.
+ */
+export function detectDocumentUnits(
+  pages: PageTextData[],
+  totalPages: number,
+  originalFilename = 'Document'
+): UnitDetectionResult {
+  // 1. Identify all Table of Contents pages
+  const tocPages = findTocPageNumbers(pages);
+
+  // 2. Scan physical pages for genuine headings, SKIPPING all TOC pages
+  const rawHeadings: RawHeadingMatch[] = [];
+  const seenUnits = new Map<string, number>(); // key -> earliest physical page
+
+  for (const page of pages) {
+    // CRITICAL: Never interpret Table of Contents entries as physical page headings!
+    if (tocPages.has(page.pageNumber)) {
+      continue;
+    }
+
+    // Scan all lines on the page (no limitation stopping after first match)
+    for (let l = 0; l < page.lines.length; l++) {
+      const line = page.lines[l];
+      const match = isGenuineHeading(line, l, page.lines.length);
+      if (!match) continue;
+
+      const key = `${match.prefix.toLowerCase()}_${match.numberValue}`;
+
+      // Filter out repeated running headers at the top of subsequent pages
+      if (seenUnits.has(key)) {
+        const firstPage = seenUnits.get(key)!;
+        if (page.pageNumber > firstPage) {
+          // Same unit repeating on a later page (running header or citation)
+          continue;
+        }
+      }
+
+      match.pageNumber = page.pageNumber;
+      rawHeadings.push(match);
+      seenUnits.set(key, page.pageNumber);
+    }
+  }
+
+  // 3. Extract TOC entries
+  const tocEntries = extractTocEntries(pages, tocPages);
+
+  // 4. Map physical body headings
+  const physicalMap = new Map<string, RawHeadingMatch>();
+  for (const heading of rawHeadings) {
+    const key = `${heading.prefix.toLowerCase()}_${heading.numberValue}`;
+    if (!physicalMap.has(key) || heading.pageNumber < physicalMap.get(key)!.pageNumber) {
+      physicalMap.set(key, heading);
+    }
+  }
+
+  // 5. Establish page-number mapping & offset calibration
+  const offsetEvidence: number[] = [];
+  for (const toc of tocEntries) {
+    const key = `${toc.prefix.toLowerCase()}_${toc.numberValue}`;
+    if (physicalMap.has(key)) {
+      const physHeading = physicalMap.get(key)!;
+      const offset = physHeading.pageNumber - toc.printedPage;
+      offsetEvidence.push(offset);
+    }
+  }
+
+  let consensusOffset: number | null = null;
+  let isOffsetReliable = false;
+
+  if (offsetEvidence.length > 0) {
+    const freq = new Map<number, number>();
+    for (const off of offsetEvidence) {
+      freq.set(off, (freq.get(off) || 0) + 1);
+    }
+    let maxCount = 0;
+    for (const [off, count] of freq.entries()) {
+      if (count > maxCount) {
+        maxCount = count;
+        consensusOffset = off;
+      }
+    }
+    // High reliability if majority of evidence agrees
+    if (maxCount >= Math.ceil(offsetEvidence.length * 0.6)) {
+      isOffsetReliable = true;
+    }
+  }
+
+  // 6. Build Candidate Units List
+  const candidateMap = new Map<string, {
+    prefix: string;
+    numberValue: number;
+    title: string;
+    physicalPage: number;
+    confidence: ConfidenceLevel;
+    source: 'heading' | 'toc' | 'manual';
+    originalHeading?: string;
+  }>();
+
+  // Add physical headings found in document body (our primary source of truth)
+  for (const [key, heading] of physicalMap.entries()) {
+    candidateMap.set(key, {
+      prefix: heading.prefix,
+      numberValue: heading.numberValue,
+      title: heading.title,
+      physicalPage: heading.pageNumber,
+      confidence: heading.confidence,
+      source: 'heading',
+      originalHeading: heading.matchedLine,
+    });
+  }
+
+  let isUncertain = false;
+  let uncertaintyReason = '';
+
+  // Complement with TOC entries
+  for (const toc of tocEntries) {
+    const key = `${toc.prefix.toLowerCase()}_${toc.numberValue}`;
+    if (!candidateMap.has(key)) {
+      if (isOffsetReliable && consensusOffset !== null) {
+        const calibratedPage = toc.printedPage + consensusOffset;
+        if (calibratedPage >= 1 && calibratedPage <= totalPages) {
+          candidateMap.set(key, {
+            prefix: toc.prefix,
+            numberValue: toc.numberValue,
+            title: toc.title,
+            physicalPage: calibratedPage,
             confidence: 'High',
-            matchedLine: line,
-            lineIndex: l,
             source: 'toc',
+            originalHeading: toc.matchedLine,
+          });
+        }
+      } else {
+        // Offset could not be established conclusively
+        isUncertain = true;
+        uncertaintyReason =
+          'Printed page numbers in the Table of Contents could not be conclusively verified against physical document headings. Please verify the unit page ranges.';
+        if (toc.printedPage <= totalPages) {
+          candidateMap.set(key, {
+            prefix: toc.prefix,
+            numberValue: toc.numberValue,
+            title: toc.title,
+            physicalPage: toc.printedPage,
+            confidence: 'Low',
+            source: 'toc',
+            originalHeading: toc.matchedLine,
           });
         }
       }
     }
   }
 
-  return tocMatches;
-}
-
-/**
- * Scans all pages to detect units and chapters, merges TOC and body headings,
- * and creates contiguous or bounded page ranges.
- */
-export function detectDocumentUnits(
-  pages: PageTextData[],
-  totalPages: number,
-  originalFilename = 'Document'
-): { parts: DetectedPart[]; hasFrontMatter: boolean; frontMatterRange?: { start: number; end: number } } {
-  const rawHeadings: RawHeadingMatch[] = [];
-
-  // 1. Scan page by page for headings
-  for (const page of pages) {
-    for (let l = 0; l < page.lines.length; l++) {
-      const line = page.lines[l];
-      const match = isGenuineHeading(line, l, page.lines.length);
-      if (match) {
-        match.pageNumber = page.pageNumber;
-        rawHeadings.push(match);
-        // Usually only one primary unit heading per page
-        break;
-      }
-    }
-  }
-
-  // 2. Check TOC
-  const tocEntries = extractTocEntries(pages);
-
-  // 3. Merge or consolidate headings
-  // Group by (prefix + numberValue)
-  const candidateMap = new Map<string, RawHeadingMatch>();
-
-  // Prioritize physical page headings, verify with TOC
-  for (const heading of rawHeadings) {
-    const key = `${heading.prefix.toLowerCase()}_${heading.numberValue}`;
-    if (!candidateMap.has(key)) {
-      candidateMap.set(key, heading);
-    } else {
-      // Keep earliest page if repeated
-      const existing = candidateMap.get(key)!;
-      if (heading.pageNumber < existing.pageNumber) {
-        candidateMap.set(key, heading);
-      }
-    }
-  }
-
-  // Complement with TOC entries if not found in body
-  for (const toc of tocEntries) {
-    const key = `${toc.prefix.toLowerCase()}_${toc.numberValue}`;
-    if (!candidateMap.has(key) && toc.pageNumber <= totalPages) {
-      candidateMap.set(key, toc);
-    }
-  }
-
-  // Sort candidates by page number
+  // Sort candidates strictly by physical page number
   const sortedCandidates = Array.from(candidateMap.values()).sort(
-    (a, b) => a.pageNumber - b.pageNumber
+    (a, b) => a.physicalPage - b.physicalPage || a.numberValue - b.numberValue
   );
 
-  // If no units found, return a default single part covering entire PDF
-  if (sortedCandidates.length === 0) {
+  // Deduplicate any candidates sharing the same physical page
+  const deduplicated: typeof sortedCandidates = [];
+  for (const item of sortedCandidates) {
+    if (deduplicated.length === 0) {
+      deduplicated.push(item);
+    } else {
+      const last = deduplicated[deduplicated.length - 1];
+      if (item.physicalPage > last.physicalPage) {
+        deduplicated.push(item);
+      }
+    }
+  }
+
+  // Fallback if no units detected
+  if (deduplicated.length === 0) {
     const baseName = originalFilename.replace(/\.pdf$/i, '');
     return {
       parts: [
@@ -334,37 +525,37 @@ export function detectDocumentUnits(
           startPage: 1,
           endPage: totalPages,
           filename: `${baseName || 'Document'}.pdf`,
-          confidence: 'Medium',
+          confidence: 'Low',
           source: 'manual',
         },
       ],
       hasFrontMatter: false,
+      isUncertain: true,
+      uncertaintyReason: 'No clear Unit or Chapter headings detected. Entire document provided as a single part.',
+      assignedPagesCount: totalPages,
+      unassignedPagesCount: 0,
+      overallConfidence: 'Low',
     };
   }
 
-  // 4. Calculate page ranges
+  // 7. Calculate exact contiguous unit boundaries
   const parts: DetectedPart[] = [];
-  const baseName = originalFilename.replace(/\.pdf$/i, '').trim();
-
-  // Check front matter (pages before the first detected unit)
-  const firstUnitStart = sortedCandidates[0].pageNumber;
+  const firstUnitStart = deduplicated[0].physicalPage;
   const hasFrontMatter = firstUnitStart > 1;
   const frontMatterRange = hasFrontMatter
     ? { start: 1, end: firstUnitStart - 1 }
     : undefined;
 
-  for (let i = 0; i < sortedCandidates.length; i++) {
-    const current = sortedCandidates[i];
-    const startPage = current.pageNumber;
+  for (let i = 0; i < deduplicated.length; i++) {
+    const current = deduplicated[i];
+    const startPage = current.physicalPage;
     
-    // End page is one before the next unit, or totalPages for the last unit
+    // End page is one before the next unit, or the actual final physical page (totalPages)
     let endPage = totalPages;
-    if (i < sortedCandidates.length - 1) {
-      const next = sortedCandidates[i + 1];
-      endPage = Math.max(startPage, next.pageNumber - 1);
+    if (i < deduplicated.length - 1) {
+      endPage = Math.max(startPage, deduplicated[i + 1].physicalPage - 1);
     }
 
-    // Default filename
     const safeTitle = current.title.replace(/[:\-–—\s]+/g, ' ').trim();
     const filename = `${safeTitle}.pdf`;
 
@@ -376,13 +567,83 @@ export function detectDocumentUnits(
       filename,
       confidence: current.confidence,
       source: current.source,
-      originalHeading: current.matchedLine,
+      originalHeading: current.originalHeading,
     });
   }
+
+  // Compute coverage totals
+  let assignedPagesCount = 0;
+  for (const part of parts) {
+    assignedPagesCount += Math.max(0, part.endPage - part.startPage + 1);
+  }
+  const unassignedPagesCount = Math.max(0, totalPages - assignedPagesCount);
+
+  // Single unit warning in multi-page document
+  if (parts.length === 1 && totalPages > 15) {
+    isUncertain = true;
+    uncertaintyReason = `Only 1 unit detected across ${totalPages} pages. Review boundaries before cutting.`;
+  }
+
+  const overallConfidence: ConfidenceLevel = isUncertain
+    ? 'Low'
+    : parts.every((p) => p.confidence === 'High')
+    ? 'High'
+    : 'Medium';
 
   return {
     parts,
     hasFrontMatter,
     frontMatterRange,
+    isUncertain,
+    uncertaintyReason,
+    assignedPagesCount,
+    unassignedPagesCount,
+    overallConfidence,
+  };
+}
+
+export interface CutEligibilityResult {
+  canCut: boolean;
+  reason?: string;
+  requiresConfirmation: boolean;
+}
+
+/**
+ * Validates whether cutting can proceed, enforcing that uncertain page boundaries
+ * cannot be silently cut without explicit user review and confirmation.
+ */
+export function validateCutEligibility(
+  isUncertain: boolean | undefined,
+  isConfirmed: boolean | undefined,
+  partsCount = 0,
+  isValidRanges = true
+): CutEligibilityResult {
+  if (partsCount === 0) {
+    return {
+      canCut: false,
+      requiresConfirmation: false,
+      reason: 'No units defined for extraction.',
+    };
+  }
+
+  if (!isValidRanges) {
+    return {
+      canCut: false,
+      requiresConfirmation: false,
+      reason: 'Page ranges contain validation errors.',
+    };
+  }
+
+  if (isUncertain && !isConfirmed) {
+    return {
+      canCut: false,
+      requiresConfirmation: true,
+      reason: 'Page boundaries are uncertain and must be reviewed and confirmed before cutting.',
+    };
+  }
+
+  return {
+    canCut: true,
+    requiresConfirmation: Boolean(isUncertain),
   };
 }

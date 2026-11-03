@@ -73,7 +73,13 @@ async function runFullAudit() {
     { id: '1', title: 'Unit 1', startPage: 1, endPage: 2, filename: 'Unit 1.pdf', confidence: 'High' },
     { id: '2', title: 'Unit 2', startPage: 3, endPage: 5, filename: 'Unit 2.pdf', confidence: 'High' },
   ];
-  const cutResults = await executeCutPlan(basePdfBuf, cutPlan, () => {});
+  const cutResults = await executeCutPlan(
+    basePdfBuf,
+    cutPlan,
+    () => {},
+    undefined,
+    { isUncertain: false, isConfirmed: true }
+  );
   record('PDF Unit Cutter', cutResults.length === 2, `Sliced into ${cutResults.length} units with zero data detachment`);
 
   // 2. Merge PDF

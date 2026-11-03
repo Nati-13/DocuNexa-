@@ -22,7 +22,8 @@ import {
   DetectedPart,
   ValidationResult,
   CutProgressState,
-  CutProgressItem
+  CutProgressItem,
+  ConfidenceLevel
 } from '@/types';
 import { extractPdfTextPages, getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { detectDocumentUnits } from '@/lib/detector';
@@ -33,7 +34,9 @@ import {
   createZipBundle,
   isFileSystemAccessSupported,
   saveFilesToDirectory,
-  executeCutPlan
+  executeCutPlan,
+  dispatchCutExecution,
+  resolveEffectiveUncertainty
 } from '@/lib/cutter';
 import { exportProjectFile, importProjectFile } from '@/lib/project';
 import { sanitizeDownloadFilename } from '@/lib/downloadContract';
@@ -62,9 +65,15 @@ export default function PdfUnitCutterPage() {
   const [parts, setParts] = useState<DetectedPart[]>([]);
   const [originalParts, setOriginalParts] = useState<DetectedPart[]>([]);
 
-  // Front matter suggestions
+  // Front matter & analysis summary
   const [hasFrontMatter, setHasFrontMatter] = useState<boolean>(false);
   const [frontMatterRange, setFrontMatterRange] = useState<{ start: number; end: number } | undefined>();
+  const [detectionSummary, setDetectionSummary] = useState<{
+    isUncertain?: boolean;
+    uncertaintyReason?: string;
+    overallConfidence?: ConfidenceLevel;
+  }>({});
+  const [isBoundariesConfirmed, setIsBoundariesConfirmed] = useState<boolean>(false);
 
   // Modals & Interactivity
   const [previewPart, setPreviewPart] = useState<DetectedPart | null>(null);
@@ -149,6 +158,8 @@ export default function PdfUnitCutterPage() {
       setOriginalParts([]);
       setHasFrontMatter(false);
       setFrontMatterRange(undefined);
+      setDetectionSummary({});
+      setIsBoundariesConfirmed(false);
       setCompletionItems(null);
     } catch (err: any) {
       console.error('Error reading PDF file:', err);
@@ -174,6 +185,8 @@ export default function PdfUnitCutterPage() {
     setOriginalParts([]);
     setHasFrontMatter(false);
     setFrontMatterRange(undefined);
+    setDetectionSummary({});
+    setIsBoundariesConfirmed(false);
     setCompletionItems(null);
   };
 
@@ -205,13 +218,18 @@ export default function PdfUnitCutterPage() {
           : null
       );
 
-      const { parts: detected, hasFrontMatter: fmDetected, frontMatterRange: fmRange } =
-        detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name);
+      const result = detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name);
 
-      setParts(detected);
-      setOriginalParts(JSON.parse(JSON.stringify(detected)));
-      setHasFrontMatter(fmDetected);
-      setFrontMatterRange(fmRange);
+      setParts(result.parts);
+      setOriginalParts(JSON.parse(JSON.stringify(result.parts)));
+      setHasFrontMatter(result.hasFrontMatter);
+      setFrontMatterRange(result.frontMatterRange);
+      setDetectionSummary({
+        isUncertain: result.isUncertain,
+        uncertaintyReason: result.uncertaintyReason,
+        overallConfidence: result.overallConfidence,
+      });
+      setIsBoundariesConfirmed(false);
       setSplitMode('auto');
     } catch (err: any) {
       console.error('Analysis error:', err);
@@ -240,12 +258,14 @@ export default function PdfUnitCutterPage() {
 
   // Parts list manipulations
   const handleUpdatePart = (id: string, updated: Partial<DetectedPart>) => {
+    setIsBoundariesConfirmed(false);
     setParts((prev) =>
       prev.map((part) => (part.id === id ? { ...part, ...updated } : part))
     );
   };
 
   const handleAddPart = (newPartData: Omit<DetectedPart, 'id'>) => {
+    setIsBoundariesConfirmed(false);
     const newPart: DetectedPart = {
       ...newPartData,
       id: `part-${Date.now()}-${parts.length + 1}`,
@@ -257,6 +277,7 @@ export default function PdfUnitCutterPage() {
     const targetIdx = parts.findIndex((p) => p.id === id);
     if (targetIdx === -1) return;
 
+    setIsBoundariesConfirmed(false);
     const source = parts[targetIdx];
     const duplicated: DetectedPart = {
       ...source,
@@ -271,6 +292,7 @@ export default function PdfUnitCutterPage() {
   };
 
   const handleDeletePart = (id: string) => {
+    setIsBoundariesConfirmed(false);
     setParts((prev) => prev.filter((p) => p.id !== id));
   };
 
@@ -278,6 +300,7 @@ export default function PdfUnitCutterPage() {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= parts.length) return;
 
+    setIsBoundariesConfirmed(false);
     const nextParts = [...parts];
     const temp = nextParts[index];
     nextParts[index] = nextParts[newIndex];
@@ -286,6 +309,7 @@ export default function PdfUnitCutterPage() {
   };
 
   const handleResetParts = () => {
+    setIsBoundariesConfirmed(false);
     if (originalParts.length > 0) {
       setParts(JSON.parse(JSON.stringify(originalParts)));
     }
@@ -293,6 +317,7 @@ export default function PdfUnitCutterPage() {
 
   const handleApplyAll = () => {
     if (!fileInfo) return;
+    setIsBoundariesConfirmed(false);
     const sanitized = parts.map((part) => ({
       ...part,
       filename: sanitizeFilename(part.filename),
@@ -304,6 +329,7 @@ export default function PdfUnitCutterPage() {
 
   const handleFrontMatter = (action: 'separate' | 'include' | 'exclude') => {
     if (!frontMatterRange) return;
+    setIsBoundariesConfirmed(false);
 
     if (action === 'separate') {
       const frontPart: DetectedPart = {
@@ -330,6 +356,19 @@ export default function PdfUnitCutterPage() {
 
   // Download Single Part
   const handleDownloadSinglePart = async (part: DetectedPart) => {
+    let effectiveUncertain: boolean;
+    try {
+      effectiveUncertain = resolveEffectiveUncertainty(splitMode, detectionSummary.isUncertain);
+    } catch (err: any) {
+      alert(err.message || 'Cannot extract part: Document uncertainty state is unverified.');
+      return;
+    }
+
+    if (effectiveUncertain && !isBoundariesConfirmed) {
+      alert('Please review and confirm unit page boundaries before extracting or downloading parts.');
+      return;
+    }
+
     const activeBuf = await getActiveBuffer();
     if (!activeBuf) {
       alert('Cannot access PDF document data.');
@@ -364,6 +403,19 @@ export default function PdfUnitCutterPage() {
       return;
     }
 
+    let effectiveUncertain: boolean;
+    try {
+      effectiveUncertain = resolveEffectiveUncertainty(splitMode, detectionSummary.isUncertain);
+    } catch (err: any) {
+      alert(err.message || 'Cannot cut PDF: Document uncertainty state is unverified.');
+      return;
+    }
+
+    if (effectiveUncertain && !isBoundariesConfirmed) {
+      alert('Please review and confirm unit page boundaries before cutting.');
+      return;
+    }
+
     const activeBuf = await getActiveBuffer();
     if (!activeBuf) {
       alert('Cannot access PDF document data. Please re-select the file.');
@@ -373,12 +425,15 @@ export default function PdfUnitCutterPage() {
     setIsCuttingCancelled(false);
 
     try {
-      const items = await executeCutPlan(
-        activeBuf,
+      const items = await dispatchCutExecution({
+        buffer: activeBuf,
         parts,
-        (progress) => setProgressState(progress),
-        () => isCuttingCancelled
-      );
+        isValidRanges: validation.isValid,
+        isUncertain: effectiveUncertain,
+        isBoundariesConfirmed: Boolean(isBoundariesConfirmed),
+        onProgress: (progress) => setProgressState(progress),
+        shouldCancel: () => isCuttingCancelled,
+      });
 
       if (!isCuttingCancelled) {
         setCompletionItems(items);
@@ -462,6 +517,7 @@ export default function PdfUnitCutterPage() {
       const project = await importProjectFile(file);
       setParts(project.parts);
       setOriginalParts(JSON.parse(JSON.stringify(project.parts)));
+      setIsBoundariesConfirmed(false);
       alert(`Loaded project with ${project.parts.length} unit definitions.`);
     } catch (err: any) {
       alert(`Failed to load project: ${err.message || err}`);
@@ -633,6 +689,11 @@ export default function PdfUnitCutterPage() {
                 onCutPdf={handleCutPdf}
                 onSaveProject={handleExportProject}
                 onLoadProject={handleImportProjectClick}
+                isUncertain={splitMode === 'manual' ? false : detectionSummary.isUncertain}
+                uncertaintyReason={detectionSummary.uncertaintyReason}
+                overallConfidence={detectionSummary.overallConfidence}
+                isBoundariesConfirmed={isBoundariesConfirmed}
+                onConfirmBoundaries={() => setIsBoundariesConfirmed(true)}
               />
             )}
           </div>
