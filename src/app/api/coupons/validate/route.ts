@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentProfile } from '@/lib/supabase/server';
+import { getCurrentProfile, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
@@ -22,6 +22,19 @@ export async function POST(req: Request) {
       return secureJsonResponse(
         { error: 'Please log in to apply a coupon.' },
         { status: 401 },
+        requestId
+      );
+    }
+
+    const hasConsent = await hasUserAcceptedCurrentTerms(profile.id);
+    if (!hasConsent) {
+      return secureJsonResponse(
+        {
+          error: 'Please review and accept the current Terms of Service and Privacy Policy before validating coupons.',
+          code: 'CONSENT_REQUIRED',
+          redirect: '/accept-terms',
+        },
+        { status: 403 },
         requestId
       );
     }

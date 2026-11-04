@@ -1266,7 +1266,7 @@ export default function UniversalToolPage() {
               </div>
             )}
 
-            {/* G. OCR LANGUAGE PICKER */}
+            {/* G. OCR LANGUAGE PICKER & TRANSPARENCY NOTICE */}
             {tool.id === 'ocr-pdf' && (
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">OCR Recognition Language</label>
@@ -1287,6 +1287,15 @@ export default function UniversalToolPage() {
                       {l.label}
                     </button>
                   ))}
+                </div>
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                    <ShieldCheck size={14} />
+                    <span>Local WebAssembly OCR • Public Model Download Only</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Character recognition executes locally in a browser Web Worker via Tesseract.js. On first use, the engine downloads public open-source language dictionary weights (.traineddata.gz) from jsDelivr CDN. Zero document bytes, images, or extracted text leave your browser.
+                  </p>
                 </div>
                 <p className="text-[11px] text-slate-500">
                   Preserves the complete OCR transcript as UTF-8 without silently removing Ethiopic/Amharic characters.
@@ -1383,18 +1392,50 @@ export default function UniversalToolPage() {
                 </select>
 
                 {selectedLangObj?.isLocallySupported ? (
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
-                    <CheckCircle2 size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span>Locally supported via document vocabulary glossary & phrase transformation.</span>
+                  <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
+                    <div className="font-semibold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 size={14} />
+                      <span>Locally Supported via In-Memory Glossary</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      Vocabulary transformation executes 100% inside your browser RAM. Zero document text is transmitted to external translation APIs.
+                    </p>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
-                    <Info size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <span>
-                      Requires External Provider: The local engine does not have a verified translation model for {selectedLangObj?.name}. To avoid generating fake translations, this language will return a clear availability notice.
-                    </span>
+                  <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                    <div className="font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                      <Info size={14} />
+                      <span>Requires External Provider (Not Connected)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      The local engine does not have a verified in-browser translation model for {selectedLangObj?.name}. To safeguard document confidentiality and prevent unauthorized external text transmission, this language returns an honest availability notice without sending your document data anywhere.
+                    </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* J. DOCUMENT SUMMARIZER: Client-Side Engine & Zero External AI Notice */}
+            {tool.id === 'ai-summarizer' && (
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <Sparkles size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">Local Heuristic Summarizer</h4>
+                    <span className="text-[11px] text-slate-500">In-Browser Analysis • Zero External AI Data Transmission</span>
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 space-y-1.5">
+                  <p className="font-semibold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                    <ShieldCheck size={14} />
+                    <span>100% Client-Side In-Memory Execution</span>
+                  </p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    This tool analyzes structural patterns, section headings, and key sentences directly within your browser&apos;s volatile RAM. Your document file and extracted text are NEVER sent to external AI providers (such as OpenAI, Anthropic, or Google Gemini).
+                  </p>
+                </div>
               </div>
             )}
 

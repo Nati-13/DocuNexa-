@@ -11,6 +11,12 @@ export interface SendResetEmailParams {
   transporter?: Transporter;
 }
 
+export interface SendWelcomeEmailParams {
+  to: string;
+  transporter?: Transporter;
+  requestId?: string;
+}
+
 /**
  * Returns true if the required server-side SMTP credentials are configured.
  */
@@ -123,6 +129,174 @@ If you did not request a password reset, you can safely ignore this email.`;
     return {
       success: false,
       error: 'Password reset email service is currently not configured or unavailable.',
+    };
+  }
+
+  try {
+    const { host, port, secure, user, pass, from } = getSmtpConfig();
+
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+    });
+
+    await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    return handleSmtpError(err);
+  }
+}
+
+/**
+ * Sends an automated customer welcome email upon successful account registration.
+ * Non-critical notification: failure to deliver does not undo account registration.
+ */
+export async function sendWelcomeEmail({
+  to,
+  transporter: customTransporter,
+  requestId,
+}: SendWelcomeEmailParams): Promise<{ success: boolean; error?: string }> {
+  const subject = 'Welcome to DocuNexa — Free Client-Side PDF Tools';
+
+  const textContent = `Welcome to DocuNexa!
+
+Thank you for registering with DocuNexa (https://docunexa.pro.et).
+
+DocuNexa provides fast, private, browser-based PDF utilities engineered for zero-upload document privacy. All PDF operations — including our flagship PDF Unit Cutter, page merging, splitting, OCR text extraction, watermarking, and document protection — execute directly inside your browser without dispatching document files to external servers.
+
+Explore all available tools:
+https://docunexa.pro.et/tools
+
+Home:
+https://docunexa.pro.et
+
+Legal & Privacy Policies:
+- Terms of Service: https://docunexa.pro.et/terms-of-service
+- Privacy Policy: https://docunexa.pro.et/privacy-policy
+
+Need support or have questions? Contact us anytime at:
+docunexa.security@gmail.com
+
+Best regards,
+The DocuNexa Team
+https://docunexa.pro.et`;
+
+  const htmlContent = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1e293b; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px;">
+      <div style="margin-bottom: 24px; text-align: center;">
+        <span style="display: inline-block; padding: 6px 14px; background: #eef2ff; color: #4338ca; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+          DocuNexa
+        </span>
+        <h1 style="margin: 16px 0 8px; color: #0f172a; font-size: 22px; font-weight: 800; line-height: 1.3;">
+          Welcome to DocuNexa
+        </h1>
+        <p style="margin: 0; font-size: 14px; color: #64748b;">
+          Your private in-browser PDF tools platform
+        </p>
+      </div>
+
+      <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 16px;">
+        Thank you for registering with DocuNexa. Your account is active and ready to use.
+      </p>
+
+      <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 20px;">
+        DocuNexa is designed with strict client-side data privacy: all standard document processing — including page splitting, merging, conversion, optical character recognition (OCR), and our flagship <strong>PDF Unit Cutter</strong> — executes entirely inside your web browser. Your sensitive documents are never uploaded to remote cloud storage.
+      </p>
+
+      <div style="text-align: center; margin: 28px 0;">
+        <a href="https://docunexa.pro.et/tools" style="display: inline-block; background: #4338ca; color: #ffffff; text-decoration: none; padding: 12px 28px; font-size: 13px; font-weight: 700; border-radius: 12px; box-shadow: 0 2px 4px rgba(67, 56, 202, 0.2);">
+          Explore All PDF Tools &rarr;
+        </a>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 24px;">
+        <p style="margin: 0 0 10px; font-size: 12px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+          Key Platform Capabilities
+        </p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #475569;">
+          <li><strong>PDF Unit Cutter:</strong> Intelligent semantic textbook splitting with automated table-of-contents detection.</li>
+          <li><strong>Client-Side Security:</strong> Zero-upload file processing keeping your confidential records on your machine.</li>
+          <li><strong>Comprehensive Suite:</strong> Merge, compress, protect, watermark, reorder, and convert PDFs seamlessly.</li>
+        </ul>
+      </div>
+
+      <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 24px; font-size: 12px; line-height: 1.6; color: #64748b;">
+        <p style="margin: 0 0 8px;">
+          Website: <a href="https://docunexa.pro.et" style="color: #4338ca; text-decoration: underline;">https://docunexa.pro.et</a>
+        </p>
+        <p style="margin: 0 0 8px;">
+          Legal & Privacy Policies:
+          <a href="https://docunexa.pro.et/terms-of-service" style="color: #4338ca; text-decoration: underline;">Terms of Service</a> &bull;
+          <a href="https://docunexa.pro.et/privacy-policy" style="color: #4338ca; text-decoration: underline;">Privacy Policy</a>
+        </p>
+        <p style="margin: 0 0 8px;">
+          Need assistance or have feedback? Contact us at <a href="mailto:docunexa.security@gmail.com" style="color: #4338ca; text-decoration: underline;">docunexa.security@gmail.com</a>.
+        </p>
+        <p style="margin: 16px 0 0; font-size: 11px; color: #94a3b8; border-top: 1px solid #f8fafc; padding-top: 12px;">
+          You received this email because an account was registered with DocuNexa using this email address.
+        </p>
+      </div>
+    </div>
+  `;
+
+  // Custom mock transporter for testing
+  if (customTransporter) {
+    try {
+      const { from } = getSmtpConfig();
+      await customTransporter.sendMail({
+        from,
+        to,
+        subject,
+        text: textContent,
+        html: htmlContent,
+      });
+      return { success: true };
+    } catch (err: any) {
+      return handleSmtpError(err);
+    }
+  }
+
+  // 1. Guard against sending real SMTP emails in Vercel Preview deployments
+  if (process.env.VERCEL_ENV === 'preview') {
+    return {
+      success: false,
+      error: 'Welcome email delivery is disabled in preview deployments.',
+    };
+  }
+
+  // 2. In unit test environments without mock transporter, simulate successful delivery without real SMTP
+  if (process.env.NODE_ENV === 'test' && !process.env.FORCE_SMTP_TEST) {
+    return { success: true };
+  }
+
+  // 3. Real SMTP delivery is permitted ONLY on Vercel Production deployments
+  if (process.env.VERCEL_ENV !== 'production') {
+    return {
+      success: false,
+      error: 'Real SMTP email delivery is permitted only on Vercel Production deployments.',
+    };
+  }
+
+  // 4. Check if SMTP credentials are configured
+  if (!isSmtpConfigured()) {
+    return {
+      success: false,
+      error: 'SMTP service is currently not configured or unavailable.',
     };
   }
 

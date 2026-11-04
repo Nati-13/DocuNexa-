@@ -134,6 +134,13 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 
     if (userError || !user) return null;
 
+    // Fail-closed protection: reject access if account has administrative failure flags in app_metadata
+    // NOTE: app_metadata is strictly server-managed and cannot be altered or forged by client users
+    const appMeta = user.app_metadata || {};
+    if (appMeta.consent_persistence_failed === true || appMeta.registration_failed === true) {
+      return null;
+    }
+
     // Fetch user profile from public.profiles
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -171,5 +178,39 @@ export async function getServerAuthClaims(): Promise<Record<string, any> | null>
     return data.claims;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Authoritative check whether the user has a durable legal acceptance record in public.legal_acceptances.
+ * Does NOT rely on user-editable user_metadata.
+ */
+export async function hasUserAcceptedCurrentTerms(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from('legal_acceptances')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      return true;
+    }
+
+    // Fallback verification using service_role client for robust SSR / API consistency
+    const admin = createAdminSupabaseClient();
+    const { data: adminData } = await admin
+      .from('legal_acceptances')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    return !!adminData;
+  } catch {
+    return false;
   }
 }

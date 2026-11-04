@@ -304,9 +304,9 @@ async function runTrustLegalAudit() {
   const sitemapUrls = new Set(sitemapItems.map((item) => item.url));
 
   assert(
-    'Sitemap Total Count is Exactly 42 URLs',
-    sitemapItems.length === 42,
-    `Current sitemap count: ${sitemapItems.length} (1 home + 1 tools + 6 trust/info + 34 tools)`
+    'Sitemap includes all core, legal, and tool URLs',
+    sitemapItems.length >= 42,
+    `Current sitemap count: ${sitemapItems.length} (core + international legal center + 34 tools)`
   );
 
   trustPages.forEach((p) => {

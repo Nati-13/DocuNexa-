@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getCurrentProfile, createAdminSupabaseClient, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { generateUniquePaymentAmount, getBybitConfig, normalizeAmount, formatPaymentAmount } from '@/lib/payments/bybit';
 import { getAptosConfig, isValidAptosAddress } from '@/lib/payments/aptos';
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
@@ -25,6 +25,19 @@ export async function POST(req: Request) {
       return secureJsonResponse(
         { error: 'Please log in to upgrade to Ad-Free.' },
         { status: 401 },
+        requestId
+      );
+    }
+
+    const hasConsent = await hasUserAcceptedCurrentTerms(profile.id);
+    if (!hasConsent) {
+      return secureJsonResponse(
+        {
+          error: 'Please review and accept the current Terms of Service and Privacy Policy to proceed with checkout.',
+          code: 'CONSENT_REQUIRED',
+          redirect: '/accept-terms',
+        },
+        { status: 403 },
         requestId
       );
     }

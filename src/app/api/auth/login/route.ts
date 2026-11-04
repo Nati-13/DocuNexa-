@@ -71,6 +71,30 @@ export async function POST(req: Request) {
       return secureJsonResponse({ error: msg || 'Authentication failed. Please verify your credentials.' }, { status: 401 }, requestId);
     }
 
+    // 1. Check server-managed app_metadata for administrative blocking (users cannot edit app_metadata)
+    const appMeta = authData.user.app_metadata || {};
+    if (appMeta.consent_persistence_failed === true || appMeta.registration_failed === true) {
+      await supabase.auth.signOut();
+      console.error(
+        `[OPERATIONAL ALERT] [SECURITY] [Request ID: ${requestId}]: Blocked login attempt for administratively flagged account ${authData.user.id} (${cleanEmail}). Incomplete registration.`
+      );
+      return secureJsonResponse(
+        { error: 'Account registration was incomplete or blocked. Please contact support.' },
+        { status: 403 },
+        requestId
+      );
+    }
+
+    // 2. Authoritative consent verification: check public.legal_acceptances
+    const { data: legalAcceptance } = await supabase
+      .from('legal_acceptances')
+      .select('id')
+      .eq('user_id', authData.user.id)
+      .limit(1)
+      .maybeSingle();
+
+    const needsReconsent = !legalAcceptance;
+
     // Retrieve profile to confirm plan
     const { data: profile } = await supabase
       .from('profiles')
@@ -97,6 +121,8 @@ export async function POST(req: Request) {
 
     return secureJsonResponse({
       success: true,
+      needsConsent: needsReconsent,
+      redirect: needsReconsent ? '/accept-terms' : '/account',
       user: {
         id: authData.user.id,
         email: authData.user.email,

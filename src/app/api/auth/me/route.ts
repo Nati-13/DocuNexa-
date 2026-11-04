@@ -1,4 +1,4 @@
-import { getCurrentProfile } from '@/lib/supabase/server';
+import { getCurrentProfile, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
@@ -15,11 +15,14 @@ export async function GET(req: Request) {
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
-      return secureJsonResponse({ authenticated: false, user: null }, { status: 200 }, requestId);
+      return secureJsonResponse({ authenticated: false, user: null, hasConsent: false }, { status: 200 }, requestId);
     }
+
+    const hasConsent = await hasUserAcceptedCurrentTerms(profile.id);
 
     return secureJsonResponse({
       authenticated: true,
+      hasConsent,
       user: {
         id: profile.id,
         email: profile.email,

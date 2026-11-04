@@ -74,7 +74,9 @@ export function LoginForm() {
       }
 
       await refreshUser();
-      const redirectTarget = searchParams.get('redirect') || '/account';
+      const redirectTarget = data.needsConsent
+        ? '/accept-terms'
+        : (data.redirect || searchParams.get('redirect') || '/account');
       router.push(redirectTarget);
       router.refresh();
     } catch (err: any) {

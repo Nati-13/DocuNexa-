@@ -4,7 +4,7 @@ import { ALL_TOOLS } from '@/config/tools';
 const CANONICAL_BASE = 'https://docunexa.pro.et';
 
 // Stable release timestamp reflecting authentic content updates (Google Search Central best practice)
-const RELEASE_DATE = new Date('2026-10-11T00:00:00.000Z');
+const RELEASE_DATE = new Date('2026-11-01T00:00:00.000Z');
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = RELEASE_DATE;
@@ -35,28 +35,104 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `${CANONICAL_BASE}/security`,
+      url: `${CANONICAL_BASE}/contact`,
       lastModified,
       changeFrequency: 'monthly',
       priority: 0.7,
+    },
+    {
+      url: `${CANONICAL_BASE}/support`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+  ];
+
+  const legalPages: MetadataRoute.Sitemap = [
+    {
+      url: `${CANONICAL_BASE}/legal`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${CANONICAL_BASE}/terms-of-service`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${CANONICAL_BASE}/privacy-policy`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${CANONICAL_BASE}/refund-policy`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${CANONICAL_BASE}/acceptable-use`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${CANONICAL_BASE}/payment-policy`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${CANONICAL_BASE}/cookie-policy`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${CANONICAL_BASE}/copyright-policy`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${CANONICAL_BASE}/security-policy`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${CANONICAL_BASE}/accessibility`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${CANONICAL_BASE}/subprocessors`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    // Backwards-compatible aliases
+    {
+      url: `${CANONICAL_BASE}/terms`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
     {
       url: `${CANONICAL_BASE}/privacy`,
       lastModified,
       changeFrequency: 'monthly',
-      priority: 0.6,
+      priority: 0.5,
     },
     {
-      url: `${CANONICAL_BASE}/terms`,
+      url: `${CANONICAL_BASE}/security`,
       lastModified,
       changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${CANONICAL_BASE}/contact`,
-      lastModified,
-      changeFrequency: 'monthly',
-      priority: 0.7,
+      priority: 0.5,
     },
   ];
 
@@ -67,5 +143,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: tool.slug === 'pdf-unit-cutter' ? 0.95 : 0.8,
   }));
 
-  return [...corePages, ...toolPages];
+  return [...corePages, ...legalPages, ...toolPages];
 }

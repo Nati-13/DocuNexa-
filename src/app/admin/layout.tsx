@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentProfile } from '@/lib/supabase/server';
+import { getCurrentProfile, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { isUserAdmin } from '@/lib/admin/auth';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { ShieldCheck, ShieldAlert, ArrowLeft } from 'lucide-react';
@@ -33,6 +33,11 @@ export default async function AdminLayout({
   const profile = await getCurrentProfile();
   if (!profile) {
     redirect('/login?redirect=/admin');
+  }
+
+  const hasConsent = await hasUserAcceptedCurrentTerms(profile.id);
+  if (!hasConsent) {
+    redirect('/accept-terms?redirect=/admin');
   }
 
   const isAdmin = await isUserAdmin(profile.id);

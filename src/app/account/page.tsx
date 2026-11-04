@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getCurrentProfile, createServerSupabaseClient } from '@/lib/supabase/server';
+import { getCurrentProfile, createServerSupabaseClient, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { AccountView } from './AccountView';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +20,12 @@ export default async function AccountPage() {
 
   if (!profile) {
     redirect('/login');
+  }
+
+  // Authoritative consent check: redirect users without current acceptance in public.legal_acceptances
+  const hasConsent = await hasUserAcceptedCurrentTerms(profile.id);
+  if (!hasConsent) {
+    redirect('/accept-terms?redirect=/account');
   }
 
   const supabase = await createServerSupabaseClient();

@@ -11,6 +11,7 @@ import {
   Mail,
   ArrowRight,
   Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 
 export function SignupForm() {
@@ -20,6 +21,7 @@ export function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +31,11 @@ export function SignupForm() {
 
     if (!email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
+      return;
+    }
+
+    if (!termsAccepted) {
+      setError('You must read and agree to the Terms of Service and Privacy Policy to create an account.');
       return;
     }
 
@@ -53,7 +60,15 @@ export function SignupForm() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, confirmPassword }),
+        body: JSON.stringify({
+          email,
+          password,
+          confirmPassword,
+          termsAccepted: true,
+          termsVersion: '2026.11',
+          privacyAccepted: true,
+          privacyVersion: '2026.11',
+        }),
       });
 
       const data = await res.json();
@@ -167,6 +182,28 @@ export function SignupForm() {
               className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
             />
           </div>
+        </div>
+
+        {/* Visible, non-preselected legal acceptance checkbox */}
+        <div className="flex items-start gap-2.5 pt-1">
+          <input
+            id="accept-terms"
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-brand-600 focus:ring-brand-500 cursor-pointer"
+          />
+          <label htmlFor="accept-terms" className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed cursor-pointer select-none">
+            I have read and agree to the{' '}
+            <Link href="/terms-of-service" target="_blank" className="font-semibold text-brand-600 dark:text-brand-400 hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy-policy" target="_blank" className="font-semibold text-brand-600 dark:text-brand-400 hover:underline">
+              Privacy Policy
+            </Link>{' '}
+            (v2026.11).
+          </label>
         </div>
 
         <button

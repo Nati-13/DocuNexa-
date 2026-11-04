@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentProfile } from '@/lib/supabase/server';
+import { getCurrentProfile, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
@@ -19,6 +19,19 @@ export async function POST(req: Request) {
     const profile = await getCurrentProfile();
     if (!profile) {
       return secureJsonResponse({ error: 'Your session has expired. Please sign in again.' }, { status: 401 }, requestId);
+    }
+
+    const hasConsent = await hasUserAcceptedCurrentTerms(profile.id);
+    if (!hasConsent) {
+      return secureJsonResponse(
+        {
+          error: 'Please review and accept the current Terms of Service and Privacy Policy to continue.',
+          code: 'CONSENT_REQUIRED',
+          redirect: '/accept-terms',
+        },
+        { status: 403 },
+        requestId
+      );
     }
 
     let body: any;

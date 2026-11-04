@@ -130,6 +130,16 @@ export type DbAdminAuditLog = {
   created_at: string;
 };
 
+export type DbLegalAcceptance = {
+  id: string; // uuid
+  user_id: string; // uuid
+  terms_version: string;
+  privacy_version: string;
+  policy_scope: string;
+  accepted_at: string;
+  created_at: string;
+};
+
 export type Json =
   | string
   | number
@@ -451,6 +461,28 @@ export type Database = {
         Update: {
           update_id?: string;
           processed_at?: string;
+        };
+        Relationships: [];
+      };
+      legal_acceptances: {
+        Row: DbLegalAcceptance;
+        Insert: {
+          id?: string;
+          user_id: string;
+          terms_version?: string;
+          privacy_version?: string;
+          policy_scope?: string;
+          accepted_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          terms_version?: string;
+          privacy_version?: string;
+          policy_scope?: string;
+          accepted_at?: string;
+          created_at?: string;
         };
         Relationships: [];
       };

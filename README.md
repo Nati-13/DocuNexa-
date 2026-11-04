@@ -12,6 +12,21 @@ DocuNexa is released as a public good resource:
 
 ---
 
+---
+
+## ?? Complete Technical Documentation
+
+For the full, authoritative technical specification covering the entire DocuNexa platform, see:
+?? **[`docs/DOCUNEXA_COMPLETE_DOCUMENTATION.md`](docs/DOCUNEXA_COMPLETE_DOCUMENTATION.md)**
+
+It includes:
+- **Architecture & Design**: In-browser client-side WebAssembly execution, memory isolation, and sequence diagrams.
+- **Complete 34 Tool Reference**: Deep dive into the PDF Unit Cutter (detection, offset mapping, anti-clamping) and all 33 specialized tools.
+- **Route & API Reference**: All 71 routes and 38 API endpoints.
+- **Database & Security**: Supabase PostgreSQL schemas, RLS, bcrypt resets, and rate limiting.
+- **Payments & Blockchain**: Polygon USDT & Aptos USDT stablecoin settlements, and disabled planned TRON/USDC rails.
+- **International Legal & Policies**: 10 public policy documents, GDPR/CCPA compliance, and 100% User Document Ownership.
+
 ## 🌟 Flagship Features
 
 ### 1. 📚 PDF Unit Cutter
@@ -163,6 +178,22 @@ DocuNexa leverages the modern W3C **File System Access API**:
 - **Fallback**: In Mozilla Firefox, Apple Safari, or mobile browsers, DocuNexa automatically compiles your outputs into a compressed `.zip` archive for immediate one-click download.
 
 ---
+
+---
+
+## ?? International Legal Center & Policies
+
+DocuNexa is an international document platform serving users worldwide. All document processing runs locally in browser memory with **100% User Document Ownership** (DocuNexa never claims ownership or retains your files).
+
+- **Legal Center**: [`/legal`](https://docunexa.pro.et/legal)
+- **Terms of Service**: [`/terms-of-service`](https://docunexa.pro.et/terms-of-service)
+- **Privacy Policy**: [`/privacy-policy`](https://docunexa.pro.et/privacy-policy)
+- **Refund Policy**: [`/refund-policy`](https://docunexa.pro.et/refund-policy)
+- **Payment Policy**: [`/payment-policy`](https://docunexa.pro.et/payment-policy)
+- **Acceptable Use**: [`/acceptable-use`](https://docunexa.pro.et/acceptable-use)
+- **Security & Architecture**: [`/security-policy`](https://docunexa.pro.et/security-policy)
+- **Subprocessors**: [`/subprocessors`](https://docunexa.pro.et/subprocessors)
+- **Official Security & Inquiries**: [`docunexa.security@gmail.com`](mailto:docunexa.security@gmail.com)
 
 ## 🤝 Contributing
 
