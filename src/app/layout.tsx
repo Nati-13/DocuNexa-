@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import { Fraunces, Public_Sans } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -9,6 +10,18 @@ import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController'
 import { MonetagZone, MonetagMainZone } from '@/components/ads/MonetagZone';
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { FloatingSupportButton } from '@/components/layout/FloatingSupportButton';
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-serif-display',
+});
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -114,21 +127,26 @@ export default async function RootLayout({
       },
     ],
   };
+
   return (
-    <html lang="en" className="h-full">
+    <html
+      lang="en"
+      className={`h-full ${fraunces.variable} ${publicSans.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
+        {/* Zero-flash blocking theme initialization script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&d)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(rootJsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors">
+      <body className="min-h-screen bg-paper text-ink font-sans antialiased flex flex-col transition-colors selection:bg-brand/15 selection:text-ink">
         <AnalyticsTracker />
         <AuthProvider initialUser={user ? { id: user.id, email: user.email, plan: user.plan, created_at: user.created_at } : null}>
           <Navbar />
