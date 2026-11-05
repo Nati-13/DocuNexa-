@@ -36,10 +36,28 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
   const checkoutParam = searchParams.get('checkout');
   const orderIdParam = searchParams.get('order_id');
 
-  // Handle starting a USDT payment order (with optional coupon and network)
-  const handleStartCheckout = useCallback(async (couponCode?: string, network?: 'Polygon' | 'Aptos') => {
+  // Handle starting a crypto payment order (with optional coupon and method/network)
+  const handleStartCheckout = useCallback(async (couponCode?: string, methodOrNetwork?: string) => {
     setCheckoutLoading(true);
     setCheckoutError(null);
+
+    let networkParam = 'Polygon';
+    let currencyParam = 'USDT';
+    let methodParam = methodOrNetwork || 'polygon_usdt';
+
+    if (methodOrNetwork === 'tron_usdt' || methodOrNetwork === 'TRON') {
+      networkParam = 'TRON';
+      currencyParam = 'USDT';
+      methodParam = 'tron_usdt';
+    } else if (methodOrNetwork === 'polygon_usdc' || methodOrNetwork === 'Polygon_USDC') {
+      networkParam = 'Polygon';
+      currencyParam = 'USDC';
+      methodParam = 'polygon_usdc';
+    } else if (methodOrNetwork === 'aptos_usdt' || methodOrNetwork === 'Aptos') {
+      networkParam = 'Aptos';
+      currencyParam = 'USDT';
+      methodParam = 'aptos_usdt';
+    }
 
     try {
       const res = await fetch('/api/payments/create-order', {
@@ -47,7 +65,9 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           couponCode: couponCode || undefined,
-          network: network || 'Polygon',
+          network: networkParam,
+          currency: currencyParam,
+          method: methodParam,
         }),
       });
 
@@ -74,8 +94,8 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
         discountAmountUsdt: data.discountAmountUsdt || '0.000000',
         couponCode: data.couponCode || null,
         formattedDiscount: data.formattedDiscount || null,
-        currency: data.currency || 'USDT',
-        network: data.network === 'Aptos' ? 'Aptos' : 'Polygon',
+        currency: data.currency || currencyParam,
+        network: data.network || networkParam,
         destinationAddress: data.destinationAddress,
         expiresAt: data.expiresAt,
         expiresInSeconds: data.expiresInSeconds || 1200,

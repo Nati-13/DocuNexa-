@@ -139,9 +139,9 @@ async function runSeoInventoryAudit() {
   const sitemapUrlSet = new Set(sitemapUrls);
 
   assert(
-    'Sitemap Contains Exactly 42 URLs',
-    sitemapItems.length === 42,
-    `Sitemap has ${sitemapItems.length} URLs (1 homepage + 1 tools directory + 6 trust/info pages + 34 tools)`
+    'Sitemap Contains Exactly 54 URLs',
+    sitemapItems.length === 54,
+    `Sitemap has ${sitemapItems.length} URLs (1 homepage + 1 tools directory + 6 trust/info pages + 12 legal center pages + 34 tools)`
   );
 
   assert(

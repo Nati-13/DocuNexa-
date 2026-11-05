@@ -13,6 +13,9 @@ import {
   Loader2,
   CheckCircle2,
   RefreshCw,
+  ShieldAlert,
+  Send,
+  KeyRound,
 } from 'lucide-react';
 
 export function LoginForm() {
@@ -35,6 +38,13 @@ export function LoginForm() {
 
   // Success message (e.g. from password reset or confirmation)
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+
+  // 5-Attempt Account Lockout State
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutData, setLockoutData] = useState<{
+    supportEmail?: string;
+    telegramBotUrl?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (searchParams.get('reset') === 'success') {
@@ -67,6 +77,15 @@ export function LoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.code === 'ACCOUNT_LOCKED' || data.isLocked) {
+          setIsLocked(true);
+          setLockoutData({
+            supportEmail: data.supportEmail || 'docunexa.security@gmail.com',
+            telegramBotUrl: data.telegramBotUrl || 'https://t.me/docunexa_bot',
+          });
+          setLoading(false);
+          return;
+        }
         if (data.needsEmailConfirmation || (data.error && data.error.includes('confirm your email'))) {
           setNeedsConfirmation(true);
         }
@@ -115,6 +134,82 @@ export function LoginForm() {
       setResending(false);
     }
   };
+
+  if (isLocked) {
+    return (
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
+          <ShieldAlert size={36} />
+        </div>
+
+        <div className="space-y-2">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Account Locked for Security
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            For your security, access for <strong className="text-slate-700 dark:text-slate-200">{email}</strong> has been temporarily suspended after 5 consecutive unsuccessful login attempts.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-left space-y-3 text-xs">
+          <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <Lock size={14} className="text-amber-500" />
+            Administrator-Assisted Recovery
+          </div>
+          <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+            DocuNexa protects your private documents from unauthorized brute-force attempts. To regain access, you may request a secure reset or contact our security team:
+          </p>
+          <div className="space-y-2 pt-1">
+            <a
+              href={`mailto:${lockoutData?.supportEmail || 'docunexa.security@gmail.com'}?subject=Account%20Recovery%20Request%20-%20DocuNexa&body=Hello%20DocuNexa%20Security,%0A%0AMy%20account%20(${encodeURIComponent(email)})%20was%20locked%20due%20to%20failed%20login%20attempts.%20Please%20assist%20me%20in%20verifying%20and%20recovering%20access.`}
+              className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 text-slate-700 dark:text-slate-300 font-medium transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Mail size={14} className="text-brand-500" />
+                <span>Email Security Team</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">{lockoutData?.supportEmail || 'docunexa.security@gmail.com'}</span>
+            </a>
+
+            <a
+              href={lockoutData?.telegramBotUrl || 'https://t.me/docunexa_bot'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 text-slate-700 dark:text-slate-300 font-medium transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Send size={14} className="text-sky-500" />
+                <span>Telegram Support Bot</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">@docunexa_bot</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <Link
+            href={`/forgot-password?email=${encodeURIComponent(email)}`}
+            className="w-full py-2.5 px-4 rounded-xl btn-aurora font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-xs"
+          >
+            <KeyRound size={14} />
+            <span>Request Password Reset</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsLocked(false);
+              setPassword('');
+              setError(null);
+            }}
+            className="w-full py-2 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium text-xs transition-colors cursor-pointer"
+          >
+            Try another email address
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">

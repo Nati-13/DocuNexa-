@@ -46,11 +46,13 @@ export interface DepositMatchResult {
  * Destination address is loaded strictly from BYBIT_USDT_POLYGON_ADDRESS.
  */
 export function getBybitConfig(): BybitConfig {
+  const stripQuotes = (val: string | undefined): string =>
+    (val || '').replace(/^["']|["']$/g, '').trim();
   return {
-    apiKey: process.env.BYBIT_API_KEY || '',
-    apiSecret: process.env.BYBIT_API_SECRET || '',
-    depositAddress: process.env.BYBIT_USDT_POLYGON_ADDRESS || '',
-    uid: process.env.BYBIT_UID || '',
+    apiKey: stripQuotes(process.env.BYBIT_API_KEY),
+    apiSecret: stripQuotes(process.env.BYBIT_API_SECRET),
+    depositAddress: stripQuotes(process.env.BYBIT_USDT_POLYGON_ADDRESS),
+    uid: stripQuotes(process.env.BYBIT_UID),
   };
 }
 

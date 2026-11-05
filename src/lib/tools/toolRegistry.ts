@@ -231,12 +231,12 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
   },
   'pdf-to-pdfa': {
     id: 'pdf-to-pdfa',
-    name: 'PDF to PDF/A',
+    name: 'Archive-ready PDF (Experimental)',
     category: 'convert-from',
     inputType: ['.pdf'],
     outputType: '.pdf',
     classification: 'LIMITED BY TECHNICAL CONSTRAINT',
-    limitations: 'PDF/A metadata preparation — experimental. Injects ISO 19005-1 (PDF/A-1b) metadata markers. Formal compliance certification requires specialized pre-press validation not guaranteed in the browser.',
+    limitations: 'Archive-ready PDF (Experimental): Injects archival XMP metadata packet for preservation workflows. Does NOT provide certified ISO 19005 conformance. Strict PDF/A compliance requires font subset embedding, ICC output intents, transparency prohibition (PDF/A-1), and pre-press validation (such as veraPDF) not available in client-side processing.',
     verificationMethod: 'Verifies XMP metadata packet and catalog registration',
   },
 
@@ -332,8 +332,8 @@ export const REGISTERED_TOOLS: Record<string, ToolDefinition> = {
     inputType: ['.pdf'],
     outputType: '.pdf',
     classification: 'LIMITED BY TECHNICAL CONSTRAINT',
-    limitations: 'LIMITED / PARTIAL (Visual Blackout Only): Opaque vector rectangles are drawn over sensitive areas. Low-level binary stream text sanitization is not guaranteed in client-side canvas mode.',
-    verificationMethod: 'Applies opaque blackout boxes over specified coordinates',
+    limitations: 'LIMITED / EXPERIMENTAL: Supports Limited Text Redaction (Experimental) to strip matching text operators from content streams and sanitize metadata, or Visual Blackout Overlays. Content within nested Form XObjects, embedded bitmap images, and complex vector patterns cannot be guaranteed sanitized client-side. Re-exporting pages as images or rasterizing via PDF to JPG is recommended for high-security redaction.',
+    verificationMethod: 'Verifies text operator removal from content streams + visual blackout rendering',
   },
   'compare-pdf': {
     id: 'compare-pdf',

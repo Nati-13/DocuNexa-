@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { getCurrentProfile, createAdminSupabaseClient, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { generateUniquePaymentAmount, getBybitConfig, normalizeAmount, formatPaymentAmount } from '@/lib/payments/bybit';
 import { getAptosConfig, isValidAptosAddress } from '@/lib/payments/aptos';
+import { getTronConfig, isValidTronAddress } from '@/lib/payments/tron';
+import { getPolygonUsdcConfig, isValidEvmAddress } from '@/lib/payments/polygonUsdc';
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
-import { CouponDiscountType, PaymentNetwork } from '@/lib/supabase/types';
+import { CouponDiscountType, PaymentNetwork, PaymentCurrency } from '@/lib/supabase/types';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export async function POST(req: Request) {
@@ -53,23 +55,107 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => ({}));
     const rawCouponCode = body?.couponCode || body?.code;
-    const requestedNetwork: PaymentNetwork = body?.network === 'Aptos' ? 'Aptos' : 'Polygon';
 
+    // Parse requested method, network, and currency
+    const rawMethod = (body?.method || body?.paymentMethod || '').toString().toLowerCase().trim();
+    const rawNetwork = (body?.network || '').toString().trim();
+    const rawCurrency = (body?.currency || '').toString().toUpperCase().trim();
+
+    let methodId: 'polygon_usdt' | 'aptos_usdt' | 'tron_usdt' | 'polygon_usdc';
+
+    if (
+      rawMethod === 'tron_usdt' ||
+      rawMethod === 'tron' ||
+      rawMethod === 'trc20' ||
+      rawNetwork === 'TRON'
+    ) {
+      methodId = 'tron_usdt';
+    } else if (
+      rawMethod === 'polygon_usdc' ||
+      rawMethod === 'usdc' ||
+      rawMethod === 'usdc_polygon' ||
+      rawNetwork === 'Polygon_USDC' ||
+      (rawNetwork === 'Polygon' && rawCurrency === 'USDC')
+    ) {
+      methodId = 'polygon_usdc';
+    } else if (
+      rawMethod === 'aptos_usdt' ||
+      rawMethod === 'aptos' ||
+      rawNetwork === 'Aptos'
+    ) {
+      methodId = 'aptos_usdt';
+    } else if (
+      rawMethod === 'polygon_usdt' ||
+      rawNetwork === 'Polygon' ||
+      !rawMethod
+    ) {
+      methodId = 'polygon_usdt';
+    } else {
+      return NextResponse.json(
+        {
+          error: `Unsupported payment method "${rawMethod || rawNetwork}". Active methods are USDT (Polygon), USDT (Aptos), USDT (TRON), and USDC (Polygon).`,
+          code: 'UNSUPPORTED_NETWORK',
+        },
+        { status: 400 }
+      );
+    }
+
+    let requestedNetwork: PaymentNetwork;
+    let requestedCurrency: PaymentCurrency;
     let destinationAddress: string;
-    if (requestedNetwork === 'Aptos') {
+
+    if (methodId === 'tron_usdt') {
+      requestedNetwork = 'TRON';
+      requestedCurrency = 'USDT';
+      const tronConfig = getTronConfig();
+      if (!tronConfig.isEnabled || !tronConfig.receivingAddress || !isValidTronAddress(tronConfig.receivingAddress)) {
+        return NextResponse.json(
+          {
+            error: 'TRON TRC20 payments are temporarily unavailable. Missing configuration: USDT_TRC20_ADDRESS.',
+            code: 'METHOD_UNAVAILABLE',
+          },
+          { status: 503 }
+        );
+      }
+      destinationAddress = tronConfig.receivingAddress;
+    } else if (methodId === 'polygon_usdc') {
+      requestedNetwork = 'Polygon';
+      requestedCurrency = 'USDC';
+      const usdcConfig = getPolygonUsdcConfig();
+      if (!usdcConfig.isEnabled || !usdcConfig.receivingAddress || !isValidEvmAddress(usdcConfig.receivingAddress)) {
+        return NextResponse.json(
+          {
+            error: 'Polygon Native USDC payments are temporarily unavailable. Missing configuration: USDC_POLYGON_ADDRESS.',
+            code: 'METHOD_UNAVAILABLE',
+          },
+          { status: 503 }
+        );
+      }
+      destinationAddress = usdcConfig.receivingAddress;
+    } else if (methodId === 'aptos_usdt') {
+      requestedNetwork = 'Aptos';
+      requestedCurrency = 'USDT';
       const aptosConfig = getAptosConfig();
       if (!aptosConfig.receivingAddress || !isValidAptosAddress(aptosConfig.receivingAddress)) {
         return NextResponse.json(
-          { error: 'Aptos payments are temporarily unavailable. Please try again later.' },
+          {
+            error: 'Aptos payments are temporarily unavailable. Missing configuration: APTOS_USDT_ADDRESS.',
+            code: 'METHOD_UNAVAILABLE',
+          },
           { status: 503 }
         );
       }
       destinationAddress = aptosConfig.receivingAddress;
     } else {
+      requestedNetwork = 'Polygon';
+      requestedCurrency = 'USDT';
       const { depositAddress } = getBybitConfig();
-      if (!depositAddress) {
+      if (!depositAddress || !isValidEvmAddress(depositAddress)) {
         return NextResponse.json(
-          { error: 'Polygon payments are temporarily unavailable. Please try again later.' },
+          {
+            error: 'Polygon USDT payments are temporarily unavailable. Missing Bybit configuration.',
+            code: 'METHOD_UNAVAILABLE',
+          },
           { status: 503 }
         );
       }
@@ -327,12 +413,18 @@ export async function POST(req: Request) {
         Math.floor((new Date(activeOrder.expires_at).getTime() - Date.now()) / 1000)
       );
 
-      // Check if requested coupon matches existing order coupon terms AND network matches
+      // Check if requested coupon matches existing order coupon terms AND network/currency matches
       const existingCoupon = activeOrder.coupon_code ? normalizeCouponCode(activeOrder.coupon_code) : null;
       const requestedCoupon = couponCode ? normalizeCouponCode(couponCode) : null;
       const activeNetwork = activeOrder.network || 'Polygon';
+      const activeCurrency = activeOrder.currency || 'USDT';
 
-      if (existingCoupon === requestedCoupon && activeNetwork === requestedNetwork && remainingSeconds > 120) {
+      if (
+        existingCoupon === requestedCoupon &&
+        activeNetwork === requestedNetwork &&
+        activeCurrency === requestedCurrency &&
+        remainingSeconds > 120
+      ) {
         return NextResponse.json({
           success: true,
           orderId: activeOrder.order_id,
@@ -342,21 +434,21 @@ export async function POST(req: Request) {
           finalPriceUsdt: formatPaymentAmount(activeOrder.final_amount_usdt || activeOrder.payment_amount_usdt),
           discountAmountUsdt: formatPaymentAmount(activeOrder.discount_amount_usdt || '0.0000'),
           couponCode: activeOrder.coupon_code || null,
-          currency: 'USDT',
+          currency: activeCurrency,
           network: activeNetwork,
           destinationAddress: activeOrder.destination_address,
           expiresAt: activeOrder.expires_at,
           expiresInSeconds: remainingSeconds,
         });
       } else {
-        // User changed coupon terms or switched network: cancel older pending order
+        // User changed coupon terms or switched network/token: cancel older pending order
         if (activeOrder.status === 'pending') {
           await admin
             .from('payment_orders')
             .update({
               status: 'cancelled',
-              failure_reason: activeNetwork !== requestedNetwork
-                ? `Superseded by network switch to ${requestedNetwork}`
+              failure_reason: activeNetwork !== requestedNetwork || activeCurrency !== requestedCurrency
+                ? `Superseded by switch to ${requestedCurrency} on ${requestedNetwork}`
                 : 'Superseded by updated coupon checkout',
             })
             .eq('id', activeOrder.id);
@@ -397,7 +489,7 @@ export async function POST(req: Request) {
       coupon_code: couponCode,
       discount_type: discountType,
       payment_amount_usdt: uniqueAmount,
-      currency: 'USDT',
+      currency: requestedCurrency,
       network: requestedNetwork,
       destination_address: destinationAddress,
       status: 'pending',
@@ -431,7 +523,7 @@ export async function POST(req: Request) {
       discountAmountUsdt: discountAmountUsdt,
       couponCode,
       formattedDiscount,
-      currency: 'USDT',
+      currency: requestedCurrency,
       network: requestedNetwork,
       destinationAddress,
       expiresAt,

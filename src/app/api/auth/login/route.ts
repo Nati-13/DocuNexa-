@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { validateEmail } from '@/lib/auth';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+import {
+  checkAccountLockoutStatus,
+  recordFailedLoginAttempt,
+  recordSuccessfulLogin,
+  SUPPORT_SECURITY_EMAIL,
+  TELEGRAM_SUPPORT_BOT_URL,
+} from '@/lib/auth/loginSecurity';
 
 export async function POST(req: Request) {
   const { errorResponse, requestId } = await guardApiRequest(req, {
@@ -35,6 +42,23 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+
+    // 0. Pre-authentication account lockout check
+    const lockoutStatus = await checkAccountLockoutStatus(cleanEmail);
+    if (lockoutStatus.isLocked) {
+      return secureJsonResponse(
+        {
+          error: 'This account has been locked for security recovery after 5 consecutive failed login attempts. Please contact an administrator or request recovery assistance.',
+          code: 'ACCOUNT_LOCKED',
+          isLocked: true,
+          supportEmail: SUPPORT_SECURITY_EMAIL,
+          telegramBotUrl: TELEGRAM_SUPPORT_BOT_URL,
+        },
+        { status: 403 },
+        requestId
+      );
+    }
 
     const supabase = await createServerSupabaseClient();
 
@@ -47,9 +71,32 @@ export async function POST(req: Request) {
       const msg = authError?.message || '';
       const lower = msg.toLowerCase();
 
-      // Truthful error reporting: only report "Invalid email or password" on actual credential failure
+      // Credential failure: record consecutive failed attempt atomically
       if (lower.includes('invalid login credentials') || lower.includes('invalid grant') || lower.includes('user not found')) {
-        return secureJsonResponse({ error: 'Invalid email or password.' }, { status: 401 }, requestId);
+        const failureResult = await recordFailedLoginAttempt(cleanEmail, ip);
+
+        if (failureResult.isLocked) {
+          return secureJsonResponse(
+            {
+              error: 'Account locked for security recovery. Maximum of 5 consecutive failed login attempts reached. Please contact an administrator.',
+              code: 'ACCOUNT_LOCKED',
+              isLocked: true,
+              supportEmail: SUPPORT_SECURITY_EMAIL,
+              telegramBotUrl: TELEGRAM_SUPPORT_BOT_URL,
+            },
+            { status: 403 },
+            requestId
+          );
+        }
+
+        return secureJsonResponse(
+          {
+            error: `Invalid email or password. Attempt ${failureResult.failedAttempts} of 5 before account lockout.`,
+            remainingAttempts: failureResult.remainingAttempts,
+          },
+          { status: 401 },
+          requestId
+        );
       }
 
       if (lower.includes('email not confirmed')) {
@@ -95,6 +142,9 @@ export async function POST(req: Request) {
 
     const needsReconsent = !legalAcceptance;
 
+    // Successful authentication: atomically reset failed login attempt counter
+    await recordSuccessfulLogin(cleanEmail);
+
     // Retrieve profile to confirm plan
     const { data: profile } = await supabase
       .from('profiles')
@@ -108,14 +158,14 @@ export async function POST(req: Request) {
       req.headers.get('cf-ipcountry') ||
       req.headers.get('x-country') ||
       null;
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+    const clientIp = ip || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
 
     const { recordAnalyticsEvent } = await import('@/lib/analytics/tracker');
     recordAnalyticsEvent({
       eventType: 'login',
       path: '/login',
       countryCode,
-      ip,
+      ip: clientIp,
       userId: authData.user.id,
     }).catch(() => {});
 

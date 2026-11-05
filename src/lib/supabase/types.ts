@@ -32,7 +32,8 @@ export type PaymentOrderStatus =
 
 export type CouponDiscountType = 'percent' | 'fixed_usdt';
 
-export type PaymentNetwork = 'Polygon' | 'Aptos';
+export type PaymentNetwork = 'Polygon' | 'Aptos' | 'TRON';
+export type PaymentCurrency = 'USDT' | 'USDC';
 
 export type DbPaymentOrder = {
   id: string; // uuid
@@ -41,7 +42,7 @@ export type DbPaymentOrder = {
   product: 'ad_free';
   base_amount_usd: number | string;
   payment_amount_usdt: number | string;
-  currency: 'USDT';
+  currency: PaymentCurrency;
   network: PaymentNetwork;
   destination_address: string;
   status: PaymentOrderStatus;
@@ -130,6 +131,20 @@ export type DbAdminAuditLog = {
   created_at: string;
 };
 
+export type DbAccountLoginAttempt = {
+  email: string;
+  failed_attempts: number;
+  last_failed_at: string | null;
+  is_locked: boolean;
+  locked_at: string | null;
+  locked_reason: string | null;
+  unlocked_at: string | null;
+  unlocked_by: string | null;
+  last_ip: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DbLegalAcceptance = {
   id: string; // uuid
   user_id: string; // uuid
@@ -180,7 +195,7 @@ export type Database = {
           product?: 'ad_free';
           base_amount_usd?: number | string;
           payment_amount_usdt: number | string;
-          currency?: 'USDT';
+          currency?: PaymentCurrency;
           network?: PaymentNetwork;
           destination_address: string;
           status?: PaymentOrderStatus;
@@ -209,7 +224,7 @@ export type Database = {
           product?: 'ad_free';
           base_amount_usd?: number | string;
           payment_amount_usdt?: number | string;
-          currency?: 'USDT';
+          currency?: PaymentCurrency;
           network?: PaymentNetwork;
           destination_address?: string;
           status?: PaymentOrderStatus;
@@ -461,6 +476,36 @@ export type Database = {
         Update: {
           update_id?: string;
           processed_at?: string;
+        };
+        Relationships: [];
+      };
+            account_login_attempts: {
+        Row: DbAccountLoginAttempt;
+        Insert: {
+          email: string;
+          failed_attempts?: number;
+          last_failed_at?: string | null;
+          is_locked?: boolean;
+          locked_at?: string | null;
+          locked_reason?: string | null;
+          unlocked_at?: string | null;
+          unlocked_by?: string | null;
+          last_ip?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          email?: string;
+          failed_attempts?: number;
+          last_failed_at?: string | null;
+          is_locked?: boolean;
+          locked_at?: string | null;
+          locked_reason?: string | null;
+          unlocked_at?: string | null;
+          unlocked_by?: string | null;
+          last_ip?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

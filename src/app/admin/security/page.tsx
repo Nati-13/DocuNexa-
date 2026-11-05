@@ -15,6 +15,7 @@ import {
   Check,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { LockedAccountsConsole } from '@/components/admin/LockedAccountsConsole';
 
 export default function AdminSecurityPage() {
   const [loading, setLoading] = useState(true);
@@ -326,6 +327,9 @@ export default function AdminSecurityPage() {
           </div>
         )}
       </div>
+
+      {/* 5-Attempt Account Lockout & Customer Recovery Console */}
+      <LockedAccountsConsole />
 
       {/* 5 Security Layers Technical Audit */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">

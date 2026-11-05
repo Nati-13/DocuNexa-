@@ -48,6 +48,9 @@ export function RedactPdfTool() {
     },
   ]);
 
+  // Redaction Mode
+  const [redactionMode, setRedactionMode] = useState<'sanitize' | 'overlay'>('sanitize');
+
   // Processing & Results
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
@@ -137,7 +140,11 @@ export function RedactPdfTool() {
           y: r.y,
           width: r.width,
           height: r.height,
-        }))
+        })),
+        {
+          mode: redactionMode,
+          sanitizeMetadata: true,
+        }
       );
 
       setProgress(85);
@@ -181,9 +188,13 @@ export function RedactPdfTool() {
           <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
             <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
-              <h4 className="font-bold text-sm sm:text-base">Document Redacted Successfully!</h4>
+              <h4 className="font-bold text-sm sm:text-base">
+                {redactionMode === 'sanitize' ? 'Limited Text Redaction Applied (Experimental)!' : 'Visual Blackout Overlay Applied!'}
+              </h4>
               <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                The specified sensitive zones have been permanently blacked out and obscured in the output PDF.
+                {redactionMode === 'sanitize'
+                  ? 'Matching text stream operators and document metadata have been stripped from the target zones, and solid blackout boxes applied. Note: Embedded images, complex vector graphics, and nested Form XObjects may remain recoverable.'
+                  : 'Solid opaque blackout rectangles were drawn over the target coordinates. Note: in visual overlay mode, underlying text streams remain recoverable.'}
               </p>
             </div>
           </div>
@@ -199,7 +210,7 @@ export function RedactPdfTool() {
               accept=".pdf,application/pdf"
               multiple={false}
               title="Select PDF to Redact"
-              subtitle="Upload a document to permanently redact confidential names, IDs, numbers, or headers"
+              subtitle="Cover or sanitize sensitive document regions, headers, or text blocks"
             />
           ) : (
             <div className="space-y-6">
@@ -231,14 +242,62 @@ export function RedactPdfTool() {
                 </button>
               </div>
 
-              {/* Security Limitation Notice */}
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-amber-800 dark:text-amber-300 text-xs">
-                <AlertTriangle size={18} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                <div className="space-y-1">
-                  <strong className="font-bold block">Important Redaction Security Advisory:</strong>
-                  <p>
-                    DocuNexa applies solid opaque vector redaction blocks that obscure all visual content across all PDF viewers and print drivers. For maximum security when redacting high-security classified files, consider converting the resulting pages to images or rasterized PDF using the PDF to JPG tool.
-                  </p>
+              {/* Security Limitation Notice & Mode Selector */}
+              <div className="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-3 text-xs">
+                <div className="flex items-start gap-3 text-amber-900 dark:text-amber-200">
+                  <AlertTriangle size={18} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div className="space-y-1">
+                    <strong className="font-bold block">Redaction Security & Transparency Advisory:</strong>
+                    <p>
+                      DocuNexa distinguishes between <strong>Limited Text Redaction (Experimental)</strong> (which strips matching text stream operators and document metadata) and <strong>Cover with Black Box (Visual Only)</strong> (which draws opaque boxes over coordinates).
+                    </p>
+                    <p className="text-amber-800 dark:text-amber-300 font-medium">
+                      ⚠️ <strong>Security Notice:</strong> In-browser vector processing cannot guarantee complete destruction of embedded bitmap images, nested Form XObjects, complex vector graphics, or attachments. Never describe visual overlays or experimental text sanitization as complete or irreversible data destruction. For high-security files, consider converting pages to images using PDF to JPG.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-amber-200/60 dark:border-amber-800/50">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 mb-2">
+                    Select Redaction Mode:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setRedactionMode('sanitize')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        redactionMode === 'sanitize'
+                          ? 'border-brand-600 bg-white dark:bg-slate-900 shadow-sm text-brand-700 dark:text-brand-300 ring-2 ring-brand-500/20'
+                          : 'border-amber-200 dark:border-amber-800/50 bg-amber-100/40 dark:bg-amber-950/20 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
+                      }`}
+                    >
+                      <div className="font-bold text-xs flex items-center gap-1.5">
+                        <CheckCircle2 size={13} className={redactionMode === 'sanitize' ? 'text-brand-600' : 'text-slate-400'} />
+                        Limited Text Redaction (Experimental)
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Strips matching font operators & text streams from page content. Images and Form XObjects may remain.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRedactionMode('overlay')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        redactionMode === 'overlay'
+                          ? 'border-amber-600 bg-white dark:bg-slate-900 shadow-sm text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20'
+                          : 'border-amber-200 dark:border-amber-800/50 bg-amber-100/40 dark:bg-amber-950/20 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
+                      }`}
+                    >
+                      <div className="font-bold text-xs flex items-center gap-1.5">
+                        <AlertTriangle size={13} className={redactionMode === 'overlay' ? 'text-amber-600' : 'text-slate-400'} />
+                        Cover with Black Box (Visual Only)
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Draws visual blackout rectangles. Underlying text and image streams remain completely intact.
+                      </p>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -343,7 +402,7 @@ export function RedactPdfTool() {
                     }`}
                   >
                     <ShieldAlert size={18} />
-                    <span>Apply Permanent Redactions</span>
+                    <span>{redactionMode === 'sanitize' ? 'Apply Limited Text Redaction (Experimental)' : 'Apply Visual Blackout Boxes'}</span>
                   </button>
                 </div>
               </div>

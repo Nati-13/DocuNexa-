@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
+  <title>TRON</title>
+  <circle cx="500" cy="500" r="500" fill="#EB0029"/>
+  <!-- TRON Faceted Prism Glyph -->
+  <g stroke="#EB0029" stroke-width="6" stroke-linejoin="round">
+    <!-- Top-Left Facet -->
+    <polygon points="260,390 730,285 490,540" fill="#FFFFFF"/>
+    <!-- Top-Right Facet -->
+    <polygon points="730,285 490,540 580,780" fill="#FFFFFF" opacity="0.88"/>
+    <!-- Bottom-Left Facet -->
+    <polygon points="260,390 490,540 580,780" fill="#FFFFFF" opacity="0.95"/>
+  </g>
+</svg>

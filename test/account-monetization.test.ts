@@ -734,7 +734,7 @@ async function runTests() {
         const match = line.match(/^([^=]+)=(.*)$/);
         if (match) {
           const key = match[1].trim();
-          const val = match[2].trim();
+          const val = match[2].trim().replace(/^["']|["']$/g, '');
           if (key && !process.env[key]) {
             process.env[key] = val;
           }

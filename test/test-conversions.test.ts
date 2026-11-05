@@ -536,10 +536,10 @@ async function runConversionsAndAcceptanceTests() {
   try {
     const secretPdf = await createSecretPdf();
 
-    // Apply visual redaction rectangle over coordinates of "CONFIDENTIAL: SECRET INFORMATION"
+    // Apply visual redaction rectangle over coordinates of "CONFIDENTIAL: SECRET INFORMATION" (visual overlay mode)
     const redactedPdf = await redactPdfAreas(secretPdf, [
       { page: 1, x: 45, y: 190, width: 400, height: 25 }
-    ]);
+    ], { mode: 'overlay' });
 
     // Extract text from the redacted document using PDF.js
     const pdfjs = await getPdfJs();

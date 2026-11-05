@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
+  <title>Aptos</title>
+  <circle cx="500" cy="500" r="500" fill="#111827"/>
+  <g fill="#FFFFFF">
+    <!-- Peak Triangle -->
+    <path d="M500 230l-78 132h156L500 230z"/>
+    <!-- Tier 2 (Left & Right segmented by diagonal slash) -->
+    <path d="M386 402l-76 128h138l76-128H386z"/>
+    <path d="M574 402l-76 128h126l76-128H574z"/>
+    <!-- Tier 3 (Left & Right segmented) -->
+    <path d="M272 570l-76 128h138l76-128H272z"/>
+    <path d="M460 570l-76 128h254l76-128H460z"/>
+    <!-- Tier 4 Base Line -->
+    <path d="M158 738l-40 68h764l-40-68H158z"/>
+  </g>
+</svg>

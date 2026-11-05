@@ -667,25 +667,25 @@ export const SEO_TOOL_RECORDS: ToolSeoRecord[] = [
   // 20. PDF to PDF/A
   {
     slug: 'pdf-to-pdfa',
-    name: 'PDF to PDF/A',
+    name: 'Archive-ready PDF (Experimental)',
     category: 'convert-from',
-    title: 'PDF to PDF/A Online — Prepare PDF for Long-Term Archiving | DocuNexa',
+    title: 'Archive-ready PDF (Experimental) — Prepare PDF for Long-Term Archiving | DocuNexa',
     description:
-      'Inject ISO 19005-1 (PDF/A-1b) archiving metadata into your PDF documents for long-term preservation. Experimental client-side metadata preparation.',
-    h1: 'PDF to PDF/A',
+      'Prepare PDF document metadata toward long-term preservation workflows. Experimental metadata preparation without claiming ISO 19005 certification.',
+    h1: 'Archive-ready PDF (Experimental)',
     canonicalUrl: `${CANONICAL_BASE}/tools/pdf-to-pdfa`,
     inputFormat: 'PDF (.pdf)',
     outputFormat: 'PDF (.pdf)',
     whatItDoes:
-      'PDF to PDF/A prepares document metadata toward the ISO 19005-1 (PDF/A-1b) standard, embedding archiving metadata dictionaries for document preservation.',
+      'Archive-ready PDF (Experimental) prepares document metadata toward preservation standards, injecting basic archival metadata dictionaries.',
     capabilities: [
-      'Injects PDF/A-1b XMP metadata identification schemas into document trailers',
+      'Injects basic archival XMP metadata identification schemas into document trailers',
       'Standardizes document catalog and color space identifiers',
       'Maintains original vector streams, page dimensions, and text layers',
       'Processes files locally in browser memory with zero external transmission',
     ],
     limitations: [
-      'Experimental client-side implementation; prepares metadata but does not guarantee 100% ISO certification compliance (e.g. strict font subset embedding or device-independent color validation)',
+      'Experimental client-side implementation; prepares metadata but does NOT provide certified ISO 19005 compliance (e.g. strict font subset embedding, ICC color profiles, or transparency removal). Formal archival submission requires validation via tools like veraPDF.',
       'Documents with proprietary non-embedded fonts require pre-embedding',
     ],
     howToSteps: [

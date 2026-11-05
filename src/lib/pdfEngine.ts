@@ -1,4 +1,5 @@
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, degrees, StandardFonts, PDFName, PDFArray } from 'pdf-lib';
+import pako from 'pako';
 import JSZip from 'jszip';
 import { getPdfJs, getPdfJsDocumentParams } from './pdfReader';
 import { encryptPDF, EncryptPDFOptions } from '@pdfsmaller/pdf-encrypt';
@@ -642,13 +643,218 @@ export async function applySignatureToPdf(
 // ----------------------------------------------------------------------
 // 13. REDACT PDF
 // ----------------------------------------------------------------------
+export interface RedactionArea {
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface RedactPdfOptions {
+  mode?: 'sanitize' | 'overlay';
+  sanitizeMetadata?: boolean;
+}
+
+function sanitizePageStreamContent(
+  streamText: string,
+  pageRedactions: RedactionArea[]
+): string {
+  if (!pageRedactions || pageRedactions.length === 0) return streamText;
+
+  return streamText.replace(/BT([\s\S]*?)ET/g, (_fullBt, btBody) => {
+    let currX = 0;
+    let currY = 0;
+
+    return (
+      'BT' +
+      btBody.replace(
+        /((?:[-\d.]+\s+){6}Tm)|((?:[-\d.]+\s+){2}Td)|((?:[-\d.]+\s+){2}TD)|(<[0-9A-Fa-f]*>\s*Tj)|(\([^\)]*\)\s*Tj)|(\[[^\]]*\]\s*TJ)|(\([^\)]*\)\s*\')|(\([^\)]*\)\s*\")/g,
+        (match: string, tmOp: string, tdOp: string, tdCapsOp: string, hexTj: string, strTj: string, arrTj: string, quoteOp: string, dquoteOp: string) => {
+          if (tmOp) {
+            const parts = tmOp.trim().split(/\s+/);
+            currX = parseFloat(parts[4]);
+            currY = parseFloat(parts[5]);
+            return match;
+          }
+          if (tdOp || tdCapsOp) {
+            const parts = (tdOp || tdCapsOp).trim().split(/\s+/);
+            currX += parseFloat(parts[0]);
+            currY += parseFloat(parts[1]);
+            return match;
+          }
+
+          let inRedaction = false;
+          const margin = 15;
+          for (const r of pageRedactions) {
+            if (
+              currX >= r.x - margin &&
+              currX <= r.x + r.width + margin &&
+              currY >= r.y - margin &&
+              currY <= r.y + r.height + margin
+            ) {
+              inRedaction = true;
+              break;
+            }
+          }
+
+          if (inRedaction) {
+            if (hexTj) return '<> Tj';
+            if (strTj) return '() Tj';
+            if (arrTj) return '[] TJ';
+            if (quoteOp) return "() '";
+            if (dquoteOp) return '() "';
+          }
+          return match;
+        }
+      ) +
+      'ET'
+    );
+  });
+}
+
 export async function redactPdfAreas(
   buffer: ArrayBuffer,
-  redactions: { page: number; x: number; y: number; width: number; height: number }[]
+  redactions: RedactionArea[],
+  options?: RedactPdfOptions
 ): Promise<Uint8Array> {
+  const mode = options?.mode ?? 'sanitize';
+  const sanitizeMeta = options?.sanitizeMetadata ?? (mode === 'sanitize');
   const srcDoc = await PDFDocument.load(toSafeBuffer(buffer));
   const pages = srcDoc.getPages();
 
+  // 1. If genuine sanitization mode (mode === 'sanitize'), sanitize text operators, Form XObjects, and annotations
+  if (mode === 'sanitize') {
+    for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+      const pageNum = pageIdx + 1;
+      const pageRedactions = redactions.filter((r) => r.page === pageNum);
+      if (pageRedactions.length === 0) continue;
+
+      const page = pages[pageIdx];
+
+      // A. Sanitize Page Content Streams
+      const contentsRef = page.node.Contents();
+      if (contentsRef) {
+        const contents = srcDoc.context.lookup(contentsRef) as any;
+        if (contents) {
+          if (contents instanceof PDFArray || (typeof contents.size === 'function' && typeof contents.get === 'function')) {
+            const newStreamRefs: any[] = [];
+            for (let i = 0; i < contents.size(); i++) {
+              const streamRef = contents.get(i);
+              const s = srcDoc.context.lookup(streamRef) as any;
+              if (!s || typeof s.getContents !== 'function') {
+                newStreamRefs.push(streamRef);
+                continue;
+              }
+              const raw = s.getContents();
+              let text = '';
+              try {
+                text = pako.inflate(raw, { to: 'string' });
+              } catch {
+                text = Buffer.from(raw).toString('latin1');
+              }
+              const sanitized = sanitizePageStreamContent(text, pageRedactions);
+              const newStream = srcDoc.context.flateStream(sanitized);
+              newStreamRefs.push(srcDoc.context.register(newStream));
+            }
+            page.node.set(PDFName.of('Contents'), srcDoc.context.obj(newStreamRefs));
+          } else if (typeof contents.getContents === 'function') {
+            const raw = contents.getContents();
+            let text = '';
+            try {
+              text = pako.inflate(raw, { to: 'string' });
+            } catch {
+              text = Buffer.from(raw).toString('latin1');
+            }
+            const sanitized = sanitizePageStreamContent(text, pageRedactions);
+            const newStream = srcDoc.context.flateStream(sanitized);
+            page.node.set(PDFName.of('Contents'), srcDoc.context.register(newStream));
+          }
+        }
+      }
+
+      // B. Sanitize Form XObjects in /Resources -> /XObject
+      const resRef = page.node.get(PDFName.of('Resources'));
+      if (resRef) {
+        const resDict = srcDoc.context.lookup(resRef) as any;
+        if (resDict && typeof resDict.get === 'function') {
+          const xobjRef = resDict.get(PDFName.of('XObject'));
+          if (xobjRef) {
+            const xobjDict = srcDoc.context.lookup(xobjRef) as any;
+            if (xobjDict && typeof xobjDict.entries === 'function') {
+              const entries = xobjDict.entries();
+              for (const [key, valRef] of entries) {
+                const xobj = srcDoc.context.lookup(valRef) as any;
+                if (xobj && typeof xobj.get === 'function') {
+                  const subtype = xobj.get(PDFName.of('Subtype'));
+                  if (subtype && subtype.toString() === '/Form' && typeof xobj.getContents === 'function') {
+                    const raw = xobj.getContents();
+                    let text = '';
+                    try {
+                      text = pako.inflate(raw, { to: 'string' });
+                    } catch {
+                      text = Buffer.from(raw).toString('latin1');
+                    }
+                    const sanitized = sanitizePageStreamContent(text, pageRedactions);
+                    const newStream = srcDoc.context.flateStream(sanitized);
+                    xobjDict.set(key, srcDoc.context.register(newStream));
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // C. Remove Overlapping Interactive Annotations (/Annots)
+      const annotsRef = page.node.get(PDFName.of('Annots'));
+      if (annotsRef) {
+        const annots = srcDoc.context.lookup(annotsRef) as any;
+        if (annots && typeof annots.size === 'function' && typeof annots.remove === 'function') {
+          for (let aIdx = annots.size() - 1; aIdx >= 0; aIdx--) {
+            const annot = srcDoc.context.lookup(annots.get(aIdx)) as any;
+            if (annot && typeof annot.get === 'function') {
+              const rectRef = annot.get(PDFName.of('Rect'));
+              const rect = srcDoc.context.lookup(rectRef) as any;
+              if (rect && typeof rect.size === 'function' && rect.size() >= 4) {
+                const ax1 = rect.get(0).asNumber ? rect.get(0).asNumber() : 0;
+                const ay1 = rect.get(1).asNumber ? rect.get(1).asNumber() : 0;
+                const ax2 = rect.get(2).asNumber ? rect.get(2).asNumber() : 0;
+                const ay2 = rect.get(3).asNumber ? rect.get(3).asNumber() : 0;
+                const overlaps = pageRedactions.some(
+                  (r) => !(ax2 < r.x || ax1 > r.x + r.width || ay2 < r.y || ay1 > r.y + r.height)
+                );
+                if (overlaps) {
+                  annots.remove(aIdx);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // D. Sanitize Document Metadata Dictionaries & Catalog XMP Stream
+    if (sanitizeMeta) {
+      srcDoc.setTitle('');
+      srcDoc.setAuthor('');
+      srcDoc.setSubject('');
+      srcDoc.setKeywords([]);
+      if (srcDoc.catalog.has(PDFName.of('Metadata'))) {
+        const metaRef = srcDoc.catalog.get(PDFName.of('Metadata'));
+        if (metaRef) {
+          try {
+            srcDoc.context.delete(metaRef as any);
+          } catch {
+            // context delete fallback
+          }
+        }
+        srcDoc.catalog.delete(PDFName.of('Metadata'));
+      }
+    }
+  }
+
+  // 2. Apply solid opaque blackout rectangles over visual coordinates
   for (const r of redactions) {
     if (r.page >= 1 && r.page <= pages.length) {
       const page = pages[r.page - 1];

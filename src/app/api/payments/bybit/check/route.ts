@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentProfile, createAdminSupabaseClient } from '@/lib/supabase/server';
 import { fetchBybitDeposits, matchDepositToOrder, formatPaymentAmount } from '@/lib/payments/bybit';
 import { fetchAptosUsdtDeposits, matchAptosDepositToOrder } from '@/lib/payments/aptos';
+import { fetchTronTrc20Deposits, matchTronDepositToOrder } from '@/lib/payments/tron';
+import { fetchPolygonUsdcTransfers, matchPolygonUsdcTransferToOrder } from '@/lib/payments/polygonUsdc';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
 
 export const dynamic = 'force-dynamic';
@@ -87,6 +89,19 @@ export async function GET(req: NextRequest) {
     }
 
     const nowIso = new Date().toISOString();
+
+    // Fail-closed guard: Reject verification for disabled or unsupported networks
+    if (order.network !== 'Aptos' && order.network !== 'Polygon' && order.network !== 'TRON') {
+      return NextResponse.json(
+        {
+          status: 'disabled',
+          isAdFree: false,
+          orderId: order.order_id,
+          message: `Payment network "${order.network}" is not active for automated verification.`,
+        },
+        { status: 400 }
+      );
+    }
 
     // =========================================================================
     // APTOS VERIFICATION PATH
@@ -283,6 +298,365 @@ export async function GET(req: NextRequest) {
         destinationAddress: order.destination_address,
         expiresInSeconds: remainingSeconds,
         message: 'Waiting for transfer on Aptos mainnet...',
+      });
+    }
+
+    // =========================================================================
+    // TRON (TRC20) VERIFICATION PATH
+    // =========================================================================
+    if (order.network === 'TRON') {
+      const tronResult = await fetchTronTrc20Deposits({
+        receivingAddress: order.destination_address,
+        limit: 50,
+        minTimestamp: Math.max(0, orderCreatedMs - 60000),
+      });
+
+      if (!tronResult.success) {
+        return NextResponse.json({
+          status: order.status,
+          isAdFree: false,
+          orderId: order.order_id,
+          message: 'We are temporarily unable to verify TRON payments. Please wait and try again.',
+          retryable: true,
+        });
+      }
+
+      const match = await matchTronDepositToOrder(order, tronResult.transactions, consumedSet);
+
+      if (match.matched && match.status === 'confirmed' && match.transaction) {
+        const tx = match.transaction;
+        const depId = match.depositId || `tron:${tx.transaction_id}`;
+        const txHash = tx.transaction_id;
+        const receivedAmount = (Number(tx.value) / 1000000).toFixed(6);
+
+        // Try atomic confirmation RPC first
+        const { error: rpcErr } = await admin.rpc('confirm_payment_order', {
+          p_order_id: order.order_id,
+          p_bybit_deposit_id: depId,
+          p_tx_id: txHash,
+          p_block_hash: null,
+          p_confirmations: 1,
+          p_received_amount: receivedAmount,
+        });
+
+        if (rpcErr) {
+          // Fallback transactional flow
+          if (order.coupon_id) {
+            const { data: couponRow } = await admin
+              .from('coupons')
+              .select('*')
+              .eq('id', order.coupon_id)
+              .single();
+
+            if (couponRow) {
+              await admin.from('coupon_redemptions').insert({
+                coupon_id: order.coupon_id,
+                user_id: profile.id,
+                payment_order_id: order.id,
+                discount_amount_usdt: order.discount_amount_usdt || '0.000000',
+                redeemed_at: nowIso,
+              });
+
+              await admin
+                .from('coupons')
+                .update({
+                  redemption_count: (couponRow.redemption_count || 0) + 1,
+                  updated_at: nowIso,
+                })
+                .eq('id', order.coupon_id);
+            }
+          }
+
+          await admin
+            .from('payment_orders')
+            .update({
+              status: 'confirmed',
+              confirmed_at: nowIso,
+              bybit_deposit_id: depId,
+              tx_id: txHash,
+              confirmations: 1,
+              received_amount: receivedAmount,
+              failure_reason: null,
+              updated_at: nowIso,
+            })
+            .eq('order_id', order.order_id);
+
+          await admin
+            .from('profiles')
+            .update({
+              plan: 'ad_free',
+              updated_at: nowIso,
+            })
+            .eq('id', profile.id);
+        }
+
+        return NextResponse.json({
+          status: 'confirmed',
+          isAdFree: true,
+          orderId: order.order_id,
+          txId: txHash,
+          confirmedAt: nowIso,
+          amount: formatPaymentAmount(order.payment_amount_usdt),
+          originalPriceUsd: formatPaymentAmount(order.original_amount_usd || '2.00'),
+          finalPriceUsdt: formatPaymentAmount(order.final_amount_usdt || order.payment_amount_usdt),
+          discountAmountUsdt: formatPaymentAmount(order.discount_amount_usdt || '0.0000'),
+          couponCode: order.coupon_code || null,
+          currency: 'USDT',
+          network: 'TRON',
+          message: 'Payment confirmed on TRON network! Ad-Free status activated.',
+        });
+      }
+
+      if (match.status === 'late_payment' && match.transaction) {
+        const tx = match.transaction;
+        const txHash = tx.transaction_id;
+        const receivedAmount = (Number(tx.value) / 1000000).toFixed(6);
+
+        await admin
+          .from('payment_orders')
+          .update({
+            status: 'late_payment',
+            tx_id: txHash,
+            received_amount: receivedAmount,
+            failure_reason: 'Deposit arrived after 20-minute window expired on TRON',
+            updated_at: nowIso,
+          })
+          .eq('order_id', order.order_id);
+
+        return NextResponse.json({
+          status: 'late_payment',
+          isAdFree: false,
+          orderId: order.order_id,
+          txId: txHash,
+          network: 'TRON',
+          message: 'Payment was received on TRON after the 20-minute order window expired. Please contact support.',
+        });
+      }
+
+      if (match.status === 'amount_mismatch' && match.transaction) {
+        const tx = match.transaction;
+        const txHash = tx.transaction_id;
+        const receivedAmount = (Number(tx.value) / 1000000).toFixed(6);
+
+        await admin
+          .from('payment_orders')
+          .update({
+            status: 'amount_mismatch',
+            tx_id: txHash,
+            received_amount: receivedAmount,
+            failure_reason: match.reason || 'Amount mismatch on TRON',
+            updated_at: nowIso,
+          })
+          .eq('order_id', order.order_id);
+
+        return NextResponse.json({
+          status: 'amount_mismatch',
+          isAdFree: false,
+          orderId: order.order_id,
+          network: 'TRON',
+          message: match.reason || 'A TRON transfer with an incorrect amount was detected.',
+        });
+      }
+
+      if (isPastExpiration) {
+        if (order.status === 'pending') {
+          await admin
+            .from('payment_orders')
+            .update({
+              status: 'expired',
+              failure_reason: '20-minute validity period expired without TRON payment',
+              updated_at: nowIso,
+            })
+            .eq('order_id', order.order_id);
+        }
+
+        return NextResponse.json({
+          status: 'expired',
+          isAdFree: false,
+          orderId: order.order_id,
+          network: 'TRON',
+          message: 'Payment window expired. Please generate a new payment order.',
+        });
+      }
+
+      const remainingSeconds = Math.max(0, Math.floor((orderExpiresMs - nowMs) / 1000));
+      return NextResponse.json({
+        status: order.status,
+        isAdFree: false,
+        orderId: order.order_id,
+        amount: formatPaymentAmount(order.payment_amount_usdt),
+        currency: 'USDT',
+        network: 'TRON',
+        destinationAddress: order.destination_address,
+        expiresInSeconds: remainingSeconds,
+        message: 'Waiting for transfer on TRON network (TRC20)...',
+      });
+    }
+
+    // =========================================================================
+    // POLYGON POS NATIVE USDC VERIFICATION PATH
+    // =========================================================================
+    if (order.network === 'Polygon' && order.currency === 'USDC') {
+      const usdcResult = await fetchPolygonUsdcTransfers({
+        receivingAddress: order.destination_address,
+        fromBlockOffset: 1200,
+      });
+
+      if (!usdcResult.success) {
+        return NextResponse.json({
+          status: order.status,
+          isAdFree: false,
+          orderId: order.order_id,
+          message: 'We are temporarily unable to verify Polygon USDC payments. Please wait and try again.',
+          retryable: true,
+        });
+      }
+
+      const match = await matchPolygonUsdcTransferToOrder(order, usdcResult.transfers, consumedSet);
+
+      if (match.matched && match.status === 'confirmed' && match.transfer) {
+        const transfer = match.transfer;
+        const depId = match.depositId || `polygon_usdc:${transfer.txHash.toLowerCase()}`;
+        const txHash = transfer.txHash;
+        const receivedAmount = (Number(transfer.value) / 1000000).toFixed(6);
+
+        // Try atomic confirmation RPC first
+        const { error: rpcErr } = await admin.rpc('confirm_payment_order', {
+          p_order_id: order.order_id,
+          p_bybit_deposit_id: depId,
+          p_tx_id: txHash,
+          p_block_hash: null,
+          p_confirmations: transfer.confirmations || 1,
+          p_received_amount: receivedAmount,
+        });
+
+        if (rpcErr) {
+          // Fallback transactional flow
+          if (order.coupon_id) {
+            const { data: couponRow } = await admin
+              .from('coupons')
+              .select('*')
+              .eq('id', order.coupon_id)
+              .single();
+
+            if (couponRow) {
+              await admin.from('coupon_redemptions').insert({
+                coupon_id: order.coupon_id,
+                user_id: profile.id,
+                payment_order_id: order.id,
+                discount_amount_usdt: order.discount_amount_usdt || '0.000000',
+                redeemed_at: nowIso,
+              });
+
+              await admin
+                .from('coupons')
+                .update({
+                  redemption_count: (couponRow.redemption_count || 0) + 1,
+                  updated_at: nowIso,
+                })
+                .eq('id', order.coupon_id);
+            }
+          }
+
+          await admin
+            .from('payment_orders')
+            .update({
+              status: 'confirmed',
+              confirmed_at: nowIso,
+              bybit_deposit_id: depId,
+              tx_id: txHash,
+              confirmations: transfer.confirmations || 1,
+              received_amount: receivedAmount,
+              failure_reason: null,
+              updated_at: nowIso,
+            })
+            .eq('order_id', order.order_id);
+
+          await admin
+            .from('profiles')
+            .update({
+              plan: 'ad_free',
+              updated_at: nowIso,
+            })
+            .eq('id', profile.id);
+        }
+
+        return NextResponse.json({
+          status: 'confirmed',
+          isAdFree: true,
+          orderId: order.order_id,
+          txId: txHash,
+          confirmedAt: nowIso,
+          amount: formatPaymentAmount(order.payment_amount_usdt),
+          originalPriceUsd: formatPaymentAmount(order.original_amount_usd || '2.00'),
+          finalPriceUsdt: formatPaymentAmount(order.final_amount_usdt || order.payment_amount_usdt),
+          discountAmountUsdt: formatPaymentAmount(order.discount_amount_usdt || '0.0000'),
+          couponCode: order.coupon_code || null,
+          currency: 'USDC',
+          network: 'Polygon',
+          message: 'Payment confirmed on Polygon PoS (Native USDC)! Ad-Free status activated.',
+        });
+      }
+
+      if (match.status === 'amount_mismatch' && match.transfer) {
+        const transfer = match.transfer;
+        const txHash = transfer.txHash;
+        const receivedAmount = (Number(transfer.value) / 1000000).toFixed(6);
+
+        await admin
+          .from('payment_orders')
+          .update({
+            status: 'amount_mismatch',
+            tx_id: txHash,
+            received_amount: receivedAmount,
+            failure_reason: match.reason || 'Amount mismatch on Polygon USDC',
+            updated_at: nowIso,
+          })
+          .eq('order_id', order.order_id);
+
+        return NextResponse.json({
+          status: 'amount_mismatch',
+          isAdFree: false,
+          orderId: order.order_id,
+          network: 'Polygon',
+          currency: 'USDC',
+          message: match.reason || 'A Polygon USDC transfer with an incorrect amount was detected.',
+        });
+      }
+
+      if (isPastExpiration) {
+        if (order.status === 'pending') {
+          await admin
+            .from('payment_orders')
+            .update({
+              status: 'expired',
+              failure_reason: '20-minute validity period expired without Polygon USDC payment',
+              updated_at: nowIso,
+            })
+            .eq('order_id', order.order_id);
+        }
+
+        return NextResponse.json({
+          status: 'expired',
+          isAdFree: false,
+          orderId: order.order_id,
+          network: 'Polygon',
+          currency: 'USDC',
+          message: 'Payment window expired. Please generate a new payment order.',
+        });
+      }
+
+      const remainingSeconds = Math.max(0, Math.floor((orderExpiresMs - nowMs) / 1000));
+      return NextResponse.json({
+        status: order.status,
+        isAdFree: false,
+        orderId: order.order_id,
+        amount: formatPaymentAmount(order.payment_amount_usdt),
+        currency: 'USDC',
+        network: 'Polygon',
+        destinationAddress: order.destination_address,
+        expiresInSeconds: remainingSeconds,
+        message: 'Waiting for transfer on Polygon PoS (Native USDC)...',
       });
     }
 

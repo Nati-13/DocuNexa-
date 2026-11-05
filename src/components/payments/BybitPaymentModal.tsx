@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { QrCode } from './QrCode';
 import { formatPaymentAmount } from '@/lib/payments/format';
+import { CRYPTO_SELECTOR_OPTIONS, OFFICIAL_CONTRACTS } from '@/lib/payments/cryptoConfig';
 
 export interface PaymentOrderData {
   orderId: string;
@@ -29,9 +30,9 @@ export interface PaymentOrderData {
   discountAmountUsdt?: string;
   couponCode?: string | null;
   formattedDiscount?: string | null;
-  currency: string; // "USDT"
-  network: 'Polygon' | 'Aptos'; // "Polygon" | "Aptos"
-  destinationAddress: string; // "0x..."
+  currency: 'USDT' | 'USDC' | string; // "USDT" | "USDC"
+  network: 'Polygon' | 'Aptos' | 'TRON' | string; // "Polygon" | "Aptos" | "TRON"
+  destinationAddress: string;
   expiresAt: string; // ISO string
   expiresInSeconds: number;
 }
@@ -40,7 +41,7 @@ interface BybitPaymentModalProps {
   order: PaymentOrderData;
   onClose: () => void;
   onConfirmed: () => void;
-  onNewOrder: (couponCode?: string, network?: 'Polygon' | 'Aptos') => void;
+  onNewOrder: (couponCode?: string, methodOrNetwork?: string) => void;
 }
 
 export function BybitPaymentModal({
@@ -198,21 +199,43 @@ export function BybitPaymentModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="payment-modal-title"
     >
       <div
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden my-auto"
+        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Pinned Top Bar with Close Control */}
-        <div className="sticky top-0 z-20 px-5 sm:px-6 pt-4 pb-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck size={14} /> USDT ({order.network})
+        <div className="sticky top-0 z-20 px-3.5 sm:px-6 pt-3.5 pb-2.5 sm:pt-4 sm:pb-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold tracking-wider shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
+                <img
+                  src={order.currency === 'USDC' ? '/images/crypto/usdc.png' : '/images/crypto/usdt.png'}
+                  alt={order.currency === 'USDC' ? 'Circle USDC logo' : 'Tether USDT logo'}
+                  width={14}
+                  height={14}
+                  className="w-3.5 h-3.5 rounded-full object-contain"
+                />
+                <img
+                  src={
+                    order.network === 'Aptos'
+                      ? '/images/crypto/aptos.png'
+                      : order.network === 'TRON'
+                      ? '/images/crypto/tron.png'
+                      : '/images/crypto/polygon.png'
+                  }
+                  alt={`${order.network} network logo`}
+                  width={14}
+                  height={14}
+                  className="w-3.5 h-3.5 rounded-full object-contain"
+                />
+              </div>
+              <span>{order.currency || 'USDT'} ({order.network})</span>
             </div>
             <span className="text-xs text-slate-400 dark:text-slate-500 font-mono hidden sm:inline">
               #{order.orderId.slice(0, 8)}
@@ -221,7 +244,7 @@ export function BybitPaymentModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
             aria-label="Close payment modal"
           >
             <X size={18} />
@@ -229,7 +252,7 @@ export function BybitPaymentModal({
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="p-5 sm:p-6 md:p-8 space-y-5 overflow-y-auto overscroll-contain">
+        <div className="p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-5 overflow-y-auto overscroll-contain">
           {/* Header Title */}
           <div className="text-center space-y-1">
             <h2 id="payment-modal-title" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
@@ -267,55 +290,127 @@ export function BybitPaymentModal({
             </div>
           ) : (
             <>
-              {/* Network Selection Control */}
-              <div className="space-y-1.5">
+              {/* Payment Method / Network Selection Control (4 Options) */}
+              <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-700 dark:text-slate-300">
-                    Payment Network
+                    Payment Method ({CRYPTO_SELECTOR_OPTIONS.length} Options)
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Choose network to pay
+                    Choose payment rail
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
-                  <button
-                    type="button"
-                    disabled={networkSwitching}
-                    onClick={async () => {
-                      if (order.network === 'Polygon') return;
-                      setNetworkSwitching(true);
-                      await onNewOrder(order.couponCode || undefined, 'Polygon');
-                      setNetworkSwitching(false);
-                    }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                      order.network === 'Polygon'
-                        ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-sm border border-purple-200 dark:border-purple-800'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
-                    <span>USDT — Polygon</span>
-                  </button>
 
-                  <button
-                    type="button"
-                    disabled={networkSwitching}
-                    onClick={async () => {
-                      if (order.network === 'Aptos') return;
-                      setNetworkSwitching(true);
-                      await onNewOrder(order.couponCode || undefined, 'Aptos');
-                      setNetworkSwitching(false);
-                    }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                      order.network === 'Aptos'
-                        ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-teal-200 dark:border-teal-800'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-teal-500 inline-block" />
-                    <span>USDT — Aptos</span>
-                  </button>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 sm:p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
+                  {CRYPTO_SELECTOR_OPTIONS.map((method) => {
+                    const isSelected =
+                      (method.id === 'polygon_usdt' && order.network === 'Polygon' && (order.currency === 'USDT' || !order.currency)) ||
+                      (method.id === 'aptos_usdt' && order.network === 'Aptos') ||
+                      (method.id === 'tron_usdt' && order.network === 'TRON') ||
+                      (method.id === 'polygon_usdc' && order.network === 'Polygon' && order.currency === 'USDC');
+
+                    if (method.isEnabled) {
+                      return (
+                        <button
+                          key={method.id}
+                          type="button"
+                          disabled={networkSwitching}
+                          onClick={async () => {
+                            if (isSelected) return;
+                            setNetworkSwitching(true);
+                            await onNewOrder(order.couponCode || undefined, method.id);
+                            setNetworkSwitching(false);
+                          }}
+                          className={`py-2.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 min-w-0 ${
+                            isSelected
+                              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-purple-300 dark:border-purple-700 ring-1 ring-purple-400/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-850'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* Dual Official Brand Logos: Token + Network */}
+                            <div className="flex items-center gap-1 shrink-0" aria-label={`${method.tokenLogoAlt} and ${method.networkLogoAlt}`}>
+                              <img
+                                src={method.tokenLogoSrc}
+                                alt={method.tokenLogoAlt}
+                                width={22}
+                                height={22}
+                                className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0 shadow-xs object-contain"
+                                loading="eager"
+                              />
+                              <img
+                                src={method.networkLogoSrc}
+                                alt={method.networkLogoAlt}
+                                width={22}
+                                height={22}
+                                className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0 shadow-xs object-contain"
+                                loading="eager"
+                              />
+                            </div>
+                            <div className="flex flex-col text-left min-w-0">
+                              <span className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
+                                {method.shortLabel}
+                              </span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate leading-tight">
+                                {method.networkName}
+                              </span>
+                            </div>
+                          </div>
+                          <span className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-tight sm:tracking-normal px-1.5 py-0.5 rounded ${method.badgeColor} shrink-0`}>
+                            {method.badgeText}
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    // Disabled / Coming Soon methods
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        disabled={true}
+                        aria-disabled="true"
+                        title={method.tooltip}
+                        className="py-2.5 px-2.5 sm:px-3 rounded-xl text-xs font-semibold bg-slate-100/50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2 cursor-not-allowed opacity-75 select-none min-w-0"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {/* Dual Official Brand Logos: Token + Network */}
+                          <div className="flex items-center gap-1 shrink-0 opacity-70" aria-label={`${method.tokenLogoAlt} and ${method.networkLogoAlt}`}>
+                            <img
+                              src={method.tokenLogoSrc}
+                              alt={method.tokenLogoAlt}
+                              width={22}
+                              height={22}
+                              className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0 shadow-xs object-contain"
+                              loading="eager"
+                            />
+                            <img
+                              src={method.networkLogoSrc}
+                              alt={method.networkLogoAlt}
+                              width={22}
+                              height={22}
+                              className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0 shadow-xs object-contain"
+                              loading="eager"
+                            />
+                          </div>
+                          <div className="flex flex-col text-left min-w-0">
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate leading-tight">
+                              {method.shortLabel}
+                            </span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate leading-tight">
+                              {method.id === 'polygon_usdc' ? 'Native (0x3c49...)' : method.networkName}
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`text-[7.5px] sm:text-[8.5px] font-bold uppercase tracking-tight sm:tracking-normal px-1.5 py-0.5 rounded ${method.badgeColor} shrink-0`}>
+                          {method.badgeText}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div><p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal px-0.5">
+                  USDT TRON (TRC20) and Polygon USDC (Native) are displayed as Coming Soon and disabled until legal authorization and receiving addresses are confirmed.
+                </p>
               </div>
 
               {/* Pricing Breakdown & Coupon Entry */}
@@ -459,32 +554,32 @@ export function BybitPaymentModal({
               </div>
 
               {/* Quick Actions Bar: Copy Amount, Copy Address, Show/Hide QR */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleCopyAmount}
-                  className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
                 >
-                  {copiedAmount ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                  <span>{copiedAmount ? 'Copied!' : 'Copy Amount'}</span>
+                  {copiedAmount ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Copy size={14} className="shrink-0" />}
+                  <span className="truncate">{copiedAmount ? 'Copied!' : 'Copy Amount'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleCopyAddress}
-                  className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
                 >
-                  {copiedAddress ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                  <span>{copiedAddress ? 'Copied!' : 'Copy Address'}</span>
+                  {copiedAddress ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Copy size={14} className="shrink-0" />}
+                  <span className="truncate">{copiedAddress ? 'Copied!' : 'Copy Address'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setShowQr(!showQr)}
-                  className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
                 >
-                  <QrIcon size={14} />
-                  <span>{showQr ? 'Hide QR' : 'Show QR'}</span>
+                  <QrIcon size={14} className="shrink-0" />
+                  <span className="truncate">{showQr ? 'Hide QR' : 'Show QR'}</span>
                 </button>
               </div>
 
@@ -499,14 +594,36 @@ export function BybitPaymentModal({
                   <span>Important {order.network} Payment Warning</span>
                 </div>
                 <p className="leading-relaxed">
-                  Send <strong>EXACTLY {displayAmount} USDT</strong> using the <strong>{order.network === 'Aptos' ? 'Aptos Mainnet' : 'Polygon PoS'}</strong> network.
+                  Send <strong>EXACTLY {displayAmount} {order.currency || 'USDT'}</strong> using the <strong>
+                    {order.network === 'Aptos'
+                      ? 'Aptos Mainnet'
+                      : order.network === 'TRON'
+                      ? 'TRON (TRC20)'
+                      : order.currency === 'USDC'
+                      ? 'Polygon PoS (Native USDC)'
+                      : 'Polygon PoS'}
+                  </strong> network.
                 </p>
                 <p className="leading-relaxed text-[11px] font-medium opacity-90">
-                  <strong>CRITICAL:</strong> The selected network ({order.network}) must match the network used in your wallet or exchange. Never send {order.network === 'Aptos' ? 'Polygon or Ethereum' : 'Aptos'} tokens to this address!
+                  <strong>CRITICAL:</strong> The selected network ({order.network}) and token ({order.currency || 'USDT'}) must match what you send from your wallet or exchange.
                 </p>
-                {order.network === 'Aptos' && (
+                {order.network === 'Aptos' ? (
                   <p className="text-[10px] font-mono text-teal-800 dark:text-teal-300 pt-0.5 break-all">
-                    Official Tether USDt Fungible Asset Metadata ID: 0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b
+                    Official Tether USDt Fungible Asset Metadata ID: {OFFICIAL_CONTRACTS.APTOS_USDT_METADATA}
+                  </p>
+                ) : order.network === 'TRON' ? (
+                  <p className="text-[10px] font-mono text-red-800 dark:text-red-300 pt-0.5 break-all">
+                    Official Tether USDt (TRC20) Contract: {OFFICIAL_CONTRACTS.TRON_USDT_TRC20}
+                  </p>
+                ) : order.currency === 'USDC' ? (
+                  <p className="text-[10px] font-mono text-blue-800 dark:text-blue-300 pt-0.5 break-all">
+                    Official Native Circle USDC Contract: {OFFICIAL_CONTRACTS.POLYGON_USDC_NATIVE}
+                    <br />
+                    <span className="font-semibold text-rose-500">Notice: Legacy bridged USDC.e (0x2791...) is strictly incompatible.</span>
+                  </p>
+                ) : (
+                  <p className="text-[10px] font-mono text-amber-800 dark:text-amber-300 pt-0.5 break-all">
+                    Official Tether USDt (Polygon PoS) Contract: {OFFICIAL_CONTRACTS.POLYGON_USDT}
                   </p>
                 )}
               </div>
@@ -514,9 +631,30 @@ export function BybitPaymentModal({
               {/* Destination Address & QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {order.network === 'Aptos' ? 'Aptos Receiving Address' : 'Bybit Deposit Address (Polygon PoS)'}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <img
+                      src={
+                        order.network === 'Aptos'
+                          ? '/images/crypto/aptos.png'
+                          : order.network === 'TRON'
+                          ? '/images/crypto/tron.png'
+                          : '/images/crypto/polygon.png'
+                      }
+                      alt={`${order.network} network logo`}
+                      width={16}
+                      height={16}
+                      className="w-4 h-4 rounded-full object-contain shrink-0"
+                    />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {order.network === 'Aptos'
+                        ? 'Aptos Receiving Address'
+                        : order.network === 'TRON'
+                        ? 'TRON (TRC20) Receiving Address'
+                        : order.currency === 'USDC'
+                        ? 'Polygon PoS (Native USDC) Receiving Address'
+                        : 'Bybit Deposit Address (Polygon PoS)'}
+                    </span>
+                  </div>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                     Network: {order.network}
                   </span>

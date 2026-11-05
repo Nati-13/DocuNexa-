@@ -15,6 +15,7 @@ import {
   FileText, 
   CheckCircle2, 
   AlertCircle, 
+  ShieldCheck,
   RefreshCw 
 } from 'lucide-react';
 
@@ -179,6 +180,14 @@ export function UnlockPdfTool() {
                   <RefreshCw size={13} />
                   Change PDF
                 </button>
+              </div>
+
+              {/* Local Decryption Advisory */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3 text-slate-700 dark:text-slate-300 text-xs">
+                <ShieldCheck size={16} className="shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                <p>
+                  <strong>Client-Side Decryption:</strong> Password verification and decryption are executed entirely within your browser RAM. Your password is never logged, stored, or sent to any server.
+                </p>
               </div>
 
               {/* Password Input */}

@@ -7,8 +7,8 @@ export interface PdfAResult {
 }
 
 /**
- * Prepares PDF metadata and color profile tags toward ISO 19005-1 (PDF/A-1b) archival standard.
- * Strictly labeled as experimental metadata preparation; does not claim formal ISO certification.
+ * Prepares PDF metadata and basic archival descriptors toward archival workflows.
+ * Strictly labeled as Archive-ready PDF (Experimental); does NOT claim certified ISO 19005 conformance.
  */
 export async function preparePdfA(
   pdfBuffer: ArrayBuffer,
@@ -16,7 +16,7 @@ export async function preparePdfA(
 ): Promise<PdfAResult> {
   const doc = await PDFDocument.load(pdfBuffer.slice(0), { ignoreEncryption: true });
 
-  // 1. Inject standard XMP Metadata Packet for PDF/A identification
+  // 1. Inject standard XMP Metadata Packet for archival identification
   const xmpMetadata = `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -44,14 +44,15 @@ export async function preparePdfA(
   doc.catalog.set(PDFName.of('Metadata'), metadataStreamRef);
 
   // 2. Set Producer and Creator
-  doc.setProducer('DocuNexa PDF/A Metadata Preparation');
-  doc.setCreator('DocuNexa Free PDF Suite');
+  doc.setProducer('DocuNexa Archive-Ready PDF Preparation (Experimental)');
+  doc.setCreator('DocuNexa PDF Suite');
 
   const outputBytes = await doc.save();
 
   return {
-    filename: `${baseName} - (PDF-A Experimental).pdf`,
+    filename: `${baseName} - (Archive-Ready PDF-A Experimental).pdf`,
     bytes: outputBytes,
-    disclaimer: 'PDF/A metadata preparation — experimental. Injects ISO 19005-1 (PDF/A-1b) metadata markers. Formal compliance certification requires specialized pre-press validation not guaranteed in the browser.',
+    disclaimer:
+      'Archive-ready PDF (Experimental) — experimental metadata preparation toward archival preservation standards. Injects basic XMP archival markers. NOTE: This does NOT certify formal ISO 19005 conformance. Certified PDF/A validation requires pre-press checks (e.g. veraPDF) including 100% embedded font subsets, device-independent ICC color profiles, elimination of password encryption, and transparency flattening (PDF/A-1), which client-side browser tools cannot guarantee.',
   };
 }

@@ -12,29 +12,61 @@ export interface OfficeConversionResult {
 /**
  * Reconstructs spreadsheet data (.xlsx, .csv) into paginated PDF tables.
  */
+// Security & Resource Constraints for untrusted workbooks
+const MAX_EXCEL_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_SHEETS_TO_PROCESS = 50;
+const MAX_ROWS_PER_SHEET = 5000;
+const MAX_DISPLAY_COLUMNS = 8;
+
 export async function convertExcelToPdf(
   excelBuffer: ArrayBuffer,
   baseName: string
 ): Promise<OfficeConversionResult> {
+  if (!excelBuffer || excelBuffer.byteLength === 0) {
+    throw new Error('Spreadsheet file is empty (0 bytes).');
+  }
+  if (excelBuffer.byteLength > MAX_EXCEL_BYTES) {
+    throw new Error(`Spreadsheet exceeds maximum supported size of 50 MB (file size: ${(excelBuffer.byteLength / (1024 * 1024)).toFixed(1)} MB).`);
+  }
+
   const xlsxModule = await import('xlsx');
   const XLSX = (xlsxModule as any).default || xlsxModule;
-  const wb = XLSX.read(excelBuffer, { type: 'array' });
+
+  let wb: any;
+  try {
+    wb = XLSX.read(excelBuffer, { type: 'array', dense: true, cellDates: true });
+  } catch (parseErr: any) {
+    throw new Error(`Failed to parse spreadsheet: ${parseErr.message || 'File is corrupted, password-protected, or in an unsupported format.'}`);
+  }
+
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
 
   const sheetNames = wb.SheetNames;
   if (!sheetNames || sheetNames.length === 0) {
-    throw new Error('Spreadsheet contains no sheets.');
+    throw new Error('Spreadsheet contains no sheets or readable data tables.');
   }
 
-  for (const name of sheetNames) {
+  const sheetsToProcess = sheetNames.slice(0, MAX_SHEETS_TO_PROCESS);
+
+  for (const name of sheetsToProcess) {
     const ws = wb.Sheets[name];
-    const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+    if (!ws) continue;
 
-    if (!data || data.length === 0) continue;
+    let rawData: any[][];
+    try {
+      rawData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) as any[][];
+    } catch {
+      continue;
+    }
 
-    // Paginate table rows (approx 28 rows per page in landscape 842x595)
+    if (!rawData || rawData.length === 0) continue;
+
+    // Apply row protection limit to prevent excessive memory/page allocation
+    const data = rawData.slice(0, MAX_ROWS_PER_SHEET);
+
+    // Paginate table rows (approx 26 rows per page in landscape 842x595)
     const rowsPerPage = 26;
     const totalPages = Math.ceil(data.length / rowsPerPage);
 
@@ -42,8 +74,11 @@ export async function convertExcelToPdf(
       const page = doc.addPage([842, 595]); // Landscape A4
       const slice = data.slice(p * rowsPerPage, (p + 1) * rowsPerPage);
 
-      // Title
-      page.drawText(`${baseName} — Sheet: ${name} (Page ${p + 1}/${totalPages})`, {
+      // Title with sheet info and row limit indicator if truncated
+      const titleSuffix = rawData.length > MAX_ROWS_PER_SHEET && p === totalPages - 1
+        ? ` (truncated at ${MAX_ROWS_PER_SHEET} rows)`
+        : '';
+      page.drawText(`${baseName} — Sheet: ${name} (Page ${p + 1}/${totalPages})${titleSuffix}`, {
         x: 40,
         y: 560,
         size: 13,
@@ -54,6 +89,8 @@ export async function convertExcelToPdf(
       let yPos = 530;
       for (let rIdx = 0; rIdx < slice.length; rIdx++) {
         const row = slice[rIdx];
+        if (!Array.isArray(row)) continue;
+
         const isHeader = p === 0 && rIdx === 0;
 
         // Draw light row background for header
@@ -67,11 +104,19 @@ export async function convertExcelToPdf(
           });
         }
 
-        // Draw up to 8 columns
+        // Draw up to MAX_DISPLAY_COLUMNS
         const colWidth = 95;
-        for (let cIdx = 0; cIdx < Math.min(row.length, 8); cIdx++) {
-          const cellVal = String(row[cIdx] !== undefined && row[cIdx] !== null ? row[cIdx] : '').slice(0, 18);
-          page.drawText(cellVal, {
+        const colLimit = Math.min(row.length, MAX_DISPLAY_COLUMNS);
+        for (let cIdx = 0; cIdx < colLimit; cIdx++) {
+          const rawCell = row[cIdx];
+          let formatted = '';
+          if (rawCell instanceof Date) {
+            formatted = rawCell.toISOString().slice(0, 10);
+          } else if (rawCell !== undefined && rawCell !== null) {
+            formatted = sanitizeOfficeText(String(rawCell)).slice(0, 18);
+          }
+
+          page.drawText(formatted, {
             x: 40 + cIdx * colWidth,
             y: yPos,
             size: isHeader ? 10 : 9,

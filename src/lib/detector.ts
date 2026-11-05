@@ -47,6 +47,38 @@ const ROMAN_NUMERALS: Record<string, number> = {
   xx: 20,
 };
 
+export const ETHIOPIC_NUMERALS: Record<string, number> = {
+  '፩': 1,
+  '፪': 2,
+  '፫': 3,
+  '፬': 4,
+  '፭': 5,
+  '፮': 6,
+  '፯': 7,
+  '፰': 8,
+  '፱': 9,
+  '፲': 10,
+  '፲፩': 11,
+  '፲፪': 12,
+  '፲፫': 13,
+  '፲፬': 14,
+  '፲፭': 15,
+  '፲፮': 16,
+  '፲፯': 17,
+  '፲፰': 18,
+  '፲፱': 19,
+  '፳': 20,
+  '፴': 30,
+  '፵': 40,
+  '፶': 50,
+};
+
+export const HEADING_PREFIXES =
+  'UNIT|CHAPTER|MODULE|LESSON|PART|ክፍል|ምዕራፍ|ትምህርት|ርዕስ|CHAPITRE|UNITÉ|CAPÍTULO|UNIDAD|KAPITEL|TEIL';
+
+export const HEADING_NUMBERS =
+  '[0-9]{1,4}|[IVXLCDM]{1,6}|[፩-፳]+|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY';
+
 export interface RawHeadingMatch {
   pageNumber: number;
   prefix: string; // e.g., 'UNIT', 'Chapter', 'Module', 'Lesson'
@@ -118,8 +150,10 @@ function isMathematicalOrContentLine(line: string): boolean {
  * "Lesson 3: Genetics"
  * "UNIT IV"
  */
-const HEADING_REGEX =
-  /^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)\b[:.\-–—\s]*(.*)$/i;
+const HEADING_REGEX = new RegExp(
+  `^\\s*(${HEADING_PREFIXES})\\s+(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*)$`,
+  'i'
+);
 
 /**
  * Parses numeric value from string (e.g. '1', 'one', 'IV')
@@ -138,6 +172,10 @@ export function parseUnitNumber(raw: string): number | null {
 
   if (ROMAN_NUMERALS[clean] !== undefined) {
     return ROMAN_NUMERALS[clean];
+  }
+
+  if (ETHIOPIC_NUMERALS[clean] !== undefined) {
+    return ETHIOPIC_NUMERALS[clean];
   }
 
   return null;
@@ -241,22 +279,29 @@ export function isGenuineHeading(
  */
 export function findTocPageNumbers(pages: PageTextData[]): Set<number> {
   const tocPages = new Set<number>();
-  const scanLimit = Math.min(pages.length, 25);
+  // For large documents (> 700 to 1,500 pages), scan up to 80 pages or while TOC pages continue
+  const scanLimit = Math.min(pages.length, 80);
 
-  for (let i = 0; i < scanLimit; i++) {
+  for (let i = 0; i < pages.length; i++) {
     const page = pages[i];
+    const prevPageWasToc = tocPages.has(page.pageNumber - 1);
+    // If beyond scanLimit and previous page wasn't TOC, stop scanning
+    if (i >= scanLimit && !prevPageWasToc) {
+      break;
+    }
+
     const lines = page.lines;
     if (!lines || lines.length === 0) continue;
 
-    // Check top 12 lines for TOC title
-    const hasExplicitTitle = lines.slice(0, 12).some((l) => {
+    // Check top 15 lines for TOC title
+    const hasExplicitTitle = lines.slice(0, 15).some((l) => {
       const upper = l.trim().toUpperCase();
-      return /^(TABLE OF CONTENTS|CONTENTS|SOMMAIRE|TABLE DES MATI[ÈE]RES|INHALTSVERZEICHNIS)\b/.test(upper);
+      return /^(TABLE OF CONTENTS|CONTENTS|SOMMAIRE|TABLE DES MATI[ÈE]RES|INHALTSVERZEICHNIS|ማውጫ|የርዕስ\s*ማውጫ|CONTENIDO|ÍNDICE)(?:\b|$|\s|:)/i.test(upper);
     });
 
-    const isContinuedTitle = lines.slice(0, 10).some((l) => {
+    const isContinuedTitle = lines.slice(0, 12).some((l) => {
       const upper = l.trim().toUpperCase();
-      return /^(CONTENTS\s*\(CONTINUED\)|TABLE OF CONTENTS\s*\(CONT\)|CONTENTS\s*CONT|CONTINUED)\b/i.test(upper);
+      return /^(CONTENTS\s*\(CONTINUED\)|TABLE OF CONTENTS\s*\(CONT\)|CONTENTS\s*CONT|CONTINUED|የቀጠለ)(?:\b|$|\s|:|\))/i.test(upper);
     });
 
     // Check for lines with dotted leaders or page numbers at the end
@@ -264,17 +309,15 @@ export function findTocPageNumbers(pages: PageTextData[]): Set<number> {
       const t = l.trim();
       return (
         /[.\s_]{2,}\s*\d{1,4}\s*$/.test(t) ||
-        /^(UNIT|CHAPTER|MODULE|LESSON|PART)\s+\w+.*?[.\s_]{2,}\s*\d{1,4}\s*$/i.test(t)
+        new RegExp(`^(${HEADING_PREFIXES})\s+.*?([.\s_]{2,}|\s{2,})\s*\d{1,4}\s*$`, 'i').test(t)
       );
     }).length;
-
-    const prevPageWasToc = tocPages.has(page.pageNumber - 1);
 
     if (
       hasExplicitTitle ||
       (isContinuedTitle && (tocEntryCount >= 1 || prevPageWasToc)) ||
       (prevPageWasToc && tocEntryCount >= 2) ||
-      tocEntryCount >= 4
+      tocEntryCount >= 3
     ) {
       tocPages.add(page.pageNumber);
     }
@@ -290,11 +333,15 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
   const targetTocPages = tocPageNumbers || findTocPageNumbers(pages);
   const entries: TocEntry[] = [];
 
-  const TOC_REGEX =
-    /^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)\b[:.\-–—\s]*(.*?)[.\s_]{2,}\s*(\d{1,4})\s*$/i;
+  const TOC_REGEX = new RegExp(
+    `^\\s*(${HEADING_PREFIXES})\\s+(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*?)[.\\s_]{2,}\\s*(\\d{1,4})\\s*$`,
+    'i'
+  );
 
-  const TOC_ALT_REGEX =
-    /^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)\b[:.\-–—\s]*(.*?)\s{2,}(\d{1,4})\s*$/i;
+  const TOC_ALT_REGEX = new RegExp(
+    `^\\s*(${HEADING_PREFIXES})\\s+(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*?)\\s{2,}(\\d{1,4})\\s*$`,
+    'i'
+  );
 
   for (const page of pages) {
     if (!targetTocPages.has(page.pageNumber)) continue;
@@ -517,6 +564,10 @@ export function detectDocumentUnits(
   // Fallback if no units detected
   if (deduplicated.length === 0) {
     const baseName = originalFilename.replace(/\.pdf$/i, '');
+    const isLikelyScanned = pages.length > 0 && pages.every((p) => !p.hasSubstantialText);
+    const reason = isLikelyScanned
+      ? 'This document appears to be scanned or image-only without an embedded text layer. Unit titles could not be extracted automatically. Please use Manual Split to specify your unit page ranges.'
+      : 'No clear Unit or Chapter headings detected. Entire document provided as a single part. You can review or manually define unit page ranges.';
     return {
       parts: [
         {
@@ -531,7 +582,7 @@ export function detectDocumentUnits(
       ],
       hasFrontMatter: false,
       isUncertain: true,
-      uncertaintyReason: 'No clear Unit or Chapter headings detected. Entire document provided as a single part.',
+      uncertaintyReason: reason,
       assignedPagesCount: totalPages,
       unassignedPagesCount: 0,
       overallConfidence: 'Low',

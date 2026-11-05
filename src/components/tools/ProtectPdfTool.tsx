@@ -16,11 +16,30 @@ import {
   FileText, 
   CheckCircle2, 
   AlertCircle, 
+  AlertTriangle,
   RefreshCw,
   Printer,
   Copy,
   Edit3
 } from 'lucide-react';
+
+
+function getPasswordStrength(pwd: string): { score: number; label: string; color: string; barClass: string } {
+  if (!pwd) return { score: 0, label: '', color: 'text-slate-400', barClass: 'bg-slate-200 w-0' };
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+  if (/\d/.test(pwd) || /[^A-Za-z0-9]/.test(pwd)) score++;
+
+  if (score <= 1) {
+    return { score: 1, label: 'Weak (8+ mixed characters recommended)', color: 'text-rose-500 dark:text-rose-400', barClass: 'bg-rose-500 w-1/4' };
+  } else if (score === 2 || score === 3) {
+    return { score: 2, label: 'Moderate strength', color: 'text-amber-500 dark:text-amber-400', barClass: 'bg-amber-500 w-2/3' };
+  } else {
+    return { score: 3, label: 'Strong AES-256 password', color: 'text-emerald-500 dark:text-emerald-400', barClass: 'bg-emerald-500 w-full' };
+  }
+}
 
 export function ProtectPdfTool() {
   const [file, setFile] = useState<File | null>(null);
@@ -71,6 +90,7 @@ export function ProtectPdfTool() {
     }
   };
 
+  const strength = getPasswordStrength(password);
   // Validation
   const hasMinLength = password.length >= 6;
   const passwordsMatch = password.length > 0 && password === repeatPassword;
@@ -204,6 +224,17 @@ export function ProtectPdfTool() {
                 </button>
               </div>
 
+              {/* Zero-Knowledge & Recovery Warning Notice */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-amber-900 dark:text-amber-200 text-xs">
+                <AlertTriangle size={18} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div className="space-y-1">
+                  <strong className="font-bold block">Zero-Knowledge Client-Side Encryption & Recovery Warning:</strong>
+                  <p>
+                    Encryption is executed 100% locally in your browser using standard ISO 32000-2 AES-256 (Revision 6) encryption. Your document and password are NEVER transmitted to or stored by DocuNexa. Because DocuNexa has zero knowledge of your password, <strong>lost or forgotten passwords CANNOT be recovered or reset by anyone</strong>. Be sure to record your password in a secure password manager.
+                  </p>
+                </div>
+              </div>
+
               {/* STEP 3 & 4: Password Form & Validation */}
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
                 <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -239,6 +270,18 @@ export function ProtectPdfTool() {
                     <p className={`text-[11px] ${hasMinLength ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
                       {hasMinLength ? '✓ Meets minimum length' : 'Minimum 6 characters'}
                     </p>
+
+                    {/* Password Strength Indicator */}
+                    {password.length > 0 && (
+                      <div className="space-y-1 pt-1">
+                        <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div className={`h-full transition-all duration-300 ${strength.barClass}`} />
+                        </div>
+                        <span className={`text-[10px] font-semibold ${strength.color}`}>
+                          {strength.label}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Repeat password field */}

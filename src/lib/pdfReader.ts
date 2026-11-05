@@ -62,7 +62,8 @@ export function getPdfJsDocumentParams(
  */
 export async function extractPdfTextPages(
   arrayBuffer: ArrayBuffer,
-  onProgress?: (current: number, total: number) => void
+  onProgress?: (current: number, total: number) => void,
+  shouldCancel?: () => boolean
 ): Promise<{
   pages: PageTextData[];
   totalPages: number;
@@ -86,60 +87,84 @@ export async function extractPdfTextPages(
   let totalChars = 0;
   let pagesWithNoText = 0;
 
-  for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-    if (onProgress) {
-      onProgress(pageNum, totalPages);
-    }
-
-    const page = await pdfDoc.getPage(pageNum);
-    const textContent = await page.getTextContent();
-
-    // Group text items by roughly their vertical Y coordinate to form lines
-    const rawItems = textContent.items as any[];
-    const lineMap = new Map<number, string[]>();
-
-    for (const item of rawItems) {
-      if (!('str' in item) || !item.str) continue;
-
-      // item.transform: [scaleX, skewY, skewX, scaleY, transX, transY]
-      // transY is position from bottom of page
-      // Round to nearest ~4 units to group words on roughly same baseline
-      const yKey = Math.round(item.transform[5] / 4) * 4;
-      if (!lineMap.has(yKey)) {
-        lineMap.set(yKey, []);
+  try {
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      if (shouldCancel && shouldCancel()) {
+        throw new Error('PDF extraction cancelled by user.');
       }
-      lineMap.get(yKey)!.push(item.str);
-    }
 
-    // Sort lines from top of page to bottom (higher transY is top in PDF coordinates)
-    const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => b - a);
-    const lines: string[] = [];
+      if (onProgress) {
+        onProgress(pageNum, totalPages);
+      }
 
-    for (const key of sortedKeys) {
-      const lineText = lineMap.get(key)!.join(' ').trim();
-      if (lineText) {
-        lines.push(lineText);
+      const page = await pdfDoc.getPage(pageNum);
+      try {
+        const textContent = await page.getTextContent();
+
+        // Group text items by roughly their vertical Y coordinate to form lines
+        const rawItems = textContent.items as any[];
+        const lineMap = new Map<number, Array<{ x: number; str: string }>>();
+
+        for (const item of rawItems) {
+          if (!('str' in item) || !item.str) continue;
+
+          // item.transform: [scaleX, skewY, skewX, scaleY, transX, transY]
+          const yKey = Math.round(item.transform[5] / 4) * 4;
+          const xPos = Number(item.transform[4]) || 0;
+          if (!lineMap.has(yKey)) {
+            lineMap.set(yKey, []);
+          }
+          lineMap.get(yKey)!.push({ x: xPos, str: item.str });
+        }
+
+        // Sort lines from top of page to bottom (higher transY is top in PDF coordinates)
+        const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => b - a);
+        const lines: string[] = [];
+
+        for (const key of sortedKeys) {
+          // Sort text fragments horizontally left-to-right to preserve reading order in multi-column layouts
+          const sortedItems = lineMap.get(key)!.sort((a, b) => a.x - b.x);
+          const lineText = sortedItems.map((it) => it.str).join(' ').trim();
+          if (lineText) {
+            lines.push(lineText);
+          }
+        }
+
+        const rawText = lines.join('\n');
+        const charCount = rawText.replace(/\s/g, '').length;
+        totalChars += charCount;
+
+        if (charCount < 10) {
+          pagesWithNoText++;
+        }
+
+        pages.push({
+          pageNumber: pageNum,
+          rawText,
+          lines,
+          hasSubstantialText: charCount >= 25,
+        });
+      } finally {
+        // Immediate memory cleanup: release glyph and font cache for this page
+        // Essential to prevent out-of-memory crashes on documents with > 700 to 1,500 pages
+        if (typeof page.cleanup === 'function') {
+          page.cleanup();
+        }
+      }
+
+      // Yield every 5 pages to keep browser UI reactive
+      if (pageNum % 5 === 0) {
+        await new Promise((r) => setTimeout(r, 0));
       }
     }
-
-    const rawText = lines.join('\n');
-    const charCount = rawText.replace(/\s/g, '').length;
-    totalChars += charCount;
-
-    if (charCount < 10) {
-      pagesWithNoText++;
-    }
-
-    pages.push({
-      pageNumber: pageNum,
-      rawText,
-      lines,
-      hasSubstantialText: charCount >= 25,
-    });
-
-    // Yield every 5 pages to keep browser UI reactive
-    if (pageNum % 5 === 0) {
-      await new Promise((r) => setTimeout(r, 0));
+  } finally {
+    // Release PDF.js worker resources
+    if (typeof pdfDoc.destroy === 'function') {
+      try {
+        await pdfDoc.destroy();
+      } catch {
+        // ignore cleanup error
+      }
     }
   }
 
@@ -170,19 +195,34 @@ export async function renderPdfPageToCanvas(
   const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(arrayBuffer));
 
   const pdfDoc = await loadingTask.promise;
-  const page = await pdfDoc.getPage(pageNumber);
+  try {
+    const page = await pdfDoc.getPage(pageNumber);
+    try {
+      const viewport = page.getViewport({ scale });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
 
-  const viewport = page.getViewport({ scale });
-  canvas.height = viewport.height;
-  canvas.width = viewport.width;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport,
+      };
 
-  const renderContext = {
-    canvasContext: ctx,
-    viewport: viewport,
-  };
-
-  await page.render(renderContext).promise;
+      await page.render(renderContext).promise;
+    } finally {
+      if (typeof page.cleanup === 'function') {
+        page.cleanup();
+      }
+    }
+  } finally {
+    if (typeof pdfDoc.destroy === 'function') {
+      try {
+        await pdfDoc.destroy();
+      } catch {
+        // ignore cleanup error
+      }
+    }
+  }
 }

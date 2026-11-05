@@ -708,7 +708,7 @@ export default function UniversalToolPage() {
         // 14. PDF TO PDF/A (Experimental Metadata Preparation)
         case 'pdf-to-pdfa': {
           setProgress(50);
-          setProcessingStatus('Injecting ISO-19005 archiving metadata...');
+          setProcessingStatus('Injecting archival preservation metadata (Experimental)...');
           const pdfaRes = await preparePdfA(primaryBuf, baseName);
           setProgress(100);
           setResultFiles([
@@ -1436,6 +1436,20 @@ export default function UniversalToolPage() {
                     This tool analyzes structural patterns, section headings, and key sentences directly within your browser&apos;s volatile RAM. Your document file and extracted text are NEVER sent to external AI providers (such as OpenAI, Anthropic, or Google Gemini).
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* K. ARCHIVE-READY PDF (EXPERIMENTAL): Limitations & Pre-Press Advisory */}
+            {tool.id === 'pdf-to-pdfa' && (
+              <div className="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                <div className="font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                  <AlertTriangle size={15} />
+                  <span>Archive-Ready PDF (Experimental) — Archival Metadata Notice</span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  This tool injects basic archival XMP metadata dictionaries for long-term storage workflows.
+                  <strong> It does NOT certify formal ISO 19005 (PDF/A) conformance.</strong> Strict PDF/A validation requires pre-press checks (such as veraPDF) to verify 100% font subset embedding, ICC color profiles, and transparency elimination, which cannot be guaranteed in client-side browser processing.
+                </p>
               </div>
             )}
 
