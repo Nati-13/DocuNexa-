@@ -137,51 +137,51 @@ export function LoginForm() {
 
   if (isLocked) {
     return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
+      <div className="w-full max-w-md w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle space-y-6 text-center text-ink">
+        <div className="w-14 h-14 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
           <ShieldAlert size={36} />
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-ink">
             Account Locked for Security
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            For your security, access for <strong className="text-slate-700 dark:text-slate-200">{email}</strong> has been temporarily suspended after 5 consecutive unsuccessful login attempts.
+          <p className="text-xs sm:text-sm text-muted">
+            For your security, access for <strong className="text-ink">{email}</strong> has been temporarily suspended after 5 consecutive unsuccessful login attempts.
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-left space-y-3 text-xs">
-          <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <Lock size={14} className="text-amber-500" />
+        <div className="p-4 rounded-md bg-paper border border-border text-left space-y-3 text-xs">
+          <div className="font-semibold text-ink flex items-center gap-1.5">
+            <Lock size={14} className="text-amber-600 dark:text-amber-400" />
             Administrator-Assisted Recovery
           </div>
-          <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+          <p className="text-muted text-[11px] leading-relaxed">
             DocuNexa protects your private documents from unauthorized brute-force attempts. To regain access, you may request a secure reset or contact our security team:
           </p>
           <div className="space-y-2 pt-1">
             <a
               href={`mailto:${lockoutData?.supportEmail || 'docunexa.security@gmail.com'}?subject=Account%20Recovery%20Request%20-%20DocuNexa&body=Hello%20DocuNexa%20Security,%0A%0AMy%20account%20(${encodeURIComponent(email)})%20was%20locked%20due%20to%20failed%20login%20attempts.%20Please%20assist%20me%20in%20verifying%20and%20recovering%20access.`}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 text-slate-700 dark:text-slate-300 font-medium transition-colors"
+              className="flex items-center justify-between p-2.5 rounded-md bg-surface border border-border hover:border-brand text-ink font-medium transition-colors"
             >
               <span className="flex items-center gap-2">
-                <Mail size={14} className="text-brand-500" />
+                <Mail size={14} className="text-brand" />
                 <span>Email Security Team</span>
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">{lockoutData?.supportEmail || 'docunexa.security@gmail.com'}</span>
+              <span className="text-[10px] text-muted font-mono">{lockoutData?.supportEmail || 'docunexa.security@gmail.com'}</span>
             </a>
 
             <a
               href={lockoutData?.telegramBotUrl || 'https://t.me/docunexa_bot'}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 text-slate-700 dark:text-slate-300 font-medium transition-colors"
+              className="flex items-center justify-between p-2.5 rounded-md bg-surface border border-border hover:border-brand text-ink font-medium transition-colors"
             >
               <span className="flex items-center gap-2">
-                <Send size={14} className="text-sky-500" />
+                <Send size={14} className="text-brand" />
                 <span>Telegram Support Bot</span>
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">@docunexa_bot</span>
+              <span className="text-[10px] text-muted font-mono">@docunexa_bot</span>
             </a>
           </div>
         </div>
@@ -189,7 +189,7 @@ export function LoginForm() {
         <div className="space-y-3 pt-2">
           <Link
             href={`/forgot-password?email=${encodeURIComponent(email)}`}
-            className="w-full py-2.5 px-4 rounded-xl btn-aurora font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-xs"
+            className="w-full py-2.5 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs transition-colors flex items-center justify-center gap-2"
           >
             <KeyRound size={14} />
             <span>Request Password Reset</span>
@@ -202,7 +202,7 @@ export function LoginForm() {
               setPassword('');
               setError(null);
             }}
-            className="w-full py-2 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium text-xs transition-colors cursor-pointer"
+            className="w-full py-2 px-4 rounded-md border border-border text-muted hover:text-ink hover:bg-paper font-medium text-xs transition-colors cursor-pointer"
           >
             Try another email address
           </button>
@@ -212,13 +212,13 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+    <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle space-y-6 text-ink">
       <div className="flex flex-col items-center text-center space-y-2">
         <DocuNexaLogo size="md" />
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-4">
+        <h1 className="text-2xl font-serif font-bold tracking-tight text-ink mt-4">
           Welcome Back
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           Sign in to your DocuNexa account to view your entitlement and tools.
         </p>
       </div>
@@ -226,7 +226,7 @@ export function LoginForm() {
       {successNotice && (
         <div
           role="status"
-          className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-start gap-2.5 text-xs text-emerald-700 dark:text-emerald-300"
+          className="p-3.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2.5 text-xs text-emerald-700 dark:text-emerald-300"
         >
           <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-emerald-600" />
           <span>{successNotice}</span>
@@ -236,7 +236,7 @@ export function LoginForm() {
       {error && (
         <div
           role="alert"
-          className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 space-y-2 text-xs text-rose-600 dark:text-rose-400"
+          className="p-3.5 rounded-md bg-rose-500/10 border border-rose-500/30 space-y-2 text-xs text-rose-700 dark:text-rose-300"
         >
           <div className="flex items-start gap-2.5">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -244,12 +244,12 @@ export function LoginForm() {
           </div>
 
           {needsConfirmation && (
-            <div className="pt-2 border-t border-rose-200/60 dark:border-rose-900/60">
+            <div className="pt-2 border-t border-rose-500/20">
               <button
                 type="button"
                 onClick={handleResendConfirmation}
                 disabled={resending}
-                className="w-full py-1.5 px-3 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/50 dark:hover:bg-rose-900/80 text-rose-800 dark:text-rose-200 font-semibold text-[11px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="w-full py-1.5 px-3 rounded-md bg-rose-500/20 hover:bg-rose-500/30 text-rose-800 dark:text-rose-200 font-semibold text-[11px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {resending ? (
                   <>
@@ -269,9 +269,9 @@ export function LoginForm() {
       {resendStatus && (
         <div
           role={resendStatus.type === 'error' ? 'alert' : 'status'}
-          className={`p-3.5 rounded-2xl flex items-start gap-2.5 text-xs ${
+          className={`p-3.5 rounded-md flex items-start gap-2.5 text-xs ${
             resendStatus.type === 'error'
-              ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300'
+              ? 'bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300'
               : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300'
           }`}
         >
@@ -288,12 +288,12 @@ export function LoginForm() {
         <div>
           <label
             htmlFor="login-email"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Email Address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Mail size={16} />
             </div>
             <input
@@ -304,7 +304,7 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
           </div>
         </div>
@@ -313,19 +313,19 @@ export function LoginForm() {
           <div className="flex justify-between items-center mb-1.5">
             <label
               htmlFor="login-password"
-              className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+              className="block text-xs font-semibold text-ink"
             >
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline"
+              className="text-[11px] text-brand hover:underline"
             >
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Lock size={16} />
             </div>
             <input
@@ -336,7 +336,7 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
           </div>
         </div>
@@ -344,7 +344,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-sm transition-all shadow-md shadow-brand-500/20 hover:shadow-brand-500/35 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="w-full mt-2 py-3 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
           {loading ? (
             <>
@@ -358,19 +358,19 @@ export function LoginForm() {
         </button>
       </form>
 
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center space-y-2">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+      <div className="pt-2 border-t border-border text-center space-y-2">
+        <p className="text-xs text-muted">
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"
-            className="font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+            className="font-semibold text-brand hover:underline"
           >
             Create an account
           </Link>
         </p>
-        <p className="text-[11px] text-slate-400 dark:text-slate-500">
+        <p className="text-[11px] text-muted">
           Want to use tools without signing in?{' '}
-          <Link href="/tools" className="hover:underline text-slate-600 dark:text-slate-400">
+          <Link href="/tools" className="hover:underline text-ink">
             Open PDF Tools directly
           </Link>
         </p>

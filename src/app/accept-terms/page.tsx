@@ -42,15 +42,15 @@ export default async function AcceptTermsPage() {
 
   return (
     <main className="min-h-[calc(100vh-140px)] flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+      <div className="max-w-md w-full space-y-8 bg-surface p-8 rounded-md border border-border shadow-subtle text-ink">
         <div className="text-center space-y-3">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-600 dark:text-brand-400">
+          <div className="w-12 h-12 mx-auto rounded-md bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
             <ShieldCheck size={26} />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl font-serif font-bold tracking-tight text-ink">
             Updated Legal Agreements
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
             Please review and accept our updated Terms of Service and Privacy Policy (Version 2026.11) to continue
             accessing your DocuNexa account and features.
           </p>

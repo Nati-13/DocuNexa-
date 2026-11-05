@@ -112,13 +112,13 @@ export function PlanSelection() {
   return (
     <div className="w-full max-w-4xl space-y-8 py-6">
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-semibold">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-semibold">
           <Zap size={14} /> Account Created Successfully
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-ink">
           Choose Your DocuNexa Plan
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+        <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
           Choose how you would like to experience DocuNexa. You can always change or upgrade your plan anytime from your account settings.
         </p>
       </div>
@@ -126,7 +126,7 @@ export function PlanSelection() {
       {error && (
         <div
           role="alert"
-          className="max-w-md mx-auto p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400"
+          className="max-w-md mx-auto p-4 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300"
         >
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{error}</span>
@@ -135,30 +135,30 @@ export function PlanSelection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto items-stretch">
         {/* PLAN 1 — FREE */}
-        <div className="flex flex-col justify-between p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg hover:shadow-xl transition-all">
+        <div className="flex flex-col justify-between p-6 sm:p-8 rounded-md bg-surface border border-border shadow-subtle transition-colors">
           <div className="space-y-5">
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">FREE</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <h2 className="font-serif text-2xl font-bold text-ink">FREE</h2>
+              <p className="text-xs text-muted">
                 Use DocuNexa for free.
               </p>
             </div>
 
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">$0</span>
+              <span className="text-4xl sm:text-5xl font-extrabold text-ink">$0</span>
             </div>
 
-            <ul className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300">
+            <ul className="space-y-3 pt-4 border-t border-border text-sm text-ink">
               <li className="flex items-center gap-2.5">
-                <Check size={16} className="text-brand-500 shrink-0" />
+                <Check size={16} className="text-brand shrink-0" />
                 <span>Free PDF tools</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Check size={16} className="text-brand-500 shrink-0" />
+                <Check size={16} className="text-brand shrink-0" />
                 <span>No payment required</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Check size={16} className="text-brand-500 shrink-0" />
+                <Check size={16} className="text-brand shrink-0" />
                 <span>Supported by advertising</span>
               </li>
             </ul>
@@ -168,7 +168,7 @@ export function PlanSelection() {
             <button
               onClick={handleSelectFree}
               disabled={loadingPlan !== null}
-              className="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-md bg-paper hover:bg-paper/80 border border-border text-ink font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {loadingPlan === 'free' ? (
                 <>
@@ -184,15 +184,15 @@ export function PlanSelection() {
         </div>
 
         {/* PLAN 2 — AD-FREE */}
-        <div className="relative flex flex-col justify-between p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-brand-50/50 to-white dark:from-slate-900 dark:to-slate-900/90 border-2 border-brand-500 dark:border-brand-500/80 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/20 transition-all">
-          <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-[11px] font-bold tracking-wide shadow-md">
+        <div className="relative flex flex-col justify-between p-6 sm:p-8 rounded-md bg-surface border-2 border-brand shadow-subtle transition-colors">
+          <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded bg-brand text-brand-fg text-[11px] font-bold tracking-wider uppercase">
             RECOMMENDED
           </div>
 
           <div className="space-y-5">
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">AD-FREE</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <h2 className="font-serif text-2xl font-bold text-ink">AD-FREE</h2>
+              <p className="text-xs text-muted">
                 Use DocuNexa without advertisements.
               </p>
             </div>
@@ -204,7 +204,7 @@ export function PlanSelection() {
                     <span className="text-4xl sm:text-5xl font-extrabold text-emerald-600 dark:text-emerald-400">
                       ${Number(appliedCoupon.finalAmountUsdt).toFixed(2)}
                     </span>
-                    <span className="text-xs text-slate-400 line-through">
+                    <span className="text-xs text-muted line-through">
                       ${appliedCoupon.originalAmountUsd}
                     </span>
                     <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
@@ -213,8 +213,8 @@ export function PlanSelection() {
                   </>
                 ) : (
                   <>
-                    <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">$2</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">one-time</span>
+                    <span className="text-4xl sm:text-5xl font-extrabold text-ink">$2</span>
+                    <span className="text-xs text-muted font-medium">one-time</span>
                   </>
                 )}
               </div>
@@ -225,14 +225,14 @@ export function PlanSelection() {
               )}
             </div>
 
-            <ul className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300">
+            <ul className="space-y-3 pt-4 border-t border-border text-sm text-ink">
               <li className="flex items-center gap-2.5">
                 <Check size={16} className="text-emerald-500 shrink-0" />
                 <span>Free PDF tools</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Check size={16} className="text-emerald-500 shrink-0" />
-                <span className="font-semibold text-slate-900 dark:text-white">No Monetag advertising</span>
+                <span className="font-semibold text-ink">No Monetag advertising</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Check size={16} className="text-emerald-500 shrink-0" />
@@ -241,9 +241,9 @@ export function PlanSelection() {
             </ul>
 
             {/* Coupon Code Input */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="pt-3 border-t border-border space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                <span className="text-muted font-medium flex items-center gap-1">
                   <Tag size={12} /> Have a coupon code?
                 </span>
                 {appliedCoupon && (
@@ -262,12 +262,12 @@ export function PlanSelection() {
                     setCouponError(null);
                   }}
                   placeholder="e.g. DOCUNEXA100well"
-                  className="flex-1 px-3 py-1.5 rounded-xl text-xs font-mono font-medium uppercase tracking-wider bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="flex-1 px-3 py-2 rounded-md text-xs font-mono font-medium uppercase tracking-wider bg-paper border border-border text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
                 />
                 <button
                   type="submit"
                   disabled={couponLoading || !couponCode.trim()}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center min-w-[60px]"
+                  className="px-3.5 py-2 rounded-md text-xs font-semibold text-brand-fg bg-brand hover:bg-brand/90 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center min-w-[60px]"
                 >
                   {couponLoading ? <Loader2 size={12} className="animate-spin" /> : 'Apply'}
                 </button>
@@ -283,7 +283,7 @@ export function PlanSelection() {
             <button
               onClick={handleSelectAdFree}
               disabled={loadingPlan !== null}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-600 hover:from-brand-500 hover:to-indigo-500 active:from-brand-700 active:to-indigo-700 text-white font-semibold text-sm transition-all shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {loadingPlan === 'ad_free' ? (
                 <>
@@ -299,7 +299,7 @@ export function PlanSelection() {
                 </>
               )}
             </button>
-            <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
+            <p className="text-[11px] text-center text-muted mt-2">
               {appliedCoupon && Number(appliedCoupon.finalAmountUsdt) === 0
                 ? 'Zero-cost activation. Instant access with no payment required.'
                 : 'Direct Bybit USDT transfer on Polygon or Aptos. No recurring fees.'}

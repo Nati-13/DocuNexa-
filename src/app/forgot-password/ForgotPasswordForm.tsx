@@ -54,34 +54,34 @@ export function ForgotPasswordForm() {
 
   if (submitted) {
     return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 text-center">
+      <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle space-y-6 text-center text-ink">
         <div className="flex flex-col items-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+          <div className="w-14 h-14 rounded-md bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
             <KeyRound size={32} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-2">
+          <h1 className="text-2xl font-serif font-bold tracking-tight text-ink mt-2">
             Reset Code Sent
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-            If an account exists for <strong className="text-slate-900 dark:text-white">{email}</strong>, we&apos;ve sent a password reset code.
+          <p className="text-xs sm:text-sm text-muted max-w-sm">
+            If an account exists for <strong className="text-ink">{email}</strong>, we&apos;ve sent a password reset code.
           </p>
         </div>
 
-        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+        <p className="text-xs text-muted leading-relaxed">
           The code consists of <strong>4 digits and 2 uppercase letters</strong> (e.g. <code>4827AB</code>) and expires in 10 minutes.
         </p>
 
-        <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="space-y-3 pt-2 border-t border-border">
           <button
             onClick={() => router.push(`/reset-password?email=${encodeURIComponent(email)}`)}
-            className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-xs transition-all shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             Enter Recovery Code <ArrowRight size={14} />
           </button>
 
           <Link
             href="/login"
-            className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors pt-1"
+            className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-muted hover:text-ink transition-colors pt-1"
           >
             <ArrowLeft size={14} /> Back to login
           </Link>
@@ -91,13 +91,13 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+    <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle space-y-6 text-ink">
       <div className="flex flex-col items-center text-center space-y-2">
         <DocuNexaLogo size="md" />
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-4">
+        <h1 className="text-2xl font-serif font-bold tracking-tight text-ink mt-4">
           Forgot Password
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           Enter your account email address and we&apos;ll send a 6-character recovery code.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function ForgotPasswordForm() {
       {error && (
         <div
           role="alert"
-          className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400"
+          className="p-3.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300"
         >
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{error}</span>
@@ -116,12 +116,12 @@ export function ForgotPasswordForm() {
         <div>
           <label
             htmlFor="forgot-email"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Account Email Address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Mail size={16} />
             </div>
             <input
@@ -132,7 +132,7 @@ export function ForgotPasswordForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
           </div>
         </div>
@@ -140,7 +140,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-sm transition-all shadow-md shadow-brand-500/20 hover:shadow-brand-500/35 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="w-full mt-2 py-3 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
           {loading ? (
             <>
@@ -154,10 +154,10 @@ export function ForgotPasswordForm() {
         </button>
       </form>
 
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+      <div className="pt-2 border-t border-border text-center">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft size={14} /> Back to Sign In
         </Link>

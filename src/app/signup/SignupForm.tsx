@@ -87,13 +87,13 @@ export function SignupForm() {
   };
 
   return (
-    <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+    <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle space-y-6 text-ink">
       <div className="flex flex-col items-center text-center space-y-2">
         <DocuNexaLogo size="md" />
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-4">
+        <h1 className="text-2xl font-serif font-bold tracking-tight text-ink mt-4">
           Create Your Account
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           Sign up to choose between our free ad-supported plan or $2 ad-free upgrade.
         </p>
       </div>
@@ -101,7 +101,7 @@ export function SignupForm() {
       {error && (
         <div
           role="alert"
-          className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400"
+          className="p-3.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300"
         >
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{error}</span>
@@ -112,12 +112,12 @@ export function SignupForm() {
         <div>
           <label
             htmlFor="signup-email"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Email Address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Mail size={16} />
             </div>
             <input
@@ -128,7 +128,7 @@ export function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
           </div>
         </div>
@@ -136,12 +136,12 @@ export function SignupForm() {
         <div>
           <label
             htmlFor="signup-password"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Lock size={16} />
             </div>
             <input
@@ -152,10 +152,10 @@ export function SignupForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-[11px] text-muted mt-1">
             Minimum 8 characters with at least one letter and one number.
           </p>
         </div>
@@ -163,12 +163,12 @@ export function SignupForm() {
         <div>
           <label
             htmlFor="signup-confirm-password"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Confirm Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Lock size={16} />
             </div>
             <input
@@ -179,7 +179,7 @@ export function SignupForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
           </div>
         </div>
@@ -191,15 +191,15 @@ export function SignupForm() {
             type="checkbox"
             checked={termsAccepted}
             onChange={(e) => setTermsAccepted(e.target.checked)}
-            className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-brand-600 focus:ring-brand-500 cursor-pointer"
+            className="mt-0.5 w-4 h-4 rounded border-border text-brand focus:ring-brand cursor-pointer"
           />
-          <label htmlFor="accept-terms" className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed cursor-pointer select-none">
+          <label htmlFor="accept-terms" className="text-xs text-muted leading-relaxed cursor-pointer select-none">
             I have read and agree to the{' '}
-            <Link href="/terms-of-service" target="_blank" className="font-semibold text-brand-600 dark:text-brand-400 hover:underline">
+            <Link href="/terms-of-service" target="_blank" className="font-semibold text-brand hover:underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy-policy" target="_blank" className="font-semibold text-brand-600 dark:text-brand-400 hover:underline">
+            <Link href="/privacy-policy" target="_blank" className="font-semibold text-brand hover:underline">
               Privacy Policy
             </Link>{' '}
             (v2026.11).
@@ -209,7 +209,7 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-sm transition-all shadow-md shadow-brand-500/20 hover:shadow-brand-500/35 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="w-full mt-2 py-3 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
           {loading ? (
             <>
@@ -223,19 +223,19 @@ export function SignupForm() {
         </button>
       </form>
 
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center space-y-2">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+      <div className="pt-2 border-t border-border text-center space-y-2">
+        <p className="text-xs text-muted">
           Already have an account?{' '}
           <Link
             href="/login"
-            className="font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+            className="font-semibold text-brand hover:underline"
           >
             Log in
           </Link>
         </p>
-        <p className="text-[11px] text-slate-400 dark:text-slate-500">
+        <p className="text-[11px] text-muted">
           Want to use tools without an account?{' '}
-          <Link href="/tools" className="hover:underline text-slate-600 dark:text-slate-400">
+          <Link href="/tools" className="hover:underline text-ink">
             Open PDF Tools directly
           </Link>
         </p>

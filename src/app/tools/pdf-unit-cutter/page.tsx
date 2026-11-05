@@ -722,7 +722,7 @@ export default function PdfUnitCutterPage() {
         {completionItems && (
           <CompletionModal
             originalFileName={fileInfo?.name || 'Document'}
-            items={completionItems}
+            completedItems={completionItems}
             onClose={() => setCompletionItems(null)}
             onDownloadAll={handleDownloadAll}
             onDownloadZip={handleDownloadZip}

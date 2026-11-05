@@ -206,7 +206,6 @@ async function runTests() {
     asset_type: '0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b',
     amount: '2045800', // 2.0458 USDT in micro-units
     type: '0x1::fungible_asset::Deposit',
-    is_gas_fee: false,
     is_transaction_success: true,
     transaction_timestamp: new Date(Date.now() - 60000).toISOString(),
   };
