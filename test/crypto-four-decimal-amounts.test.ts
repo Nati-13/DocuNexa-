@@ -202,7 +202,6 @@ async function runTests() {
   };
   const aptosActivity: AptosFungibleActivity = {
     transaction_version: '100201',
-    event_index: 0,
     owner_address: aptosOrder.destination_address,
     asset_type: '0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b',
     amount: '2045800', // 2.0458 USDT in micro-units

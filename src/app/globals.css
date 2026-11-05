@@ -4,57 +4,90 @@
 
 @layer base {
   :root {
-    --color-primary: #1e293b;
-    --color-on-primary: #ffffff;
-    --color-secondary: #334155;
-    --color-on-secondary: #ffffff;
-    --color-accent: #2563eb;
-    --color-on-accent: #ffffff;
-    --color-background: #f8fafc;
-    --color-foreground: #0f172a;
-    --color-card: #ffffff;
-    --color-card-foreground: #0f172a;
-    --color-muted: #f1f5f9;
-    --color-muted-foreground: #475569;
-    --color-border: #e2e8f0;
-    --color-ring: #4f46e5;
+    /* -------------------------------------------------------------------------
+       DocuNexa "Ink and Paper" Design System — Light Mode
+       Warm cream stationery aesthetic with rich dark charcoal ink
+       ------------------------------------------------------------------------- */
+    --paper: 250 247 242;       /* #FAF7F2 warm cream page background */
+    --surface: 255 255 255;     /* #FFFFFF card / modal / elevated surface */
+    --border: 228 221 208;      /* #E4DDD0 warm subtle border (1px rules) */
+    --line: 228 221 208;        /* #E4DDD0 warm subtle rule / divider */
+    --ink: 28 27 25;            /* #1C1B19 deep charcoal primary ink (16.7:1 on paper) */
+    --muted: 107 102 92;        /* #6B665C warm secondary text (5.2:1 on paper) */
+    --brand: 31 58 95;          /* #1F3A5F deep navy editorial ink (8.5:1 on paper) */
+    --brand-fg: 255 255 255;    /* #FFFFFF (8.8:1 on brand) */
+    --accent: 228 87 46;        /* #E4572E terracotta / wax seal (4.6:1 on paper) */
+    --accent-fg: 255 255 255;   /* #FFFFFF (4.6:1 on accent) */
 
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    /* Legacy compatibility tokens mapped to Ink & Paper */
+    --color-primary: #1F3A5F;
+    --color-on-primary: #FFFFFF;
+    --color-secondary: #6B665C;
+    --color-on-secondary: #FFFFFF;
+    --color-accent: #E4572E;
+    --color-on-accent: #FFFFFF;
+    --color-background: #FAF7F2;
+    --color-foreground: #1C1B19;
+    --color-card: #FFFFFF;
+    --color-card-foreground: #1C1B19;
+    --color-muted: #FAF7F2;
+    --color-muted-foreground: #6B665C;
+    --color-border: #E4DDD0;
+    --color-ring: #1F3A5F;
 
-    --space-xs: 0.25rem;
-    --space-sm: 0.5rem;
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
-    --space-2xl: 3rem;
+    --background: 40 33% 98%;
+    --foreground: 36 6% 10%;
   }
 
   .dark {
-    --color-primary: #f8fafc;
-    --color-on-primary: #0f172a;
-    --color-secondary: #cbd5e1;
-    --color-on-secondary: #0f172a;
-    --color-accent: #3b82f6;
-    --color-on-accent: #ffffff;
-    --color-background: #020617;
-    --color-foreground: #f8fafc;
-    --color-card: #0f172a;
-    --color-card-foreground: #f8fafc;
-    --color-muted: #1e293b;
-    --color-muted-foreground: #94a3b8;
-    --color-border: #1e293b;
-    --color-ring: #6366f1;
+    /* -------------------------------------------------------------------------
+       DocuNexa "Ink and Paper" Design System — Dark Mode
+       Deep espresso warm dark aesthetic with warm off-white ink
+       ------------------------------------------------------------------------- */
+    --paper: 26 24 22;          /* #1A1816 deep espresso, NOT pitch black #000000 */
+    --surface: 36 34 32;        /* #242220 warm dark charcoal elevated surface */
+    --border: 58 54 50;         /* #3A3632 subtle warm border */
+    --line: 58 54 50;           /* #3A3632 warm subtle rule / divider */
+    --ink: 236 230 218;         /* #ECE6DA warm off-white ink (14.1:1 on paper) */
+    --muted: 163 156 142;       /* #A39C8E warm muted secondary text (6.9:1 on paper) */
+    --brand: 143 176 220;       /* #8FB0DC softer slate blue (7.7:1 on paper) */
+    --brand-fg: 20 23 28;       /* #14171C (8.6:1 on brand) */
+    --accent: 242 107 67;       /* #F26B43 terracotta adjusted for dark mode (5.5:1 on paper) */
+    --accent-fg: 26 24 22;      /* #1A1816 (7.1:1 on accent) */
 
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Legacy compatibility tokens mapped to Ink & Paper */
+    --color-primary: #8FB0DC;
+    --color-on-primary: #14171C;
+    --color-secondary: #A39C8E;
+    --color-on-secondary: #14171C;
+    --color-accent: #F26B43;
+    --color-on-accent: #1A1816;
+    --color-background: #1A1816;
+    --color-foreground: #ECE6DA;
+    --color-card: #242220;
+    --color-card-foreground: #ECE6DA;
+    --color-muted: #242220;
+    --color-muted-foreground: #A39C8E;
+    --color-border: #3A3632;
+    --color-ring: #8FB0DC;
+
+    --background: 30 8% 9%;
+    --foreground: 38 31% 91%;
   }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: rgb(var(--paper));
+    color: rgb(var(--ink));
+    font-family: var(--font-sans), 'Public Sans', 'Nyala', 'Kefa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-serif-display), 'Fraunces', 'Nyala', 'Abyssinica SIL', serif;
+    letter-spacing: -0.02em;
+    font-feature-settings: 'liga', 'clig';
   }
 
   code, pre, .font-mono {
@@ -64,7 +97,7 @@
 
 /* Accessible focus styling */
 :focus-visible {
-  outline: 2px solid #4f46e5;
+  outline: 2px solid rgb(var(--brand));
   outline-offset: 2px;
 }
 
@@ -80,7 +113,7 @@
   }
 }
 
-/* Custom subtle scrollbar */
+/* Subtle, clean scrollbars — stationery aesthetic without heavy chrome */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -91,252 +124,107 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: rgb(var(--border));
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgb(var(--muted));
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+/* -----------------------------------------------------------------------------
+   Flat Editorial Utilities (Replacing Aurora, Gradients, and Glassmorphism)
+   ----------------------------------------------------------------------------- */
+.card-editorial {
+  background-color: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: 6px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-@keyframes bounceSubtle {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+.card-editorial:hover {
+  border-color: rgb(var(--muted) / 0.5);
 }
 
-.animate-bounce-subtle {
-  animation: bounceSubtle 2s infinite ease-in-out;
+.btn-primary {
+  background-color: rgb(var(--brand)) !important;
+  color: rgb(var(--brand-fg)) !important;
+  border: 1px solid rgb(var(--brand)) !important;
+  border-radius: 6px !important;
+  font-weight: 600;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+  box-shadow: none !important;
 }
 
-
-/* ==========================================================================
-   Shader-Inspired Visuals, Aurora Gradients & Modern Glow Effects
-   ========================================================================== */
-
-@keyframes auroraFlow {
-  0% {
-    background-position: 0% 50%, 50% 0%, 100% 50%;
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    background-position: 100% 50%, 0% 100%, 50% 100%;
-    transform: rotate(3deg) scale(1.04);
-  }
-  100% {
-    background-position: 0% 50%, 50% 0%, 100% 50%;
-    transform: rotate(0deg) scale(1);
-  }
+.btn-primary:hover {
+  opacity: 0.92;
 }
 
-@keyframes floatGentle {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(8px, -12px);
-  }
+.btn-secondary {
+  background-color: rgb(var(--surface)) !important;
+  color: rgb(var(--ink)) !important;
+  border: 1px solid rgb(var(--border)) !important;
+  border-radius: 6px !important;
+  font-weight: 500;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: none !important;
 }
 
-@keyframes floatGentleAlt {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(-10px, 10px);
-  }
+.btn-secondary:hover {
+  border-color: rgb(var(--ink) / 0.6);
 }
 
-@keyframes glowPulse {
-  0%, 100% {
-    opacity: 0.55;
-    filter: blur(40px) brightness(1);
-  }
-  50% {
-    opacity: 0.85;
-    filter: blur(52px) brightness(1.15);
-  }
-}
-
-@keyframes scannerSweep {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@keyframes shimmerSweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-/* Aurora Backdrop Mesh */
-.aurora-mesh {
-  position: absolute;
-  inset: -20%;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 25%, rgba(99, 102, 241, 0.18) 0%, transparent 45%),
-    radial-gradient(circle at 80% 30%, rgba(168, 85, 247, 0.16) 0%, transparent 50%),
-    radial-gradient(circle at 50% 75%, rgba(6, 182, 212, 0.14) 0%, transparent 55%),
-    radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 45%);
-  filter: blur(60px);
-  animation: auroraFlow 24s ease-in-out infinite;
-  transform-origin: center;
-}
-
-.dark .aurora-mesh {
-  background:
-    radial-gradient(circle at 20% 25%, rgba(99, 102, 241, 0.28) 0%, transparent 50%),
-    radial-gradient(circle at 80% 30%, rgba(147, 51, 234, 0.22) 0%, transparent 55%),
-    radial-gradient(circle at 50% 75%, rgba(6, 182, 212, 0.2) 0%, transparent 55%),
-    radial-gradient(circle at 70% 80%, rgba(37, 99, 235, 0.22) 0%, transparent 50%);
-  filter: blur(75px);
-}
-
-/* Glassmorphism Panel Tokens */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-}
-
-.dark .glass-panel {
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-}
-
-.glass-panel-interactive {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.glass-panel-interactive:hover {
-  transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 12px 28px -6px rgba(99, 102, 241, 0.12), 0 0 0 1px rgba(99, 102, 241, 0.1);
-}
-
-.dark .glass-panel-interactive {
-  background: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
-}
-
-.dark .glass-panel-interactive:hover {
-  transform: translateY(-2px);
-  border-color: rgba(129, 140, 248, 0.35);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 25px -5px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-/* Luminous Glowing Accents */
-.glow-brand {
-  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.3), 0 0 15px -3px rgba(6, 182, 212, 0.2);
-}
-
-.glow-brand-subtle {
-  box-shadow: 0 0 25px -6px rgba(99, 102, 241, 0.18);
-}
-
-/* Premium Gradient Button */
+/* Neutralize legacy SaaS classes: strictly flat, no gradients, no glows */
 .btn-aurora {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 45%, #8b5cf6 80%, #06b6d4 100%);
-  background-size: 200% 200%;
-  color: #ffffff !important;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.35);
+  background: rgb(var(--brand)) !important;
+  color: rgb(var(--brand-fg)) !important;
+  border: 1px solid rgb(var(--brand)) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
 }
 
 .btn-aurora:hover {
-  background-position: 100% 50%;
-  transform: translateY(-1px) scale(1.015);
-  box-shadow: 0 8px 24px 0 rgba(79, 70, 229, 0.45), 0 0 12px 0 rgba(6, 182, 212, 0.3);
+  opacity: 0.92 !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-.btn-aurora:active {
-  transform: translateY(1px) scale(0.985);
-  box-shadow: 0 2px 8px 0 rgba(79, 70, 229, 0.3);
+.glass-panel,
+.glass-panel-interactive {
+  background-color: rgb(var(--surface)) !important;
+  border: 1px solid rgb(var(--border)) !important;
+  border-radius: 6px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease !important;
 }
 
-/* High-tech Scanner Bar */
-.scanner-bar {
-  background: linear-gradient(
-    90deg,
-    #4f46e5 0%,
-    #06b6d4 25%,
-    #8b5cf6 50%,
-    #06b6d4 75%,
-    #4f46e5 100%
-  );
-  background-size: 200% 100%;
-  animation: scannerSweep 2s linear infinite;
+.glass-panel-interactive:hover {
+  border-color: rgb(var(--brand)) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
-/* Animated Floating Lights */
-.float-light-1 {
-  animation: floatGentle 8s ease-in-out infinite;
+.aurora-mesh {
+  display: none !important;
 }
 
-.float-light-2 {
-  animation: floatGentleAlt 11s ease-in-out infinite;
-}
-
+.glow-brand,
+.glow-brand-subtle,
 .pulse-glow {
-  animation: glowPulse 5s ease-in-out infinite;
+  box-shadow: none !important;
+  filter: none !important;
+  animation: none !important;
 }
 
-/* Subtle Shimmer for High-Priority Cards */
-.shimmer-card {
-  position: relative;
-  overflow: hidden;
+.scanner-bar {
+  background: rgb(var(--brand)) !important;
+  animation: none !important;
 }
 
 .shimmer-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 45%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.05) 55%,
-    transparent 100%
-  );
-  transform: translateX(-100%);
-  pointer-events: none;
-  transition: transform 0.75s ease-in-out;
-}
-
-.shimmer-card:hover::after {
-  transform: translateX(100%);
+  display: none !important;
 }
