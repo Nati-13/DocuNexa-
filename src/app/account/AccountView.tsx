@@ -257,7 +257,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                 )}
               </button>
               <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-1.5">
-                $2.00 USD one-time USDT deposit on Polygon PoS or Aptos Mainnet. Never billed again.
+                $2.00 USD one-time crypto payment on Polygon, Aptos, or TRON. Never billed again.
               </p>
             </div>
           )}
@@ -314,7 +314,7 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                               {p.coupon_code}
                             </span>
                             <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-                              -{formatPaymentAmount(p.discount_amount_usdt || '0.0000')} USDT
+                              -{formatPaymentAmount(p.discount_amount_usdt || '0.0000')} {p.currency || 'USDT'}
                             </span>
                           </div>
                         ) : (
@@ -322,15 +322,19 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                         )}
                       </td>
                       <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white font-mono">
-                        {formatPaymentAmount(p.payment_amount_usdt)} USDT
+                        {formatPaymentAmount(p.payment_amount_usdt)} {p.currency || 'USDT'}
                       </td>
                       <td className="py-3 px-3">
                         {p.network === 'Aptos' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-medium text-[11px]">
                             Aptos
                           </span>
+                        ) : p.network === 'TRON' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-medium text-[11px]">
+                            TRON
+                          </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-medium text-[11px]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-medium text-[11px]">
                             Polygon
                           </span>
                         )}

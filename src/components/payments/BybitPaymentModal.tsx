@@ -408,8 +408,9 @@ export function BybitPaymentModal({
                       </button>
                     );
                   })}
-                </div><p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal px-0.5">
-                  USDT TRON (TRC20) and Polygon USDC (Native) are displayed as Coming Soon and disabled until legal authorization and receiving addresses are confirmed.
+                </div>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal px-0.5">
+                  All four payment methods are active. Select your preferred network and token to proceed.
                 </p>
               </div>
 
@@ -437,7 +438,7 @@ export function BybitPaymentModal({
                       </div>
                       <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
                         <span>Coupon Discount</span>
-                        <span>-{formatPaymentAmount(order.discountAmountUsdt || '0.0000')} USDT</span>
+                        <span>-{formatPaymentAmount(order.discountAmountUsdt || '0.0000')} {order.currency || 'USDT'}</span>
                       </div>
                       <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-sm">
                         <span>You Pay</span>
@@ -512,7 +513,7 @@ export function BybitPaymentModal({
                       {displayAmount}
                     </span>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
-                      USDT
+                      {order.currency || 'USDT'}
                     </span>
                   </div>
                   <button
