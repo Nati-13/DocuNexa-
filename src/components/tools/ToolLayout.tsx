@@ -20,48 +20,45 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
   const relatedTools = ALL_TOOLS.filter((t) => t.id !== tool.id && t.category === tool.category).slice(0, 3);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-paper text-ink transition-colors">
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 mb-6">
-          <Link href="/" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-medium text-muted mb-6">
+          <Link href="/" className="hover:text-brand transition-colors focus-visible:ring-2 focus-visible:ring-brand rounded px-1">
             Home
           </Link>
           <ChevronRight size={13} aria-hidden="true" />
-          <Link href="/tools" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1">
+          <Link href="/tools" className="hover:text-brand transition-colors focus-visible:ring-2 focus-visible:ring-brand rounded px-1">
             Tools
           </Link>
           <ChevronRight size={13} aria-hidden="true" />
           {categoryInfo && (
             <>
-              <span className="text-slate-600 dark:text-slate-300 px-1">{categoryInfo.name}</span>
+              <span className="text-muted px-1">{categoryInfo.name}</span>
               <ChevronRight size={13} aria-hidden="true" />
             </>
           )}
-          <span className="font-semibold text-slate-900 dark:text-white px-1" aria-current="page">{tool.name}</span>
+          <span className="font-semibold text-ink px-1" aria-current="page">{tool.name}</span>
         </nav>
 
         {/* Tool Header Section */}
-        <div className="relative text-center max-w-2xl mx-auto mb-10 space-y-3">
-          {/* Subtle luminous aurora glow behind header */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[220px] bg-gradient-to-tr from-brand-500/15 via-indigo-500/10 to-cyan-500/15 blur-3xl -z-10 pointer-events-none rounded-full" />
-
-          {/* Tool Icon & Badge */}
-          <div className="inline-flex items-center justify-center p-3.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 text-brand-600 dark:text-brand-400 border border-brand-200/70 dark:border-brand-700/60 shadow-lg shadow-brand-500/15 mb-1 backdrop-blur-md">
-            <DynamicIcon name={tool.iconName} size={30} />
+        <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+          {/* Tool Icon */}
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-md bg-surface text-brand border border-border mb-1">
+            <DynamicIcon name={tool.iconName} size={24} />
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-ink">
             {tool.name}
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 leading-relaxed">
+          <p className="text-sm sm:text-base text-muted leading-relaxed">
             {tool.description}
           </p>
 
           {/* Privacy & Guarantee Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
-            <ShieldCheck size={14} className="text-emerald-500" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface border border-border text-muted text-xs font-medium">
+            <ShieldCheck size={14} className="text-brand shrink-0" />
             <span>Client-Side Processing: Zero document uploads, processed locally in your browser memory.</span>
           </div>
         </div>
@@ -76,14 +73,14 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
 
         {/* Related Tools Section */}
         {relatedTools.length > 0 && (
-          <div className="pt-10 border-t border-slate-200 dark:border-slate-800 space-y-6">
+          <div className="pt-10 border-t border-border space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-serif font-bold text-ink">
                 More {categoryInfo?.name || 'Related'} Tools
               </h3>
               <Link
                 href="/tools"
-                className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1"
+                className="text-xs font-semibold text-brand hover:underline flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-brand rounded px-1"
               >
                 <span>View all 34 tools</span>
                 <ArrowRight size={13} />
@@ -95,22 +92,22 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, children }) => {
                 <Link
                   key={rel.id}
                   href={`/tools/${rel.slug}`}
-                  className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500/60 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-out flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+                  className="group p-5 rounded-md bg-surface border border-border hover:border-brand/60 transition-colors flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden"
                 >
                   <div className="space-y-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-brand-50 dark:group-hover:bg-brand-950/60 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex items-center justify-center transition-colors">
+                    <div className="w-9 h-9 rounded-md bg-paper text-brand flex items-center justify-center transition-colors border border-border">
                       <DynamicIcon name={rel.iconName} size={18} />
                     </div>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    <h4 className="font-semibold text-sm text-ink group-hover:text-brand transition-colors">
                       {rel.name}
                     </h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                       {rel.description}
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center text-xs font-semibold text-brand-600 dark:text-brand-400 group-hover:translate-x-0.5 transition-transform">
+                  <div className="mt-4 flex items-center text-xs font-semibold text-brand">
                     <span>Open tool</span>
-                    <ArrowRight size={12} className="ml-1" />
+                    <ArrowRight size={12} className="ml-1 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </Link>
               ))}

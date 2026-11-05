@@ -9,8 +9,6 @@ import {
   Split, 
   FileArchive, 
   FileText, 
-  Image, 
-  FileSearch, 
   Sparkles, 
   ArrowRight, 
   Search, 
@@ -19,26 +17,21 @@ import {
   UploadCloud, 
   CheckCircle2, 
   BookOpen, 
-  ChevronRight, 
-  Layers, 
-  Lock, 
-  Zap, 
-  HelpCircle,
-  Plus,
-  RotateCw,
-  FolderDown,
-  Check,
-  GraduationCap,
-  Gift
+  RotateCw, 
+  FolderDown, 
+  Check, 
+  GraduationCap, 
+  Gift, 
+  Plus, 
+  Zap 
 } from 'lucide-react';
 import { 
   ALL_TOOLS, 
   TOOL_CATEGORIES, 
-  getPopularTools, 
-  getToolBySlug 
+  getPopularTools 
 } from '@/config/tools';
 import { DynamicIcon } from '@/components/common/DynamicIcon';
-import { ToolCategory, ToolItem } from '@/types';
+import { ToolCategory } from '@/types';
 import { createSampleTextbookPdf } from '@/lib/sampleGenerator';
 import { AdSlot } from '@/components/ads/AdSlot';
 
@@ -100,7 +93,7 @@ export default function HomePage() {
     }
   };
 
-  // Filter tools for All Tools section
+  // Filter tools
   const filteredTools = ALL_TOOLS.filter((tool) => {
     const matchesCat = activeCategory === 'all' || tool.category === activeCategory;
     const q = searchQuery.toLowerCase().trim();
@@ -116,81 +109,71 @@ export default function HomePage() {
 
   const faqs = [
     {
-      q: 'Are my PDF documents uploaded to a remote server?',
-      a: 'No. DocuNexa is built on a client-side, privacy-first architecture. Document parsing, unit detection, splitting, merging, and transformations execute directly in your browser memory using WebAssembly and Web Workers. Your files are processed locally on your device.',
+      q: 'Are my uploaded files and PDFs kept private?',
+      a: 'Yes. Core PDF tools run entirely client-side using JavaScript WebAssembly in your browser memory. Your files are not uploaded, cached, or saved on remote servers.',
     },
     {
-      q: 'How does the PDF Unit Cutter automatically detect units in a textbook?',
-      a: 'The engine scans page baselines, font sizes, heading prefixes (e.g., UNIT 1, Chapter 2, Module 3, Roman numerals, spelled-out words), and correlates them with the document Table of Contents (TOC). It filters out casual conversational references like "In Unit 2 we learned" to avoid false positives.',
+      q: 'Is DocuNexa really 100% free?',
+      a: 'Yes. Every core tool is completely free with zero subscription requirements or daily page limits. Users who wish to remove advertising can choose a one-time $2 Ad-Free upgrade.',
     },
     {
-      q: 'Is there a limit on how many units or pages I can split?',
-      a: 'No artificial limits! You can create 2, 10, 25, 50, or unlimited custom parts. It easily processes 300+ page textbooks and course materials without degradation or freezing.',
+      q: 'What is the PDF Unit Cutter tool?',
+      a: 'PDF Unit Cutter is our flagship tool built for educators and students. It automatically scans textbooks for unit, chapter, or module headings and splits the book into organized, labeled PDF files.',
     },
     {
-      q: 'Does splitting reduce the quality of text or images?',
-      a: 'Never. Unlike simplistic tools that convert pages to low-resolution JPEG screenshots, DocuNexa uses native PDF object copying. Vector graphics, searchable text layers, mathematical formulas, and font definitions are losslessly preserved.',
+      q: 'What file size limits apply to DocuNexa tools?',
+      a: 'Client-side processing supports documents up to 250 MB depending on available device memory. Because processing happens locally, operations are fast and bandwidth-free.',
     },
     {
-      q: 'Can I save the sliced PDFs directly into a folder on my computer?',
-      a: 'Yes! In supported modern browsers (Chrome, Edge, Opera), you can click "Save Directly to Folder" using the File System Access API. On all other browsers, you can download all files individually or as a single neatly organized ZIP archive.',
-    },
-    {
-      q: 'Is DocuNexa completely free to use?',
-      a: 'Yes! All 34 core PDF tools and the flagship PDF Unit Cutter are completely free to use on your device with zero account requirements, zero subscription paywalls, and zero watermarks added to your files.',
+      q: 'Does DocuNexa work offline?',
+      a: 'Once the application is loaded in your browser, client-side tools like PDF Unit Cutter, Split, Merge, Rotate, and Protect continue to function even without an active internet connection.',
     },
   ];
 
   return (
-    <div className="space-y-24 md:space-y-32 pb-24 overflow-hidden">
+    <div className="space-y-20 md:space-y-28 pb-24 overflow-hidden bg-paper text-ink transition-colors">
       {/* ============================================================ */}
       {/* 1. HERO SECTION */}
       {/* ============================================================ */}
-      <section className="relative pt-12 md:pt-20 lg:pt-28 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
-        {/* Animated Aurora Shader-Inspired Backdrop */}
-        <div className="aurora-mesh opacity-60 dark:opacity-75 -z-20" />
-        <div className="absolute top-10 left-1/4 w-72 h-72 bg-indigo-500/15 dark:bg-indigo-500/25 rounded-full blur-3xl pointer-events-none float-light-1 -z-10" />
-        <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-cyan-500/12 dark:bg-cyan-500/20 rounded-full blur-3xl pointer-events-none float-light-2 -z-10" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-brand-500/20 via-indigo-500/15 to-cyan-500/15 blur-3xl -z-10 pointer-events-none rounded-full pulse-glow" />
-
+      <section className="relative pt-12 md:pt-20 lg:pt-24 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-7">
         {/* Eyebrow */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-brand-300/70 dark:border-brand-700/70 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider shadow-sm shadow-brand-500/10 shimmer-card">
-          <span className="w-2 h-2 rounded-full bg-brand-500 animate-ping" />
-          <span>ALL-IN-ONE PDF WORKSPACE</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md bg-surface border border-border text-brand text-xs font-semibold uppercase tracking-wider">
+          <span className="w-2 h-2 rounded-full bg-brand" />
+          <span>All-In-One PDF Workspace</span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold tracking-tight text-ink leading-[1.12]">
           Everything you need to <br className="hidden sm:inline" />
-          work with <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-rose-500">PDFs.</span>
+          work with <span className="text-brand">PDFs.</span>
         </h1>
 
         {/* Subheading */}
-        <p className="text-base sm:text-xl text-slate-700 dark:text-slate-200 max-w-2xl mx-auto leading-relaxed font-normal">
-          Split, merge, convert, edit, compress, secure, and understand your documents from one simple workspace.
+        <p className="text-base sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed font-normal">
+          Split, merge, convert, edit, compress, secure, and understand your documents from one simple, private workspace.
         </p>
 
         {/* Primary CTAs */}
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
           <a
             href="#quick-upload"
-            className="btn-aurora inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-sm shadow-xl transition-all"
+            className="inline-flex items-center gap-2 px-7 py-3 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-sm transition-colors cursor-pointer"
           >
             <span>Start Using DocuNexa</span>
-            <ArrowRight size={16} />
+            <ArrowRight size={15} />
           </a>
 
           <a
             href="#all-tools"
-            className="glass-panel-interactive inline-flex items-center gap-2 px-7 py-4 rounded-2xl text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-surface hover:bg-paper border border-border text-ink font-semibold text-sm transition-colors cursor-pointer"
           >
             <span>Explore All 34 Tools</span>
           </a>
         </div>
 
-        <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-600 dark:text-slate-300">
-          <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-semibold">
-            <ShieldCheck size={16} className="text-emerald-500" />
+        <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-muted">
+          <span className="flex items-center gap-1.5 text-brand font-semibold">
+            <ShieldCheck size={15} className="text-brand" />
             Client-Side Document Privacy
           </span>
           <span>•</span>
@@ -220,10 +203,10 @@ export default function HomePage() {
                 handleFileDrop(e.dataTransfer.files[0]);
               }
             }}
-            className={`glass-panel relative p-8 md:p-14 rounded-3xl border-2 border-dashed text-center transition-all duration-300 cursor-pointer shadow-xl shimmer-card ${
+            className={`relative p-8 md:p-12 rounded-md border-2 border-dashed text-center transition-colors cursor-pointer ${
               isDragOver
-                ? 'border-brand-500 bg-brand-50/90 dark:bg-brand-950/70 scale-[1.01] glow-brand'
-                : 'border-slate-300/80 dark:border-slate-700/80 hover:border-brand-400 dark:hover:border-brand-500'
+                ? 'border-brand bg-paper'
+                : 'border-border bg-surface hover:border-brand/60'
             }`}
           >
             <input
@@ -237,25 +220,25 @@ export default function HomePage() {
             />
 
             <label htmlFor="hero-file-picker" className="cursor-pointer space-y-4 flex flex-col items-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-50 to-cyan-50 dark:from-brand-950/80 dark:to-cyan-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner border border-brand-200/60 dark:border-brand-800/60">
-                <UploadCloud size={32} />
+              <div className="w-12 h-12 rounded-md bg-paper border border-border text-brand flex items-center justify-center">
+                <UploadCloud size={26} />
               </div>
 
               <div>
-                <h3 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white">
+                <h3 className="text-xl md:text-2xl font-serif font-bold text-ink">
                   Drop your PDF here
                 </h3>
-                <p className="text-xs md:text-sm text-slate-700 dark:text-slate-200 mt-1">
+                <p className="text-xs md:text-sm text-muted mt-1">
                   or click to choose a file from your device
                 </p>
               </div>
 
-              <div className="btn-aurora inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs md:text-sm shadow-md">
-                <Plus size={16} />
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-brand text-brand-fg font-semibold text-xs md:text-sm transition-colors">
+                <Plus size={15} />
                 <span>Choose a file</span>
               </div>
 
-              <div className="pt-2 text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-center gap-2">
+              <div className="pt-2 text-xs text-muted flex flex-wrap items-center justify-center gap-2">
                 <span>Supported: PDF, JPG, PNG, DOCX, XLSX, PPTX up to 250 MB</span>
                 <span>•</span>
                 <button
@@ -264,7 +247,7 @@ export default function HomePage() {
                     e.preventDefault();
                     handleLoadSample();
                   }}
-                  className="font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+                  className="font-semibold text-brand hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <BookOpen size={13} />
                   <span>Try Sample Textbook</span>
@@ -274,15 +257,15 @@ export default function HomePage() {
           </div>
         ) : (
           /* When a file is dropped in Hero: Smart Recommended Actions */
-          <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-brand-200 dark:border-brand-800 shadow-xl space-y-6 animate-in zoom-in-95 duration-200">
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="p-6 md:p-8 rounded-md bg-surface border border-border space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
-                  <FileText size={22} />
+                <div className="w-10 h-10 rounded-md bg-paper border border-border text-brand flex items-center justify-center shrink-0">
+                  <FileText size={20} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base text-slate-900 dark:text-white">{droppedFileInfo?.name}</h4>
-                  <p className="text-xs text-slate-700 dark:text-slate-200">
+                  <h4 className="font-semibold text-base text-ink">{droppedFileInfo?.name}</h4>
+                  <p className="text-xs text-muted">
                     {((droppedFileInfo?.size || 0) / (1024 * 1024)).toFixed(2)} MB • Ready to process
                   </p>
                 </div>
@@ -290,28 +273,28 @@ export default function HomePage() {
 
               <button
                 onClick={() => setDroppedFile(null)}
-                className="text-xs font-semibold text-slate-500 hover:text-rose-500 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="text-xs font-semibold text-muted hover:text-ink px-3 py-1.5 rounded-md border border-border hover:bg-paper transition-colors cursor-pointer"
               >
                 Change Document
               </button>
             </div>
 
-            <div className="space-y-2">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <div className="space-y-2.5">
+              <h5 className="text-xs font-bold uppercase tracking-wider text-muted">
                 What would you like to do with this document?
               </h5>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <Link
                   href="/tools/pdf-unit-cutter"
-                  className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 hover:border-brand-500 hover:shadow-md transition-all flex items-start gap-3 text-left"
+                  className="p-4 rounded-md bg-paper border border-border hover:border-brand/60 transition-colors flex items-start gap-3 text-left"
                 >
-                  <Scissors size={20} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+                  <Scissors size={18} className="text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">
+                    <span className="font-semibold text-xs text-ink block">
                       Detect Textbook Units
                     </span>
-                    <span className="text-[11px] text-slate-700 dark:text-slate-200">
+                    <span className="text-[11px] text-muted">
                       Auto-split into chapters & units
                     </span>
                   </div>
@@ -319,56 +302,56 @@ export default function HomePage() {
 
                 <Link
                   href="/tools/compress-pdf"
-                  className="p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:shadow-md transition-all flex items-start gap-3 text-left"
+                  className="p-4 rounded-md bg-surface border border-border hover:border-brand/60 transition-colors flex items-start gap-3 text-left"
                 >
-                  <FileArchive size={20} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <FileArchive size={18} className="text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">Compress File</span>
-                    <span className="text-[11px] text-slate-700 dark:text-slate-200">Reduce size for easy sharing</span>
+                    <span className="font-semibold text-xs text-ink block">Compress File</span>
+                    <span className="text-[11px] text-muted">Reduce size for easy sharing</span>
                   </div>
                 </Link>
 
                 <Link
                   href="/tools/ai-summarizer"
-                  className="p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:shadow-md transition-all flex items-start gap-3 text-left"
+                  className="p-4 rounded-md bg-surface border border-border hover:border-brand/60 transition-colors flex items-start gap-3 text-left"
                 >
-                  <Sparkles size={20} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <Sparkles size={18} className="text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">Document Summarizer</span>
-                    <span className="text-[11px] text-slate-700 dark:text-slate-200">Extract takeaways & study questions</span>
+                    <span className="font-semibold text-xs text-ink block">Document Summarizer</span>
+                    <span className="text-[11px] text-muted">Extract key terms & questions</span>
                   </div>
                 </Link>
 
                 <Link
                   href="/tools/split-pdf"
-                  className="p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:shadow-md transition-all flex items-start gap-3 text-left"
+                  className="p-4 rounded-md bg-surface border border-border hover:border-brand/60 transition-colors flex items-start gap-3 text-left"
                 >
-                  <Split size={20} className="text-rose-500 shrink-0 mt-0.5" />
+                  <Split size={18} className="text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">Split by Ranges</span>
-                    <span className="text-[11px] text-slate-700 dark:text-slate-200">Extract custom page sets</span>
+                    <span className="font-semibold text-xs text-ink block">Split by Ranges</span>
+                    <span className="text-[11px] text-muted">Extract custom page sets</span>
                   </div>
                 </Link>
 
                 <Link
                   href="/tools/merge-pdf"
-                  className="p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:shadow-md transition-all flex items-start gap-3 text-left"
+                  className="p-4 rounded-md bg-surface border border-border hover:border-brand/60 transition-colors flex items-start gap-3 text-left"
                 >
-                  <Files size={20} className="text-blue-500 shrink-0 mt-0.5" />
+                  <Files size={18} className="text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">Merge with Others</span>
-                    <span className="text-[11px] text-slate-700 dark:text-slate-200">Combine into one document</span>
+                    <span className="font-semibold text-xs text-ink block">Merge with Others</span>
+                    <span className="text-[11px] text-muted">Combine into one document</span>
                   </div>
                 </Link>
 
                 <Link
                   href="/tools/rotate-pdf"
-                  className="p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:shadow-md transition-all flex items-start gap-3 text-left"
+                  className="p-4 rounded-md bg-surface border border-border hover:border-brand/60 transition-colors flex items-start gap-3 text-left"
                 >
-                  <RotateCw size={20} className="text-purple-500 shrink-0 mt-0.5" />
+                  <RotateCw size={18} className="text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white block">Rotate Pages</span>
-                    <span className="text-[11px] text-slate-700 dark:text-slate-200">Flip portrait & landscape</span>
+                    <span className="font-semibold text-xs text-ink block">Rotate Pages</span>
+                    <span className="text-[11px] text-muted">Flip portrait & landscape</span>
                   </div>
                 </Link>
               </div>
@@ -380,57 +363,55 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 3. POPULAR TOOLS */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-border">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand">
               Frequently Used
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-ink mt-0.5">
               Popular PDF Tools
             </h2>
           </div>
           <a
             href="#all-tools"
-            className="text-xs sm:text-sm font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
+            className="text-xs sm:text-sm font-semibold text-brand hover:underline inline-flex items-center gap-1"
           >
             <span>Explore all 34 tools</span>
-            <ArrowRight size={14} />
+            <ArrowRight size={13} />
           </a>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {popularTools.map((tool) => {
             const isFlagship = tool.id === 'pdf-unit-cutter';
             return (
               <Link
                 key={tool.id}
                 href={`/tools/${tool.slug}`}
-                className={`group p-6 rounded-3xl transition-all duration-200 flex flex-col justify-between ${
+                className={`group p-5 rounded-md transition-colors flex flex-col justify-between ${
                   isFlagship
-                    ? 'bg-gradient-to-b from-brand-50/90 to-white dark:from-brand-950/40 dark:to-slate-900 border-2 border-brand-500 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/20'
-                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-400 hover:shadow-lg'
+                    ? 'bg-surface border-2 border-brand'
+                    : 'bg-surface border border-border hover:border-brand/60'
                 }`}
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-200 ${
+                      className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${
                         isFlagship
-                          ? 'bg-brand-600 text-white shadow-md'
-                          : 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400'
+                          ? 'bg-brand text-brand-fg'
+                          : 'bg-paper text-brand border border-border'
                       }`}
                     >
-                      <DynamicIcon name={tool.iconName} size={20} />
+                      <DynamicIcon name={tool.iconName} size={18} />
                     </div>
                     {tool.badge && (
                       <span
                         className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded ${
                           tool.badge === 'Featured'
-                            ? 'bg-brand-600 text-white'
-                            : tool.badge === 'AI'
-                            ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            ? 'bg-brand/10 border border-brand/20 text-brand'
+                            : 'bg-paper border border-border text-muted'
                         }`}
                       >
                         {tool.badge}
@@ -438,17 +419,17 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <h3 className="font-semibold text-sm text-ink group-hover:text-brand transition-colors">
                     {tool.name}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                     {tool.description}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-brand-600 dark:text-brand-400">
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-semibold text-brand">
                   <span>Open Tool</span>
-                  <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </Link>
             );
@@ -460,28 +441,25 @@ export default function HomePage() {
       {/* 4. FEATURED TOOL: PDF UNIT CUTTER */}
       {/* ============================================================ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl bg-gradient-to-br from-brand-600 via-indigo-700 to-slate-900 text-white p-8 sm:p-12 lg:p-16 shadow-2xl overflow-hidden">
-          {/* Subtle background circuit pattern */}
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-wider">
+        <div className="relative rounded-md bg-brand text-brand-fg p-8 sm:p-12 lg:p-14 border border-brand shadow-subtle overflow-hidden">
+          <div className="relative z-10 max-w-3xl space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-brand-fg/10 border border-brand-fg/20 text-brand-fg text-xs font-semibold uppercase tracking-wider">
               <Scissors size={14} />
               <span>Flagship Innovation</span>
             </div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-serif font-bold tracking-tight leading-tight">
               Turn one textbook into <br className="hidden sm:inline" />
               organized unit PDFs.
             </h2>
 
-            <p className="text-sm sm:text-base text-slate-200 leading-relaxed max-w-2xl font-normal">
-              Upload one textbook, automatically detect its units, review the page ranges, customize the filenames, and create separate PDFs.
+            <p className="text-sm sm:text-base text-brand-fg/90 leading-relaxed max-w-2xl font-normal">
+              Upload one textbook, automatically detect its units, review page ranges, customize filenames, and create separate, clean PDFs.
             </p>
 
             {/* Visual Workflow Steps */}
-            <div className="pt-4 pb-2">
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center text-xs font-semibold">
+            <div className="pt-2 pb-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center text-xs font-medium">
                 {[
                   '1. Upload PDF',
                   '2. Analyze',
@@ -493,7 +471,7 @@ export default function HomePage() {
                 ].map((st, i) => (
                   <div
                     key={i}
-                    className="px-2.5 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15 text-[11px]"
+                    className="px-2 py-2 rounded-md bg-brand-fg/10 border border-brand-fg/15 text-[11px]"
                   >
                     {st}
                   </div>
@@ -501,17 +479,17 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 pt-4">
+            <div className="flex flex-wrap items-center gap-4 pt-3">
               <Link
                 href="/tools/pdf-unit-cutter"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-brand-700 hover:bg-slate-100 font-extrabold text-sm shadow-xl transition-all hover:scale-[1.02]"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-surface text-ink hover:bg-paper font-semibold text-sm transition-colors"
               >
                 <span>Open PDF Unit Cutter</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={15} />
               </Link>
               <Link
                 href="/how-it-works"
-                className="text-xs font-semibold text-slate-200 hover:text-white underline underline-offset-4"
+                className="text-xs font-medium text-brand-fg/90 hover:text-brand-fg underline underline-offset-4"
               >
                 See how detection works →
               </Link>
@@ -528,21 +506,21 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 5. ALL PDF TOOLS (Searchable & Filterable) */}
       {/* ============================================================ */}
-      <section id="all-tools" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 scroll-mt-20">
+      <section id="all-tools" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7 scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Complete Toolbox
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-ink">
             All 34 PDF Tools
           </h2>
-          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+          <p className="text-xs sm:text-sm text-muted">
             Find the exact tool you need by keyword, category, or workflow.
           </p>
 
           {/* Search Input */}
-          <div className="relative max-w-md mx-auto pt-2">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" aria-hidden="true" />
+          <div className="relative max-w-md mx-auto pt-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" aria-hidden="true" />
             <input
               type="text"
               id="search-tools-input"
@@ -550,7 +528,7 @@ export default function HomePage() {
               placeholder="Search PDF tools... (e.g. split, word, unit, compress)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs text-sm text-slate-900 dark:text-white placeholder:text-slate-600 dark:placeholder:text-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 transition-all"
+              className="w-full pl-11 pr-4 py-2.5 rounded-md bg-surface border border-border text-sm text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-brand transition-colors"
             />
           </div>
         </div>
@@ -561,10 +539,10 @@ export default function HomePage() {
             role="tab"
             aria-selected={activeCategory === 'all'}
             onClick={() => setActiveCategory('all')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+            className={`px-3.5 py-2 rounded-md text-xs font-semibold shrink-0 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
               activeCategory === 'all'
-                ? 'bg-brand-600 text-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-brand text-brand-fg'
+                : 'bg-surface border border-border text-ink hover:bg-paper'
             }`}
           >
             All Tools ({ALL_TOOLS.length})
@@ -575,10 +553,10 @@ export default function HomePage() {
               role="tab"
               aria-selected={activeCategory === c.id}
               onClick={() => setActiveCategory(c.id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+              className={`px-3.5 py-2 rounded-md text-xs font-semibold shrink-0 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
                 activeCategory === c.id
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-brand text-brand-fg'
+                  : 'bg-surface border border-border text-ink hover:bg-paper'
               }`}
             >
               {c.name}
@@ -587,7 +565,7 @@ export default function HomePage() {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredTools.map((tool) => {
             const isFav = favorites.includes(tool.id);
             const isFlagship = tool.id === 'pdf-unit-cutter';
@@ -596,22 +574,22 @@ export default function HomePage() {
               <Link
                 key={tool.id}
                 href={`/tools/${tool.slug}`}
-                className={`group relative p-6 rounded-3xl transition-all duration-200 ease-out flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+                className={`group relative p-5 rounded-md transition-colors flex flex-col justify-between cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
                   isFlagship
-                    ? 'bg-gradient-to-b from-brand-50/90 to-white dark:from-brand-950/40 dark:to-slate-900 border-2 border-brand-500 shadow-xl shadow-brand-500/10 hover:shadow-brand-500/25 hover:-translate-y-1'
-                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-400 hover:shadow-xl hover:-translate-y-1 shadow-xs'
+                    ? 'bg-surface border-2 border-brand'
+                    : 'bg-surface border border-border hover:border-brand/60'
                 }`}
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-200 ${
+                      className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${
                         isFlagship
-                          ? 'bg-brand-600 text-white shadow-md'
-                          : 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400'
+                          ? 'bg-brand text-brand-fg'
+                          : 'bg-paper text-brand border border-border'
                       }`}
                     >
-                      <DynamicIcon name={tool.iconName} size={20} />
+                      <DynamicIcon name={tool.iconName} size={18} />
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -619,10 +597,8 @@ export default function HomePage() {
                         <span
                           className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded ${
                             tool.badge === 'Featured'
-                              ? 'bg-brand-600 text-white'
-                              : tool.badge === 'AI'
-                              ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              ? 'bg-brand/10 border border-brand/20 text-brand'
+                              : 'bg-paper border border-border text-muted'
                           }`}
                         >
                           {tool.badge}
@@ -632,31 +608,31 @@ export default function HomePage() {
                         type="button"
                         onClick={(e) => toggleFavorite(e, tool.id)}
                         aria-label={isFav ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`}
-                        className={`p-2 rounded-lg cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
-                          isFav ? 'text-amber-400 hover:text-amber-500' : 'text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400'
+                        className={`p-1.5 rounded cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
+                          isFav ? 'text-accent hover:opacity-80' : 'text-border hover:text-muted'
                         }`}
                       >
-                        <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
+                        <Star size={15} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <h3 className="font-semibold text-sm text-ink group-hover:text-brand transition-colors">
                     {tool.name}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                     {tool.description}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-brand-600 dark:text-brand-400">
-                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-semibold text-brand">
+                  <span className="text-[11px] font-medium text-brand flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand" />
                     Client-Side
                   </span>
-                  <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span className="flex items-center gap-1">
                     <span>Open</span>
-                    <ArrowRight size={13} />
+                    <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 </div>
               </Link>
@@ -669,27 +645,27 @@ export default function HomePage() {
       {/* 6. AI PDF TOOLS SECTION */}
       {/* ============================================================ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl p-8 md:p-12 bg-gradient-to-br from-indigo-50/90 via-white to-brand-50/90 dark:from-indigo-950/40 dark:via-slate-900 dark:to-brand-950/40 border border-indigo-200 dark:border-indigo-800/60 shadow-xl space-y-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="rounded-md p-8 md:p-12 bg-surface border border-border space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-border">
             <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-paper border border-border text-brand text-xs font-semibold uppercase tracking-wider">
                 <Sparkles size={14} />
                 <span>Document Intelligence</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-ink">
                 Understand your documents locally
               </h2>
-              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted leading-relaxed">
                 Extract structured outlines, generate study guides, translate text locally, and export clean Markdown.
               </p>
             </div>
 
             <Link
               href="/tools/ai-summarizer"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/25 transition-all self-start md:self-auto shrink-0"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs transition-colors self-start md:self-auto shrink-0"
             >
               <span>Launch Document Summarizer</span>
-              <ArrowRight size={15} />
+              <ArrowRight size={14} />
             </Link>
           </div>
 
@@ -717,18 +693,18 @@ export default function HomePage() {
               <Link
                 key={idx}
                 href={`/tools/${ai.slug}`}
-                className="p-6 rounded-2xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 hover:border-indigo-400 transition-all flex flex-col justify-between space-y-4"
+                className="p-5 rounded-md bg-paper border border-border hover:border-brand/60 transition-colors flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                    <ai.icon size={20} />
+                  <div className="w-9 h-9 rounded-md bg-surface border border-border text-brand flex items-center justify-center">
+                    <ai.icon size={18} />
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">{ai.title}</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{ai.desc}</p>
+                  <h4 className="font-semibold text-sm text-ink">{ai.title}</h4>
+                  <p className="text-xs text-muted leading-relaxed">{ai.desc}</p>
                 </div>
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                <span className="text-xs font-semibold text-brand flex items-center gap-1">
                   <span>Try Tool</span>
-                  <ArrowRight size={13} />
+                  <ArrowRight size={12} />
                 </span>
               </Link>
             ))}
@@ -744,20 +720,20 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 7. WHY DOCUNEXA (Privacy & Architecture) */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Privacy First
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-ink">
             Why Choose DocuNexa?
           </h2>
-          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+          <p className="text-xs sm:text-sm text-muted">
             Engineered from the ground up for privacy, speed, and precision.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
               title: 'In-Browser Processing',
@@ -771,7 +747,7 @@ export default function HomePage() {
             },
             {
               title: 'Direct Folder Saving',
-              desc: 'Save 20 sliced units directly into your computer directory using the File System Access API.',
+              desc: 'Save sliced units directly into your computer directory using the modern File System Access API.',
               icon: FolderDown,
             },
             {
@@ -782,13 +758,13 @@ export default function HomePage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+              className="p-5 rounded-md bg-surface border border-border space-y-3"
             >
-              <div className="w-11 h-11 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-                <item.icon size={22} />
+              <div className="w-10 h-10 rounded-md bg-paper border border-border text-brand flex items-center justify-center">
+                <item.icon size={20} />
               </div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">{item.title}</h3>
-              <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">{item.desc}</p>
+              <h3 className="font-semibold text-sm text-ink">{item.title}</h3>
+              <p className="text-xs text-muted leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -797,20 +773,20 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 8. HOW IT WORKS (3 Simple Steps) */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Simple Process
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-ink">
             Three Steps. Zero Hassle.
           </h2>
-          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+          <p className="text-xs sm:text-sm text-muted">
             Work with your documents in seconds.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {[
             {
               num: '1',
@@ -830,13 +806,13 @@ export default function HomePage() {
           ].map((st, i) => (
             <div
               key={i}
-              className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden space-y-4"
+              className="p-6 rounded-md bg-surface border border-border space-y-3"
             >
-              <div className="w-10 h-10 rounded-2xl bg-brand-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-brand-500/20">
+              <div className="w-9 h-9 rounded-md bg-brand text-brand-fg font-bold text-sm flex items-center justify-center">
                 {st.num}
               </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">{st.title}</h3>
-              <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">{st.desc}</p>
+              <h3 className="font-semibold text-base text-ink">{st.title}</h3>
+              <p className="text-xs text-muted leading-relaxed">{st.desc}</p>
             </div>
           ))}
         </div>
@@ -845,123 +821,123 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 9. 100% FREE PUBLIC RESOURCE */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-200/50 dark:border-emerald-800/50">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center max-w-3xl mx-auto space-y-2.5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-paper border border-border text-brand text-xs font-semibold uppercase tracking-wider">
             <Check size={14} /> 100% Free Document Toolkit
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-ink">
             DocuNexa is a free PDF toolkit built to make document work easier for everyone.
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+          <p className="text-sm text-muted">
             No subscription required. All core PDF tools are free with zero paywalls. An optional one-time Ad-Free upgrade is available for users who prefer an ad-free workspace. Built for students, teachers, researchers, and professionals worldwide.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {/* Pillar 1: Students & Teachers */}
-          <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
-                <GraduationCap size={24} />
+          <div className="p-6 rounded-md bg-surface border border-border flex flex-col justify-between space-y-5">
+            <div className="space-y-3.5">
+              <div className="w-10 h-10 rounded-md bg-paper border border-border text-brand flex items-center justify-center">
+                <GraduationCap size={20} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">For Students & Education</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <h3 className="font-semibold text-base text-ink">For Students & Education</h3>
+              <p className="text-xs text-muted leading-relaxed">
                 Split textbooks with PDF Unit Cutter, merge class notes, extract exam chapters, and convert study materials without hidden fees or daily quotas.
               </p>
-              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+              <ul className="space-y-2 text-xs text-muted">
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Unlimited chapters & parts
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   No sign-up or student email required
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Zero watermarks added
                 </li>
               </ul>
             </div>
             <Link
               href="/tools/pdf-unit-cutter"
-              className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs text-center transition-colors"
+              className="w-full py-2.5 rounded-md bg-paper border border-border hover:bg-surface text-ink font-semibold text-xs text-center transition-colors"
             >
               Open PDF Unit Cutter
             </Link>
           </div>
 
           {/* Pillar 2: 100% Free Forever */}
-          <div className="p-8 rounded-3xl bg-gradient-to-b from-emerald-50/70 via-white to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900 border-2 border-emerald-500 shadow-xl flex flex-col justify-between space-y-6 relative">
-            <div className="absolute -top-3 right-6">
-              <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-bold text-[10px] uppercase tracking-wider shadow-md">
+          <div className="p-6 rounded-md bg-surface border-2 border-brand flex flex-col justify-between space-y-5 relative">
+            <div className="absolute -top-3 right-4">
+              <span className="px-2.5 py-0.5 rounded bg-brand text-brand-fg font-bold text-[10px] uppercase tracking-wider">
                 Always $0
               </span>
             </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
-                <Gift size={24} />
+            <div className="space-y-3.5">
+              <div className="w-10 h-10 rounded-md bg-paper border border-border text-brand flex items-center justify-center">
+                <Gift size={20} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">Completely Free Workspace</h3>
+              <h3 className="font-semibold text-base text-ink">Completely Free Workspace</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-slate-900 dark:text-white">$0</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">/ forever free</span>
+                <span className="text-3xl font-serif font-bold text-ink">$0</span>
+                <span className="text-xs text-muted">/ forever free</span>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 DocuNexa is a completely free document toolkit. Every tool is unlocked for everyone without paywalls or subscriptions.
               </p>
-              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+              <ul className="space-y-2 text-xs text-muted">
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   All 34 PDF & Document Tools
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Standard AES-256 PDF Security
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Fast ZIP & batch downloads
                 </li>
               </ul>
             </div>
             <Link
               href="/tools"
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs text-center shadow-md shadow-emerald-500/25 transition-colors"
+              className="w-full py-2.5 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs text-center transition-colors"
             >
               Explore All 34 Tools
             </Link>
           </div>
 
           {/* Pillar 3: Privacy & Security */}
-          <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs">
-                <ShieldCheck size={24} />
+          <div className="p-6 rounded-md bg-surface border border-border flex flex-col justify-between space-y-5">
+            <div className="space-y-3.5">
+              <div className="w-10 h-10 rounded-md bg-paper border border-border text-brand flex items-center justify-center">
+                <ShieldCheck size={20} />
               </div>
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">Privacy First</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <h3 className="font-semibold text-base text-ink">Privacy First</h3>
+              <p className="text-xs text-muted leading-relaxed">
                 Your files never touch an external server for core operations. Everything is parsed, encrypted, decrypted, and sliced locally in your browser.
               </p>
-              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+              <ul className="space-y-2 text-xs text-muted">
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Zero server file retention
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Passwords never stored or transmitted
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-emerald-500" />
+                  <Check size={14} className="text-brand" />
                   Works offline once loaded
                 </li>
               </ul>
             </div>
             <Link
               href="/about"
-              className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs text-center transition-colors"
+              className="w-full py-2.5 rounded-md bg-paper border border-border hover:bg-surface text-ink font-semibold text-xs text-center transition-colors"
             >
               Read Privacy Architecture
             </Link>
@@ -972,26 +948,26 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 10. FAQ SECTION */}
       {/* ============================================================ */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Answers & Questions
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-ink">
             Frequently Asked Questions
           </h2>
-          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+          <p className="text-xs sm:text-sm text-muted">
             Clear, transparent answers about how DocuNexa works.
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {faqs.map((faq, idx) => {
             const isOpen = openFaqIndex === idx;
             return (
               <div
                 key={idx}
-                className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden transition-all shadow-xs"
+                className="rounded-md bg-surface border border-border overflow-hidden transition-colors"
               >
                 <button
                   type="button"
@@ -999,17 +975,17 @@ export default function HomePage() {
                   aria-expanded={isOpen}
                   aria-controls={`faq-answer-${idx}`}
                   onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+                  className="w-full p-4 text-left flex items-center justify-between gap-4 font-semibold text-sm text-ink hover:text-brand transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden"
                 >
                   <span>{faq.q}</span>
-                  <span className="text-slate-400 shrink-0 text-lg font-mono leading-none" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+                  <span className="text-muted shrink-0 text-base font-mono leading-none" aria-hidden="true">{isOpen ? '−' : '+'}</span>
                 </button>
                 {isOpen && (
                   <div
                     id={`faq-answer-${idx}`}
                     role="region"
                     aria-labelledby={`faq-trigger-${idx}`}
-                    className="px-5 pb-5 text-xs text-slate-700 dark:text-slate-200 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3 animate-in fade-in duration-150"
+                    className="px-4 pb-4 text-xs text-muted leading-relaxed border-t border-border pt-3 animate-in fade-in duration-150"
                   >
                     {faq.a}
                   </div>
