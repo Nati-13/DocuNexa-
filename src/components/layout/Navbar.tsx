@@ -7,38 +7,22 @@ import {
   ChevronDown, 
   Search, 
   Menu, 
-  Sun, 
-  Moon, 
   Scissors, 
   Sparkles,
-  ArrowRight,
-  ShieldCheck
+  ArrowRight
 } from 'lucide-react';
 import { DocuNexaLogo } from '@/components/common/DocuNexaLogo';
 import { MegaMenu } from '@/components/layout/MegaMenu';
 import { MobileDrawer } from '@/components/layout/MobileDrawer';
 import { SearchModal } from '@/components/common/SearchModal';
 import { NavbarAuthControls } from '@/components/layout/NavbarAuthControls';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Initialize theme from local storage or system preference
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('docunexa-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
 
   // Keyboard shortcut for search (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -52,22 +36,9 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('docunexa-theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('docunexa-theme', 'dark');
-      setIsDarkMode(true);
-    }
-  };
-
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-colors">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brand-500/60 via-cyan-400/40 to-transparent pointer-events-none" />
+      <header className="sticky top-0 z-40 w-full bg-surface border-b border-border transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <div className="flex items-center gap-8">
@@ -85,17 +56,17 @@ export const Navbar: React.FC = () => {
                   onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
                   aria-expanded={isMegaMenuOpen}
                   aria-haspopup="true"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
                     isMegaMenuOpen || pathname.startsWith('/tools')
-                      ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
-                      : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                      ? 'text-brand bg-paper border border-border'
+                      : 'text-ink hover:text-brand hover:bg-paper'
                   }`}
                 >
                   <span>Tools</span>
                   <ChevronDown
-                    size={15}
+                    size={14}
                     className={`transition-transform duration-200 ${
-                      isMegaMenuOpen ? 'rotate-180 text-brand-600' : 'text-slate-400'
+                      isMegaMenuOpen ? 'rotate-180 text-brand' : 'text-muted'
                     }`}
                   />
                 </button>
@@ -104,15 +75,15 @@ export const Navbar: React.FC = () => {
               {/* PDF Unit Cutter Featured Tab */}
               <Link
                 href="/tools/pdf-unit-cutter"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
                   pathname === '/tools/pdf-unit-cutter'
-                    ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
-                    : 'text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                    ? 'text-brand bg-paper border border-border'
+                    : 'text-ink hover:text-brand hover:bg-paper'
                 }`}
               >
-                <Scissors size={15} className="text-brand-600 dark:text-brand-400" />
+                <Scissors size={14} className="text-brand" />
                 <span>PDF Unit Cutter</span>
-                <span className="px-1.5 py-0.2 text-[9px] font-extrabold uppercase rounded bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300">
+                <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-brand/10 text-brand border border-brand/20">
                   Flagship
                 </span>
               </Link>
@@ -120,36 +91,36 @@ export const Navbar: React.FC = () => {
               {/* Document Intelligence */}
               <Link
                 href="/tools/ai-summarizer"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
                   pathname === '/tools/ai-summarizer'
-                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/40'
-                    : 'text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                    ? 'text-brand bg-paper border border-border'
+                    : 'text-ink hover:text-brand hover:bg-paper'
                 }`}
               >
-                <Sparkles size={15} className="text-indigo-500" />
+                <Sparkles size={14} className="text-brand" />
                 <span>Document Intelligence</span>
               </Link>
 
               <Link
                 href="/how-it-works"
-                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+                className="px-3 py-1.5 rounded-md text-sm font-medium text-ink hover:text-brand hover:bg-paper transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden"
               >
                 How It Works
               </Link>
 
               <Link
                 href="/about"
-                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+                className="px-3 py-1.5 rounded-md text-sm font-medium text-ink hover:text-brand hover:bg-paper transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden"
               >
                 About
               </Link>
 
               <Link
                 href="/support"
-                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden ${
                   pathname === '/support'
-                    ? 'text-brand-600 dark:text-brand-400 bg-brand-50/70 dark:bg-brand-950/40'
-                    : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                    ? 'text-brand bg-paper border border-border'
+                    : 'text-ink hover:text-brand hover:bg-paper'
                 }`}
               >
                 Support
@@ -158,30 +129,23 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Action Items */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {/* Quick Search Button */}
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
               aria-label="Search tools (⌘K)"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300 text-xs font-medium transition-colors border border-slate-200/50 dark:border-slate-700/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-paper hover:bg-paper/80 text-muted hover:text-ink text-xs font-medium transition-colors border border-border cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden"
             >
               <Search size={14} />
               <span className="hidden sm:inline">Search tools...</span>
-              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded shadow-2xs">
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-medium bg-surface border border-border text-muted rounded">
                 ⌘K
               </kbd>
             </button>
 
             {/* Dark / Light Mode Toggle */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
-              className="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
-            >
-              {isDarkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
-            </button>
+            <ThemeToggle />
 
             {/* Auth / Account Controls */}
             <NavbarAuthControls />
@@ -189,7 +153,7 @@ export const Navbar: React.FC = () => {
             {/* Direct CTA */}
             <Link
               href="/tools"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm shadow-brand-500/25 transition-all hover:shadow-brand-500/40 hover:scale-[1.02]"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand hover:bg-brand/90 text-brand-fg text-xs font-semibold transition-colors"
             >
               <span>Tools</span>
               <ArrowRight size={13} />
@@ -199,9 +163,9 @@ export const Navbar: React.FC = () => {
             <button
               onClick={() => setIsMobileDrawerOpen(true)}
               aria-label="Open mobile menu"
-              className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="lg:hidden p-2 rounded-md text-ink hover:bg-paper border border-border transition-colors cursor-pointer"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
           </div>
         </div>

@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { X, ChevronDown, ChevronRight, Scissors, Sparkles, User, LogOut, CheckCircle2 } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, Scissors, LogOut, CheckCircle2 } from 'lucide-react';
 import { TOOL_CATEGORIES, ALL_TOOLS } from '@/config/tools';
 import { DynamicIcon } from '@/components/common/DynamicIcon';
 import { DocuNexaLogo } from '@/components/common/DocuNexaLogo';
 import { ToolCategory } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -27,18 +28,19 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
     <div className="fixed inset-0 z-50 flex lg:hidden">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 bg-ink/40 animate-in fade-in duration-200"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="relative w-full max-w-xs bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col z-10 border-r border-slate-200 dark:border-slate-800 animate-in slide-in-from-left duration-200">
+      <div className="relative w-full max-w-xs bg-surface h-full flex flex-col z-10 border-r border-border animate-in slide-in-from-left duration-200">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-4 border-b border-border flex items-center justify-between">
           <DocuNexaLogo size="sm" />
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Close menu"
+            className="p-1.5 rounded-md text-muted hover:text-ink hover:bg-paper transition-colors"
           >
             <X size={20} />
           </button>
@@ -50,72 +52,80 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
           <Link
             href="/tools/pdf-unit-cutter"
             onClick={onClose}
-            className="flex items-center gap-3 p-3 rounded-xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800/60 text-brand-700 dark:text-brand-300 font-semibold text-sm shadow-xs"
+            className="flex items-center gap-3 p-3 rounded-md bg-paper border border-border text-ink font-semibold text-sm hover:border-brand/40 transition-colors"
           >
-            <div className="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-md bg-brand text-brand-fg flex items-center justify-center shrink-0">
               <Scissors size={16} />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span>PDF Unit Cutter</span>
-                <span className="px-1.5 py-0.2 text-[9px] uppercase font-bold rounded bg-brand-600 text-white">
+                <span className="font-semibold text-ink">PDF Unit Cutter</span>
+                <span className="px-1.5 py-0.5 text-[9px] uppercase font-bold rounded bg-brand/10 text-brand border border-brand/20">
                   Flagship
                 </span>
               </div>
-              <p className="text-[11px] font-normal text-slate-700 dark:text-slate-200">
+              <p className="text-[11px] font-normal text-muted">
                 Split textbooks into units
               </p>
             </div>
           </Link>
+
+          {/* Theme Toggle (Mobile Drawer) */}
+          <div className="px-1">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">
+              Visual Theme
+            </span>
+            <ThemeToggle className="w-full justify-start py-2 px-3" showLabel={true} />
+          </div>
 
           {/* Direct Navigation Links */}
           <div className="space-y-1">
             <Link
               href="/tools"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               All 34 PDF Tools
             </Link>
             <Link
               href="/how-it-works"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               How It Works
             </Link>
             <Link
               href="/about"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               About DocuNexa
             </Link>
             <Link
               href="/privacy"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/security"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               Security Architecture
             </Link>
             <Link
               href="/terms"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               Terms of Service
             </Link>
             <Link
               href="/support"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-brand-600 dark:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-brand hover:bg-paper transition-colors"
             >
               Support Center
             </Link>
@@ -124,15 +134,15 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-accent hover:bg-paper transition-colors"
             >
               <span>Telegram Support</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 font-bold">@docunexa_bot</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent/10 border border-accent/20 text-accent font-bold">@docunexa_bot</span>
             </a>
             <Link
               href="/contact"
               onClick={onClose}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-ink hover:bg-paper hover:text-brand transition-colors"
             >
               Contact Us
             </Link>
@@ -141,8 +151,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
           {/* Account / Membership Section */}
           <MobileDrawerAuth onClose={onClose} />
 
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
-            <h4 className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
+          <div className="pt-2 border-t border-border">
+            <h4 className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
               Categories
             </h4>
             <div className="space-y-1">
@@ -151,28 +161,28 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
                 const categoryTools = ALL_TOOLS.filter((t) => t.category === cat.id);
 
                 return (
-                  <div key={cat.id} className="rounded-xl border border-slate-100 dark:border-slate-800/60 overflow-hidden">
+                  <div key={cat.id} className="rounded-md border border-border overflow-hidden">
                     <button
                       onClick={() => toggleCategory(cat.id)}
-                      className="w-full flex items-center justify-between p-3 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                      className="w-full flex items-center justify-between p-2.5 text-xs font-semibold text-ink hover:bg-paper transition-colors"
                     >
                       <span>{cat.name}</span>
-                      {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                      {isExpanded ? <ChevronDown size={14} className="text-muted" /> : <ChevronRight size={14} className="text-muted" />}
                     </button>
 
                     {isExpanded && (
-                      <div className="p-2 pt-0 space-y-0.5 bg-slate-50/50 dark:bg-slate-900/40">
+                      <div className="p-2 pt-0 space-y-0.5 bg-paper/50">
                         {categoryTools.map((tool) => (
                           <Link
                             key={tool.id}
                             href={`/tools/${tool.slug}`}
                             onClick={onClose}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-xs text-ink hover:bg-surface hover:text-brand font-medium transition-colors"
                           >
-                            <DynamicIcon name={tool.iconName} size={14} className="text-slate-500 shrink-0" />
+                            <DynamicIcon name={tool.iconName} size={14} className="text-brand shrink-0" />
                             <span className="truncate">{tool.name}</span>
                             {tool.badge && (
-                              <span className="ml-auto px-1.5 py-0.2 text-[9px] font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                              <span className="ml-auto px-1.5 py-0.5 text-[9px] font-bold rounded bg-surface border border-border text-muted">
                                 {tool.badge}
                               </span>
                             )}
@@ -188,8 +198,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
         </div>
 
         {/* Footer info */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-[11px] text-slate-600 dark:text-slate-300">
-          <p className="font-semibold text-emerald-700 dark:text-emerald-300">✓ Client-Side Document Privacy</p>
+        <div className="p-3 border-t border-border bg-paper text-[11px] text-muted">
+          <p className="font-semibold text-brand">✓ Client-Side Document Privacy</p>
           <p className="mt-0.5">Files are processed locally in your browser.</p>
         </div>
       </div>
@@ -218,22 +228,22 @@ const MobileDrawerAuth: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   if (!user) {
     return (
-      <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-        <h4 className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+      <div className="pt-2 border-t border-border space-y-1">
+        <h4 className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
           Account
         </h4>
         <div className="grid grid-cols-2 gap-2 px-3">
           <Link
             href="/login"
             onClick={onClose}
-            className="flex items-center justify-center py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-center"
+            className="flex items-center justify-center py-2 px-3 rounded-md border border-border text-xs font-semibold text-ink hover:bg-paper text-center transition-colors"
           >
             Log in
           </Link>
           <Link
             href="/signup"
             onClick={onClose}
-            className="flex items-center justify-center py-2 px-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold text-center shadow-xs"
+            className="flex items-center justify-center py-2 px-3 rounded-md bg-brand hover:bg-brand/90 text-brand-fg text-xs font-semibold text-center transition-colors"
           >
             Sign up
           </Link>
@@ -245,18 +255,18 @@ const MobileDrawerAuth: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const isAdFree = user.plan === 'ad_free';
 
   return (
-    <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2 px-3">
-      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-1.5">
+    <div className="pt-2 border-t border-border space-y-2 px-3">
+      <div className="p-3 rounded-md bg-paper border border-border space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="font-semibold text-xs text-slate-900 dark:text-white truncate max-w-[140px]">
+          <span className="font-semibold text-xs text-ink truncate max-w-[140px]">
             {user.email}
           </span>
           {isAdFree ? (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-0.5">
+            <span className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold flex items-center gap-0.5">
               <CheckCircle2 size={10} /> Ad-Free
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+            <span className="px-2 py-0.5 rounded-full bg-surface border border-border text-muted text-[10px] font-bold">
               Free
             </span>
           )}
@@ -266,7 +276,7 @@ const MobileDrawerAuth: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <Link
             href="/account"
             onClick={onClose}
-            className="flex-1 py-1.5 px-2.5 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold text-center border border-slate-200 dark:border-slate-600 hover:bg-slate-100 transition-colors"
+            className="flex-1 py-1.5 px-2.5 rounded-md bg-surface text-ink text-xs font-semibold text-center border border-border hover:bg-paper transition-colors"
           >
             Account
           </Link>
@@ -274,7 +284,7 @@ const MobileDrawerAuth: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <Link
               href="/admin"
               onClick={onClose}
-              className="py-1.5 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs font-semibold text-center border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-colors"
+              className="py-1.5 px-2.5 rounded-md bg-surface text-brand text-xs font-semibold text-center border border-border hover:bg-paper transition-colors"
             >
               Admin
             </Link>
@@ -284,7 +294,8 @@ const MobileDrawerAuth: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               onClose();
               logout();
             }}
-            className="py-1.5 px-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer"
+            aria-label="Log out"
+            className="py-1.5 px-2.5 rounded-md bg-surface text-muted hover:text-accent text-xs font-semibold border border-border hover:bg-paper transition-colors flex items-center gap-1 cursor-pointer"
           >
             <LogOut size={12} />
           </button>
@@ -293,4 +304,3 @@ const MobileDrawerAuth: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     </div>
   );
 };
-
