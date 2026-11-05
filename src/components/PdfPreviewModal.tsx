@@ -80,16 +80,16 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   if (!part) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-ink/40 animate-in fade-in duration-150">
+      <div className="bg-surface rounded-md border border-border text-ink max-w-4xl w-full h-[90vh] flex flex-col overflow-hidden shadow-subtle">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-surface">
           <div>
-            <h3 className="font-bold text-slate-900 text-base sm:text-lg flex items-center">
-              <FileText className="w-5 h-5 text-indigo-600 mr-2" />
+            <h3 className="font-semibold text-ink text-base sm:text-lg flex items-center">
+              <FileText className="w-5 h-5 text-brand mr-2" />
               {part.title}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Assigned Range: Pages {startPage}–{endPage} ({endPage - startPage + 1} pages) • File: {part.filename}
             </p>
           </div>
@@ -97,27 +97,28 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+            aria-label="Close preview"
+            className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-ink hover:bg-paper transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Toolbar: Navigation & Zoom */}
-        <div className="px-6 py-2.5 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-6 py-2.5 bg-paper border-b border-border flex flex-wrap items-center justify-between gap-3 text-xs">
           {/* Previous / Next buttons */}
           <div className="flex items-center space-x-2">
             <button
               type="button"
               disabled={currentPage <= startPage}
               onClick={() => setCurrentPage((p) => Math.max(startPage, p - 1))}
-              className="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              className="inline-flex items-center px-3 py-1.5 rounded-md border border-border bg-surface text-ink hover:bg-paper font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
               Previous Page
             </button>
 
-            <span className="px-3 py-1.5 font-mono font-semibold bg-slate-100 rounded-lg text-slate-800">
+            <span className="px-3 py-1.5 font-mono font-medium bg-surface border border-border rounded-md text-ink">
               Page {currentPage} of {totalPages}
             </span>
 
@@ -125,7 +126,7 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
               type="button"
               disabled={currentPage >= endPage}
               onClick={() => setCurrentPage((p) => Math.min(endPage, p + 1))}
-              className="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              className="inline-flex items-center px-3 py-1.5 rounded-md border border-border bg-surface text-ink hover:bg-paper font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
               Next Page
               <ChevronRight className="w-4 h-4 ml-1" />
@@ -137,18 +138,18 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             <button
               type="button"
               onClick={() => setScale((s) => Math.max(0.6, s - 0.2))}
-              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+              className="p-1.5 rounded-md border border-border bg-surface text-muted hover:text-ink hover:bg-paper transition-colors cursor-pointer"
               title="Zoom out"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="font-mono text-slate-600 text-xs w-12 text-center">
+            <span className="font-mono text-muted text-xs w-12 text-center">
               {Math.round(scale * 100)}%
             </span>
             <button
               type="button"
               onClick={() => setScale((s) => Math.min(2.5, s + 0.2))}
-              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+              className="p-1.5 rounded-md border border-border bg-surface text-muted hover:text-ink hover:bg-paper transition-colors cursor-pointer"
               title="Zoom in"
             >
               <ZoomIn className="w-4 h-4" />
@@ -156,26 +157,26 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           </div>
         </div>
 
-        {/* Canvas Display Viewport */}
-        <div className="flex-1 bg-slate-100 overflow-auto p-4 flex items-center justify-center relative">
+        {/* Canvas Display Viewport: Neutral paper background, authentic white sheet */}
+        <div className="flex-1 bg-paper overflow-auto p-4 flex items-center justify-center relative">
           {isLoading && (
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex flex-col items-center justify-center space-y-2 z-10">
-              <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin" />
-              <span className="text-xs font-medium text-slate-600">Rendering Page {currentPage}...</span>
+            <div className="absolute inset-0 bg-surface/80 flex flex-col items-center justify-center space-y-2 z-10">
+              <RefreshCw className="w-6 h-6 text-brand animate-spin" />
+              <span className="text-xs font-medium text-muted">Rendering Page {currentPage}...</span>
             </div>
           )}
 
           {renderError ? (
-            <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 flex items-center space-x-3">
+            <div className="p-4 bg-accent/10 border border-accent/20 rounded-md text-xs text-accent flex items-center space-x-3">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <div>
                 <p className="font-semibold">Unable to preview page {currentPage}</p>
-                <p className="text-red-500 mt-0.5">{renderError}</p>
+                <p className="mt-0.5">{renderError}</p>
               </div>
             </div>
           ) : (
-            <div className="shadow-lg border border-slate-300 rounded bg-white">
-              <canvas ref={canvasRef} className="block max-w-full" />
+            <div className="border border-border rounded-sm bg-white p-0.5 shadow-subtle">
+              <canvas ref={canvasRef} className="block max-w-full bg-white" />
             </div>
           )}
         </div>

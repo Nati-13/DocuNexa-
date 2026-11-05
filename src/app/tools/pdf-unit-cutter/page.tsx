@@ -541,9 +541,9 @@ export default function PdfUnitCutterPage() {
         {/* Step 1: Upload Zone if no file loaded */}
         {!fileInfo ? (
           <div className="space-y-4">
-            <div className="glass-panel rounded-3xl border-2 border-dashed border-slate-300/80 dark:border-slate-700/80 hover:border-brand-400 dark:hover:border-brand-500 p-8 md:p-12 text-center transition-all duration-300 shimmer-card shadow-xl">
+            <div className="rounded-md border-2 border-dashed border-border bg-surface hover:border-brand/60 p-8 md:p-12 text-center transition-colors">
               <div className="max-w-md mx-auto space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-brand-50 to-cyan-50 dark:from-brand-950/80 dark:to-cyan-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner border border-brand-200/60 dark:border-brand-800/60">
+                <div className="w-12 h-12 mx-auto rounded-md bg-paper border border-border text-brand flex items-center justify-center">
                   <UploadCloud size={32} />
                 </div>
                 <div>
@@ -556,7 +556,7 @@ export default function PdfUnitCutterPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <label className="btn-aurora px-6 py-3 rounded-xl font-semibold text-sm cursor-pointer shadow-lg inline-flex items-center gap-2">
+                  <label className="px-5 py-2.5 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-sm cursor-pointer inline-flex items-center gap-2 transition-colors">
                     Choose PDF Document
                     <input
                       type="file"
@@ -571,7 +571,7 @@ export default function PdfUnitCutterPage() {
 
                   <button
                     onClick={handleLoadSample}
-                    className="glass-panel-interactive inline-flex items-center gap-2 px-5 py-3 rounded-xl text-slate-800 dark:text-slate-200 text-sm font-semibold transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-surface hover:bg-paper border border-border text-ink text-sm font-semibold transition-colors"
                   >
                     <BookOpen size={16} className="text-brand-600 dark:text-brand-400" />
                     <span>Try with Sample Textbook</span>
@@ -588,9 +588,9 @@ export default function PdfUnitCutterPage() {
           /* Step 2: File Loaded - Inspection & Control Bar */
           <div className="space-y-6">
             {/* File Info Bar */}
-            <div className="glass-panel p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
+            <div className="p-5 rounded-md bg-surface border border-border shadow-subtle flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-md bg-paper border border-border text-brand flex items-center justify-center shrink-0">
                   <FileText size={22} />
                 </div>
                 <div className="min-w-0">
@@ -617,14 +617,14 @@ export default function PdfUnitCutterPage() {
                     <button
                       onClick={handleAnalyze}
                       disabled={isAnalyzing}
-                      className="btn-aurora inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-md disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg text-xs md:text-sm font-semibold disabled:opacity-50 transition-colors"
                     >
                       <Sparkles size={16} />
                       <span>{isAnalyzing ? `Analyzing (${analysisProgress.current}/${analysisProgress.total})...` : 'Analyze & Detect Units'}</span>
                     </button>
                     <button
                       onClick={handleManualMode}
-                      className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs md:text-sm font-semibold transition-colors"
+                      className="px-3.5 py-2 rounded-md bg-surface border border-border hover:bg-paper text-ink text-xs md:text-sm font-semibold transition-colors"
                     >
                       Manual Split
                     </button>
@@ -632,7 +632,7 @@ export default function PdfUnitCutterPage() {
                 )}
                 <button
                   onClick={handleRemoveFile}
-                  className="px-3 py-2 rounded-xl text-slate-600 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
+                  className="px-3 py-1.5 rounded-md text-muted hover:text-accent border border-border hover:bg-paper text-xs font-semibold transition-colors"
                 >
                   Change File
                 </button>
@@ -641,7 +641,7 @@ export default function PdfUnitCutterPage() {
 
             {/* Analysis In-Progress Banner */}
             {isAnalyzing && (
-              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-brand-200 dark:border-brand-800 shadow-lg space-y-3">
+              <div className="p-6 rounded-md bg-surface border border-border shadow-subtle space-y-3">
                 <div className="flex justify-between text-sm font-semibold">
                   <span className="text-brand-600 dark:text-brand-400">
                     Scanning page headings & Table of Contents...
@@ -650,9 +650,9 @@ export default function PdfUnitCutterPage() {
                     Page {analysisProgress.current} of {analysisProgress.total}
                   </span>
                 </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden p-0.5 border border-brand-200/50 dark:border-brand-800/50">
+                <div className="w-full h-2 rounded-full bg-paper overflow-hidden border border-border">
                   <div
-                    className="h-full scanner-bar rounded-full transition-all duration-300 shadow-sm shadow-cyan-400/50"
+                    className="h-full bg-brand rounded-full transition-all duration-300"
                     style={{
                       width: `${(analysisProgress.current / Math.max(1, analysisProgress.total)) * 100}%`,
                     }}

@@ -174,7 +174,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden">
+    <div className="bg-surface rounded-md border border-border p-6 shadow-subtle space-y-6 relative overflow-hidden">
       {/* Top Bar: Mode Selection & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div className="flex items-center space-x-3">
@@ -367,26 +367,26 @@ export const PartsTable: React.FC<PartsTableProps> = ({
 
       {/* Front Matter Suggestion Alert */}
       {hasFrontMatter && frontMatterRange && (
-        <div className="p-4 bg-gradient-to-r from-indigo-500/10 via-brand-500/10 to-cyan-500/10 border border-indigo-200/80 dark:border-indigo-800/60 rounded-xl space-y-2 backdrop-blur-sm">
+        <div className="p-4 bg-paper border border-border rounded-md space-y-2 text-ink">
           <div className="flex items-start space-x-3">
-            <Info className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-            <div className="text-xs text-indigo-950 flex-1">
+            <Info className="w-5 h-5 text-brand shrink-0 mt-0.5" />
+            <div className="text-xs text-ink flex-1">
               <span className="font-semibold">Introductory Pages Detected (Pages 1–{frontMatterRange.end}):</span>
-              <p className="text-indigo-800 mt-0.5">
+              <p className="text-muted mt-0.5">
                 The first detected unit begins on page {frontMatterRange.end + 1}. What would you like to do with preliminary pages (cover, copyright, preface, contents)?
               </p>
               <div className="flex flex-wrap gap-2 mt-2.5">
                 <button
                   type="button"
                   onClick={() => onHandleFrontMatter('separate')}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-2xs transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand/90 text-brand-fg font-medium rounded-md transition-colors"
                 >
                   Create &quot;Part 0 — Front Matter&quot; (Pages 1–{frontMatterRange.end})
                 </button>
                 <button
                   type="button"
                   onClick={() => onHandleFrontMatter('include')}
-                  className="px-3 py-1.5 rounded-lg bg-white text-indigo-700 font-medium border border-indigo-300 hover:bg-indigo-50 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-surface text-ink font-medium border border-border hover:bg-paper rounded-md transition-colors"
                 >
                   Include in Unit 1 (Extend start to page 1)
                 </button>
@@ -693,7 +693,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       </div>
 
       {/* Output Destination & Execute Cut Section */}
-      <div className="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/80 dark:bg-slate-900/80 -mx-6 -mb-6 p-6 rounded-b-2xl backdrop-blur-md">
+      <div className="pt-6 border-t border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-paper -mx-6 -mb-6 p-6 rounded-b-md">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-semibold text-slate-700">Output Folder:</span>
@@ -701,7 +701,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               <button
                 type="button"
                 onClick={onChooseFolder}
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-800 underline flex items-center"
+                className="text-xs font-medium text-indigo-600 hover:text-muted underline flex items-center"
               >
                 <FolderOpen className="w-3.5 h-3.5 mr-1" />
                 {selectedFolderText || 'Choose Folder (File System Access)'}
@@ -729,7 +729,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
           type="button"
           disabled={parts.length === 0 || !validation.isValid || (Boolean(isUncertain) && !isBoundariesConfirmed)}
           onClick={onCutPdf}
-          className="btn-aurora w-full md:w-auto px-8 py-3.5 rounded-xl font-bold text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer"
+          className="w-full md:w-auto px-7 py-3 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-base shadow-subtle disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer transition-colors"
           title={
             isUncertain && !isBoundariesConfirmed
               ? 'Please confirm the unit page boundaries above before cutting.'
@@ -743,8 +743,8 @@ export const PartsTable: React.FC<PartsTableProps> = ({
 
       {/* Add Custom Part Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40">
+          <div className="bg-surface rounded-md p-6 max-w-md w-full shadow-subtle border border-border text-ink space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-base">Add New Part</h3>
               <button
