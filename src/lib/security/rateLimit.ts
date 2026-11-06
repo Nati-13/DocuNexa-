@@ -11,7 +11,7 @@ const memoryRateLimits = new Map<string, InMemoryBucket>();
 
 // Clean up expired in-memory buckets periodically
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
+  const timer = setInterval(() => {
     const now = Date.now();
     for (const [key, val] of memoryRateLimits.entries()) {
       if (val.resetAt < now) {
@@ -19,6 +19,9 @@ if (typeof setInterval !== 'undefined') {
       }
     }
   }, 60000);
+  if (timer.unref) {
+    timer.unref();
+  }
 }
 
 /**

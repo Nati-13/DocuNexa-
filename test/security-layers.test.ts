@@ -180,6 +180,7 @@ async function runSecurityTests() {
   console.log('\n================================================================');
   console.log(`ALL ${passed} OF ${total} SECURITY AUDIT TESTS PASSED (100%)!`);
   console.log('================================================================\n');
+  process.exit(0);
 }
 
 runSecurityTests().catch((err) => {
