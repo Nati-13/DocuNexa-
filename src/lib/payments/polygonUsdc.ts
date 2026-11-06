@@ -78,9 +78,8 @@ export function getPolygonUsdcConfig(): PolygonUsdcConfig {
   const primaryRpc = stripEnv(process.env.POLYGON_RPC_URL);
   const rpcUrls = [
     primaryRpc,
-    'https://polygon-rpc.com',
-    'https://rpc.ankr.com/polygon',
-    'https://polygon.llamarpc.com',
+    'https://polygon-bor-rpc.publicnode.com',
+    'https://polygon.drpc.org',
     'https://1rpc.io/matic',
   ].filter(Boolean) as string[];
 
