@@ -71,7 +71,13 @@ export async function POST(
 
     // Unlock account lockout state if locked
     const { adminUnlockAccount } = await import('@/lib/auth/loginSecurity');
-    await adminUnlockAccount(targetUser.email, adminProfile.id, 'Admin dispatched password recovery instructions');
+    const unlockRes = await adminUnlockAccount(targetUser.email, adminProfile.id, 'Admin dispatched password recovery instructions');
+    if (!unlockRes.success) {
+      return NextResponse.json(
+        { error: unlockRes.error || 'Failed to clear account lockout state.' },
+        { status: 500 }
+      );
+    }
 
     // Append-only audit log (strictly zero tokens or codes recorded)
     await logAdminAction({

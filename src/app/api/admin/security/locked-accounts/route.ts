@@ -65,7 +65,10 @@ export async function POST(req: NextRequest) {
     const cleanEmail = email.trim().toLowerCase();
 
     if (action === 'unlock') {
-      await adminUnlockAccount(cleanEmail, adminProfile.id, reason || 'Admin manual account unlock');
+      const unlockRes = await adminUnlockAccount(cleanEmail, adminProfile.id, reason || 'Admin manual account unlock');
+      if (!unlockRes.success) {
+        return NextResponse.json({ error: unlockRes.error || 'Failed to unlock account in database' }, { status: 500 });
+      }
       return NextResponse.json({
         success: true,
         message: `Account ${cleanEmail} has been unlocked successfully.`,
@@ -93,12 +96,15 @@ export async function POST(req: NextRequest) {
       }
 
       // 2. Unlock the account so customer can sign in after completing reset
-      await adminUnlockAccount(cleanEmail, adminProfile.id, reason || 'Admin triggered password reset email');
+      const unlockRes = await adminUnlockAccount(cleanEmail, adminProfile.id, reason || 'Admin triggered password reset email');
+      if (!unlockRes.success) {
+        return NextResponse.json({ error: unlockRes.error || 'Failed to clear account lockout status' }, { status: 500 });
+      }
 
       // 3. Log audit event
       await logAdminAction({
         adminUserId: adminProfile.id,
-        action: 'user_password_recovery_initiated' as any,
+        action: 'user_password_recovery_initiated',
         reason: reason || 'Admin initiated password reset for locked account',
         metadata: {
           targetEmail: cleanEmail,

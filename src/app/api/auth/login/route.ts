@@ -46,6 +46,16 @@ export async function POST(req: Request) {
 
     // 0. Pre-authentication account lockout check
     const lockoutStatus = await checkAccountLockoutStatus(cleanEmail);
+    if (lockoutStatus.unavailable) {
+      return secureJsonResponse(
+        {
+          error: 'Authentication security service is temporarily unavailable. Please try again shortly.',
+          code: 'SECURITY_CHECK_UNAVAILABLE',
+        },
+        { status: 503 },
+        requestId
+      );
+    }
     if (lockoutStatus.isLocked) {
       return secureJsonResponse(
         {
@@ -74,6 +84,17 @@ export async function POST(req: Request) {
       // Credential failure: record consecutive failed attempt atomically
       if (lower.includes('invalid login credentials') || lower.includes('invalid grant') || lower.includes('user not found')) {
         const failureResult = await recordFailedLoginAttempt(cleanEmail, ip);
+
+        if (failureResult.persistenceFailed && (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production')) {
+          return secureJsonResponse(
+            {
+              error: 'Authentication security service is temporarily unavailable. Please try again shortly.',
+              code: 'SECURITY_CHECK_UNAVAILABLE',
+            },
+            { status: 503 },
+            requestId
+          );
+        }
 
         if (failureResult.isLocked) {
           return secureJsonResponse(
@@ -143,7 +164,10 @@ export async function POST(req: Request) {
     const needsReconsent = !legalAcceptance;
 
     // Successful authentication: atomically reset failed login attempt counter
-    await recordSuccessfulLogin(cleanEmail);
+    const resetResult = await recordSuccessfulLogin(cleanEmail);
+    if (!resetResult.success) {
+      console.error(`[SECURITY ALERT] Failed to reset login attempts for ${cleanEmail}: ${resetResult.error}`);
+    }
 
     // Retrieve profile to confirm plan
     const { data: profile } = await supabase

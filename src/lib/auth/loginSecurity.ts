@@ -8,6 +8,7 @@
  * 4. Provides verified recovery channels (docunexa.security@gmail.com and Telegram support bot).
  * 5. Provides administrator dashboard query and secure unlock / recovery dispatch.
  * 6. ZERO customer password logging, retrieval, or transmission.
+ * 7. Concurrency-safe atomic updates in PostgreSQL; fail-closed behavior on DB unavailability.
  */
 
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
@@ -23,6 +24,9 @@ export interface LockoutCheckResult {
   remainingAttempts: number;
   lockedAt?: string;
   lockedReason?: string;
+  unavailable?: boolean;
+  persistenceFailed?: boolean;
+  error?: string;
 }
 
 export interface LockedAccountRecord {
@@ -38,8 +42,8 @@ export interface LockedAccountRecord {
   plan?: string;
 }
 
-// In-memory fallback map for serverless execution / testing environments
-const memoryAttemptsMap = new Map<
+// In-memory map strictly for local non-production test execution when no DB is available
+const testMemoryAttemptsMap = new Map<
   string,
   {
     failedAttempts: number;
@@ -51,6 +55,32 @@ const memoryAttemptsMap = new Map<
   }
 >();
 
+// Per-email concurrency lock to guarantee atomic processing within process
+const emailLocks = new Map<string, Promise<any>>();
+
+async function withEmailLock<T>(email: string, fn: () => Promise<T>): Promise<T> {
+  const currentLock = emailLocks.get(email) || Promise.resolve();
+  let release: () => void = () => {};
+  const nextLock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  emailLocks.set(email, currentLock.then(() => nextLock));
+
+  try {
+    await currentLock;
+    return await fn();
+  } finally {
+    release();
+    if (emailLocks.get(email) === nextLock) {
+      emailLocks.delete(email);
+    }
+  }
+}
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+}
+
 /**
  * Normalizes email address to lower case and removes surrounding whitespace.
  */
@@ -60,6 +90,7 @@ function cleanEmailKey(email: string): string {
 
 /**
  * Checks whether an email account is currently locked due to exceeded login failures.
+ * Fails closed if the durable persistence cannot be queried in production.
  */
 export async function checkAccountLockoutStatus(email: string): Promise<LockoutCheckResult> {
   const cleanEmail = cleanEmailKey(email);
@@ -75,7 +106,34 @@ export async function checkAccountLockoutStatus(email: string): Promise<LockoutC
       .eq('email', cleanEmail)
       .maybeSingle();
 
-    if (!error && data) {
+    if (error) {
+      console.error('[Account Lockout Check Error]:', error.message);
+      // In production, fail closed to prevent brute force bypass during DB degradation
+      if (isProduction()) {
+        return {
+          isLocked: true,
+          failedAttempts: MAX_FAILED_LOGIN_ATTEMPTS,
+          remainingAttempts: 0,
+          unavailable: true,
+          error: error.message,
+        };
+      }
+      // Non-production fallback for unit tests
+      const mem = testMemoryAttemptsMap.get(cleanEmail);
+      if (mem) {
+        const isLocked = Boolean(mem.isLocked || mem.failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS);
+        return {
+          isLocked,
+          failedAttempts: mem.failedAttempts,
+          remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - mem.failedAttempts),
+          lockedAt: mem.lockedAt,
+          lockedReason: mem.lockedReason,
+        };
+      }
+      return { isLocked: false, failedAttempts: 0, remainingAttempts: MAX_FAILED_LOGIN_ATTEMPTS };
+    }
+
+    if (data) {
       const isLocked = Boolean(data.is_locked || data.failed_attempts >= MAX_FAILED_LOGIN_ATTEMPTS);
       const failed = Number(data.failed_attempts) || 0;
       return {
@@ -86,28 +144,41 @@ export async function checkAccountLockoutStatus(email: string): Promise<LockoutC
         lockedReason: data.locked_reason || undefined,
       };
     }
-  } catch {
-    // Database query failed; proceed to fallback
-  }
 
-  // Fallback to in-memory tracking
-  const mem = memoryAttemptsMap.get(cleanEmail);
-  if (mem) {
-    const isLocked = Boolean(mem.isLocked || mem.failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS);
-    return {
-      isLocked,
-      failedAttempts: mem.failedAttempts,
-      remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - mem.failedAttempts),
-      lockedAt: mem.lockedAt,
-      lockedReason: mem.lockedReason,
-    };
-  }
+    // No record exists in database: 0 failed attempts
+    return { isLocked: false, failedAttempts: 0, remainingAttempts: MAX_FAILED_LOGIN_ATTEMPTS };
+  } catch (err: any) {
+    console.error('[Account Lockout Check Exception]:', err?.message);
+    if (isProduction()) {
+      return {
+        isLocked: true,
+        failedAttempts: MAX_FAILED_LOGIN_ATTEMPTS,
+        remainingAttempts: 0,
+        unavailable: true,
+        error: err?.message || 'Database unavailable',
+      };
+    }
 
-  return { isLocked: false, failedAttempts: 0, remainingAttempts: MAX_FAILED_LOGIN_ATTEMPTS };
+    // Non-production fallback for tests
+    const mem = testMemoryAttemptsMap.get(cleanEmail);
+    if (mem) {
+      const isLocked = Boolean(mem.isLocked || mem.failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS);
+      return {
+        isLocked,
+        failedAttempts: mem.failedAttempts,
+        remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - mem.failedAttempts),
+        lockedAt: mem.lockedAt,
+        lockedReason: mem.lockedReason,
+      };
+    }
+
+    return { isLocked: false, failedAttempts: 0, remainingAttempts: MAX_FAILED_LOGIN_ATTEMPTS };
+  }
 }
 
 /**
  * Atomically records a failed login attempt for the specified email and IP.
+ * Uses atomic PostgreSQL stored procedure when available; otherwise executes durable upsert.
  * If consecutive failures reach 5, locks the account immediately.
  */
 export async function recordFailedLoginAttempt(
@@ -115,72 +186,176 @@ export async function recordFailedLoginAttempt(
   ip = '127.0.0.1'
 ): Promise<LockoutCheckResult> {
   const cleanEmail = cleanEmailKey(email);
-  const nowIso = new Date().toISOString();
+  return withEmailLock(cleanEmail, async () => {
+    const nowIso = new Date().toISOString();
+    const lockedReason = 'Exceeded maximum 5 consecutive failed login attempts';
 
-  let newFailedCount = 1;
-  let isLocked = false;
-  let lockedAt: string | undefined = undefined;
-  const lockedReason = 'Exceeded maximum 5 consecutive failed login attempts';
+    try {
+      const admin = createAdminSupabaseClient();
 
-  try {
-    const admin = createAdminSupabaseClient();
-    const { data: existing } = await admin
-      .from('account_login_attempts')
-      .select('failed_attempts, is_locked')
-      .eq('email', cleanEmail)
-      .maybeSingle();
+      // 1. Try atomic PostgreSQL RPC function first
+      const { data: rpcData, error: rpcError } = await (admin as any).rpc(
+        'record_failed_login_attempt',
+        {
+          p_email: cleanEmail,
+          p_ip: ip,
+          p_max_attempts: MAX_FAILED_LOGIN_ATTEMPTS,
+        }
+      );
 
-    const currentAttempts = existing?.failed_attempts ? Number(existing.failed_attempts) : 0;
-    newFailedCount = currentAttempts + 1;
-    isLocked = newFailedCount >= MAX_FAILED_LOGIN_ATTEMPTS;
-    lockedAt = isLocked ? nowIso : undefined;
+      if (!rpcError && rpcData) {
+        const row = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+        if (row) {
+          const failed = Number(row.failed_attempts);
+          const locked = Boolean(row.is_locked);
+          // Also update memory map in case tests inspect it
+          testMemoryAttemptsMap.set(cleanEmail, {
+            failedAttempts: failed,
+            isLocked: locked,
+            lockedAt: row.locked_at || (locked ? nowIso : undefined),
+            lockedReason: row.locked_reason || (locked ? lockedReason : undefined),
+            lastFailedAt: nowIso,
+            lastIp: ip,
+          });
 
-    await admin.from('account_login_attempts').upsert({
-      email: cleanEmail,
-      failed_attempts: newFailedCount,
-      last_failed_at: nowIso,
-      is_locked: isLocked,
-      locked_at: lockedAt || null,
-      locked_reason: isLocked ? lockedReason : null,
-      last_ip: ip,
-      updated_at: nowIso,
-    });
-  } catch {
-    // Fallback in-memory upsert
-    const current = memoryAttemptsMap.get(cleanEmail);
-    newFailedCount = (current?.failedAttempts || 0) + 1;
-    isLocked = newFailedCount >= MAX_FAILED_LOGIN_ATTEMPTS;
-    lockedAt = isLocked ? nowIso : undefined;
-  }
+          return {
+            isLocked: locked,
+            failedAttempts: failed,
+            remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - failed),
+            lockedAt: row.locked_at || (locked ? nowIso : undefined),
+            lockedReason: row.locked_reason || (locked ? lockedReason : undefined),
+          };
+        }
+      }
 
-  memoryAttemptsMap.set(cleanEmail, {
-    failedAttempts: newFailedCount,
-    isLocked,
-    lockedAt,
-    lockedReason: isLocked ? lockedReason : undefined,
-    lastFailedAt: nowIso,
-    lastIp: ip,
+      // 2. Durable direct upsert fallback if RPC is not yet registered or supported
+      const { data: existing, error: selectError } = await admin
+        .from('account_login_attempts')
+        .select('failed_attempts, is_locked')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (selectError && isProduction()) {
+        return {
+          isLocked: true,
+          failedAttempts: MAX_FAILED_LOGIN_ATTEMPTS,
+          remainingAttempts: 0,
+          persistenceFailed: true,
+          unavailable: true,
+          error: selectError.message,
+        };
+      }
+
+      const currentAttempts = existing?.failed_attempts ? Number(existing.failed_attempts) : 0;
+      const newFailedCount = currentAttempts + 1;
+      const isLocked = newFailedCount >= MAX_FAILED_LOGIN_ATTEMPTS;
+      const lockedAt = isLocked ? nowIso : undefined;
+
+      const { error: upsertError } = await admin.from('account_login_attempts').upsert({
+        email: cleanEmail,
+        failed_attempts: newFailedCount,
+        last_failed_at: nowIso,
+        is_locked: isLocked,
+        locked_at: lockedAt || null,
+        locked_reason: isLocked ? lockedReason : null,
+        last_ip: ip,
+        updated_at: nowIso,
+      });
+
+      if (upsertError) {
+        console.error('[Failed Login Attempt Persistence Error]:', upsertError.message);
+        if (isProduction()) {
+          return {
+            isLocked: true,
+            failedAttempts: newFailedCount,
+            remainingAttempts: 0,
+            persistenceFailed: true,
+            unavailable: true,
+            error: upsertError.message,
+          };
+        }
+      }
+
+      testMemoryAttemptsMap.set(cleanEmail, {
+        failedAttempts: newFailedCount,
+        isLocked,
+        lockedAt,
+        lockedReason: isLocked ? lockedReason : undefined,
+        lastFailedAt: nowIso,
+        lastIp: ip,
+      });
+
+      return {
+        isLocked,
+        failedAttempts: newFailedCount,
+        remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - newFailedCount),
+        lockedAt,
+        lockedReason: isLocked ? lockedReason : undefined,
+      };
+    } catch (err: any) {
+      console.error('[Failed Login Attempt Exception]:', err?.message);
+      if (isProduction()) {
+        return {
+          isLocked: true,
+          failedAttempts: MAX_FAILED_LOGIN_ATTEMPTS,
+          remainingAttempts: 0,
+          persistenceFailed: true,
+          unavailable: true,
+          error: err?.message || 'Lockout persistence failure',
+        };
+      }
+
+      // Non-production test fallback
+      const current = testMemoryAttemptsMap.get(cleanEmail);
+      const newFailedCount = (current?.failedAttempts || 0) + 1;
+      const isLocked = newFailedCount >= MAX_FAILED_LOGIN_ATTEMPTS;
+      const lockedAt = isLocked ? nowIso : undefined;
+
+      testMemoryAttemptsMap.set(cleanEmail, {
+        failedAttempts: newFailedCount,
+        isLocked,
+        lockedAt,
+        lockedReason: isLocked ? lockedReason : undefined,
+        lastFailedAt: nowIso,
+        lastIp: ip,
+      });
+
+      return {
+        isLocked,
+        failedAttempts: newFailedCount,
+        remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - newFailedCount),
+        lockedAt,
+        lockedReason: isLocked ? lockedReason : undefined,
+      };
+    }
   });
-
-  return {
-    isLocked,
-    failedAttempts: newFailedCount,
-    remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - newFailedCount),
-    lockedAt,
-    lockedReason: isLocked ? lockedReason : undefined,
-  };
 }
 
 /**
  * Atomically clears failed attempts after a verified successful password login.
+ * Returns { success: boolean; error?: string } to safely detect reset issues.
  */
-export async function recordSuccessfulLogin(email: string): Promise<void> {
+export async function recordSuccessfulLogin(
+  email: string
+): Promise<{ success: boolean; error?: string }> {
   const cleanEmail = cleanEmailKey(email);
   const nowIso = new Date().toISOString();
 
   try {
     const admin = createAdminSupabaseClient();
-    await admin.from('account_login_attempts').upsert({
+
+    // Try RPC function first
+    const { error: rpcError } = await (admin as any).rpc('record_successful_login', {
+      p_email: cleanEmail,
+    });
+
+    if (!rpcError) {
+      testMemoryAttemptsMap.delete(cleanEmail);
+      return { success: true };
+    }
+
+    // Fallback direct update
+    const { error: updateError } = await admin.from('account_login_attempts').upsert({
       email: cleanEmail,
       failed_attempts: 0,
       is_locked: false,
@@ -189,15 +364,26 @@ export async function recordSuccessfulLogin(email: string): Promise<void> {
       unlocked_at: nowIso,
       updated_at: nowIso,
     });
-  } catch {
-    // Fallback
-  }
 
-  memoryAttemptsMap.delete(cleanEmail);
+    if (updateError) {
+      console.error('[Record Successful Login Error]:', updateError.message);
+      return { success: false, error: updateError.message };
+    }
+
+    testMemoryAttemptsMap.delete(cleanEmail);
+    return { success: true };
+  } catch (err: any) {
+    if (!isProduction()) {
+      testMemoryAttemptsMap.delete(cleanEmail);
+      return { success: true };
+    }
+    return { success: false, error: err?.message || 'Failed to reset login attempts' };
+  }
 }
 
 /**
  * Administratively unlocks a locked account after customer verification.
+ * Strictly verifies that BOTH the durable database update and the audit log succeed.
  */
 export async function adminUnlockAccount(
   email: string,
@@ -207,9 +393,18 @@ export async function adminUnlockAccount(
   const cleanEmail = cleanEmailKey(email);
   const nowIso = new Date().toISOString();
 
+  if (!cleanEmail) {
+    return { success: false, error: 'A valid email address is required for unlock.' };
+  }
+  if (!adminUserId) {
+    return { success: false, error: 'Administrator user ID is required for authorized unlock.' };
+  }
+
   try {
     const admin = createAdminSupabaseClient();
-    await admin.from('account_login_attempts').upsert({
+
+    // 1. Update database record to unlock
+    const { error: updateError } = await admin.from('account_login_attempts').upsert({
       email: cleanEmail,
       failed_attempts: 0,
       is_locked: false,
@@ -220,10 +415,15 @@ export async function adminUnlockAccount(
       updated_at: nowIso,
     });
 
-    // Append-only audit trail
-    await logAdminAction({
+    if (updateError) {
+      console.error('[Admin Unlock Account DB Error]:', updateError.message);
+      return { success: false, error: `Database unlock failed: ${updateError.message}` };
+    }
+
+    // 2. Append-only audit trail: verify audit operation persistence
+    const auditRes = await logAdminAction({
       adminUserId,
-      action: 'account_unlocked_by_admin' as any,
+      action: 'account_unlocked_by_admin',
       reason,
       metadata: {
         unlockedEmail: cleanEmail,
@@ -231,11 +431,19 @@ export async function adminUnlockAccount(
       },
     });
 
-    memoryAttemptsMap.delete(cleanEmail);
+    if (!auditRes.success) {
+      console.error('[Admin Unlock Account Audit Error]:', auditRes.error);
+      return {
+        success: false,
+        error: `Unlock recorded but audit log failed: ${auditRes.error}`,
+      };
+    }
+
+    testMemoryAttemptsMap.delete(cleanEmail);
     return { success: true };
   } catch (err: any) {
-    memoryAttemptsMap.delete(cleanEmail);
-    return { success: true };
+    console.error('[Admin Unlock Account Exception]:', err?.message);
+    return { success: false, error: err?.message || 'Admin unlock operation failed' };
   }
 }
 
@@ -249,7 +457,9 @@ export async function listLockedAccounts(): Promise<LockedAccountRecord[]> {
     const admin = createAdminSupabaseClient();
     const { data: records, error } = await admin
       .from('account_login_attempts')
-      .select('email, failed_attempts, is_locked, locked_at, locked_reason, last_failed_at, last_ip, updated_at')
+      .select(
+        'email, failed_attempts, is_locked, locked_at, locked_reason, last_failed_at, last_ip, updated_at'
+      )
       .or(`is_locked.eq.true,failed_attempts.gte.${MAX_FAILED_LOGIN_ATTEMPTS}`)
       .order('updated_at', { ascending: false });
 
@@ -271,8 +481,8 @@ export async function listLockedAccounts(): Promise<LockedAccountRecord[]> {
     // Database query failed
   }
 
-  // Include any in-memory locked accounts not yet in list
-  for (const [em, rec] of memoryAttemptsMap.entries()) {
+  // Include any in-memory locked accounts not yet in list (for non-prod test environments)
+  for (const [em, rec] of testMemoryAttemptsMap.entries()) {
     if (rec.isLocked || rec.failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
       if (!lockedList.some((l) => l.email === em)) {
         lockedList.push({
@@ -291,4 +501,3 @@ export async function listLockedAccounts(): Promise<LockedAccountRecord[]> {
 
   return lockedList;
 }
-

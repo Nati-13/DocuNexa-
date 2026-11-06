@@ -16,6 +16,7 @@ export interface AuditLogParams {
     | 'user_suspended'
     | 'user_restored'
     | 'user_password_recovery_initiated'
+    | 'account_unlocked_by_admin'
     | 'admin_password_changed';
   targetUserId?: string | null;
   targetPaymentId?: string | null;
@@ -49,13 +50,14 @@ function sanitizeMetadata(metadata?: Record<string, any>): Json {
 
 /**
  * Records an immutable administrative audit event into public.admin_audit_logs.
+ * Returns { success: boolean; error?: string } to allow callers to verify durable persistence.
  */
-export async function logAdminAction(params: AuditLogParams): Promise<void> {
+export async function logAdminAction(params: AuditLogParams): Promise<{ success: boolean; error?: string }> {
   try {
     const admin = createAdminSupabaseClient();
     const cleanMeta = sanitizeMetadata(params.metadata);
 
-    await admin.from('admin_audit_logs').insert({
+    const { error } = await admin.from('admin_audit_logs').insert({
       admin_user_id: params.adminUserId,
       action: params.action,
       target_user_id: params.targetUserId || null,
@@ -65,8 +67,15 @@ export async function logAdminAction(params: AuditLogParams): Promise<void> {
       reason: params.reason || null,
       created_at: new Date().toISOString(),
     });
-  } catch (err) {
-    // Audit logging failure should be logged to stderr but not break server flow if resilient
+
+    if (error) {
+      console.error('[Admin Audit Log Error]:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
     console.error('[Admin Audit Log Error]:', err);
+    return { success: false, error: err?.message || 'Failed to record administrative audit log' };
   }
 }
