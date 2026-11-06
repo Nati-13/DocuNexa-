@@ -207,7 +207,7 @@ export function WatermarkPdfTool() {
                 value={watermarkText}
                 onChange={(e) => setWatermarkText(e.target.value)}
                 placeholder="e.g. CONFIDENTIAL, DRAFT, SAMPLE"
-                className="w-full px-3.5 py-2.5 rounded-md border border-border bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-hidden"
+                className="w-full px-3.5 py-2.5 rounded-md border border-border bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-brand outline-hidden"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {['CONFIDENTIAL', 'DRAFT', 'DO NOT COPY', 'SAMPLE'].map((preset) => (
@@ -215,7 +215,7 @@ export function WatermarkPdfTool() {
                     key={preset}
                     type="button"
                     onClick={() => setWatermarkText(preset)}
-                    className="text-[10px] px-2 py-0.5 rounded-md bg-paper text-muted hover:bg-slate-200"
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-paper text-muted hover:bg-paper"
                   >
                     {preset}
                   </button>
@@ -263,7 +263,7 @@ export function WatermarkPdfTool() {
                     setPosition({ x: 40, y: 60 });
                     setIsCustomDragged(true);
                   }}
-                  className="py-1.5 px-2.5 rounded-md text-xs font-bold bg-paper text-ink hover:bg-slate-200"
+                  className="py-1.5 px-2.5 rounded-md text-xs font-bold bg-paper text-ink hover:bg-paper"
                 >
                   Top Left
                 </button>
@@ -273,7 +273,7 @@ export function WatermarkPdfTool() {
                     setPosition({ x: 200, y: 680 });
                     setIsCustomDragged(true);
                   }}
-                  className="py-1.5 px-2.5 rounded-md text-xs font-bold bg-paper text-ink hover:bg-slate-200"
+                  className="py-1.5 px-2.5 rounded-md text-xs font-bold bg-paper text-ink hover:bg-paper"
                 >
                   Bottom Footer
                 </button>
@@ -283,7 +283,7 @@ export function WatermarkPdfTool() {
                     setPosition({ x: 300, y: 60 });
                     setIsCustomDragged(true);
                   }}
-                  className="py-1.5 px-2.5 rounded-md text-xs font-bold bg-paper text-ink hover:bg-slate-200"
+                  className="py-1.5 px-2.5 rounded-md text-xs font-bold bg-paper text-ink hover:bg-paper"
                 >
                   Top Right
                 </button>
@@ -382,7 +382,7 @@ export function WatermarkPdfTool() {
                     className={`p-2 rounded-md border text-left flex items-center gap-2 transition-all ${
                       selectedColor.name === col.name
                         ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 shadow-xs'
-                        : 'border-border hover:bg-slate-50 dark:hover:bg-slate-800'
+                        : 'border-border hover:bg-slate-50 dark:hover:bg-surface'
                     }`}
                   >
                     <span

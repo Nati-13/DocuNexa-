@@ -138,7 +138,7 @@ export default function AdminSecurityPage() {
         </div>
         <button
           onClick={fetchMfaStatus}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-paper transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw size={13} /> Refresh Status
         </button>
@@ -166,7 +166,7 @@ export default function AdminSecurityPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <div className="p-5 rounded-md bg-surface border border-border shadow-xs space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">MFA Status</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">MFA Status</span>
             <div className={`p-2 rounded-md ${aal === 'aal2' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
               <Lock size={18} />
             </div>
@@ -175,7 +175,7 @@ export default function AdminSecurityPage() {
             <div className="text-xl font-bold text-ink uppercase">
               {aal === 'aal2' ? 'AAL2 Verified' : 'AAL1 (Password)'}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-muted mt-1">
               {aal === 'aal2'
                 ? 'Two-factor authentication is active on this session.'
                 : 'Single-factor authentication. Enroll TOTP below to elevate to AAL2.'}
@@ -185,7 +185,7 @@ export default function AdminSecurityPage() {
 
         <div className="p-5 rounded-md bg-surface border border-border shadow-xs space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Enrolled Factors</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Enrolled Factors</span>
             <div className="p-2 rounded-md bg-brand/10 text-brand">
               <Key size={18} />
             </div>
@@ -194,7 +194,7 @@ export default function AdminSecurityPage() {
             <div className="text-xl font-bold text-ink">
               {factors.length} Active {factors.length === 1 ? 'Factor' : 'Factors'}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-muted mt-1">
               TOTP authenticators registered for this administrator identity.
             </p>
           </div>
@@ -202,8 +202,8 @@ export default function AdminSecurityPage() {
 
         <div className="p-5 rounded-md bg-surface border border-border shadow-xs space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Defense Layers</span>
-            <div className="p-2 rounded-md bg-brand-500/10 text-brand-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Defense Layers</span>
+            <div className="p-2 rounded-md bg-brand-500/10 text-brand">
               <ShieldCheck size={18} />
             </div>
           </div>
@@ -211,7 +211,7 @@ export default function AdminSecurityPage() {
             <div className="text-xl font-bold text-ink">
               5 / 5 Layers Active
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-muted mt-1">
               Zero-Trust, Rate Limiting, RLS Lockdown, CSP, and Serverless HMAC.
             </p>
           </div>
@@ -269,12 +269,12 @@ export default function AdminSecurityPage() {
               <h3 className="text-sm font-bold text-ink">
                 Scan QR Code in Authenticator App
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 Scan the QR code below or enter the secret key manually into your authenticator app.
               </p>
             </div>
 
-            <div className="flex justify-center p-4 bg-white rounded-md border border-slate-200 w-fit mx-auto shadow-xs">
+            <div className="flex justify-center p-4 bg-white rounded-md border border-border w-fit mx-auto shadow-xs">
               <img src={enrollQr} alt="MFA QR Code" className="w-48 h-48" />
             </div>
 
@@ -313,7 +313,7 @@ export default function AdminSecurityPage() {
                   placeholder="123456"
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
-                  className="font-mono text-center tracking-widest text-base px-4 py-2 rounded-md bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 w-36"
+                  className="font-mono text-center tracking-widest text-base px-4 py-2 rounded-md bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand w-36"
                 />
                 <button
                   type="submit"
@@ -350,7 +350,7 @@ export default function AdminSecurityPage() {
               <p className="text-xs font-semibold text-ink">
                 Layer 1: Authentication + PKCE Session Hardening
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 Next.js SSR middleware synchronizes cookies on all requests. Server verification uses getClaims() and getUser(). Private authenticated responses marked non-cacheable.
               </p>
             </div>
@@ -362,7 +362,7 @@ export default function AdminSecurityPage() {
               <p className="text-xs font-semibold text-ink">
                 Layer 2: Zero-Trust Admin & TOTP MFA
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 Admin authorization verified strictly against database admin_users allowlist. Deny-by-default on all endpoints with append-only audit logging.
               </p>
             </div>
@@ -374,7 +374,7 @@ export default function AdminSecurityPage() {
               <p className="text-xs font-semibold text-ink">
                 Layer 3: API Abuse & Privacy-Preserving Rate Limiting
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 Serverless-safe sliding window rate limiting on authentication, payments, and coupons. Zero raw IP storage; SHA-256 salted hashes. Max body size 64KB.
               </p>
             </div>
@@ -386,7 +386,7 @@ export default function AdminSecurityPage() {
               <p className="text-xs font-semibold text-ink">
                 Layer 4: Database RLS & Privileged Function Hardening
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 RLS enforced across all tables. Functions use SET search_path = public, pg_temp. Public/anon execution revoked for handle_new_user and confirm_payment_order.
               </p>
             </div>
@@ -398,7 +398,7 @@ export default function AdminSecurityPage() {
               <p className="text-xs font-semibold text-ink">
                 Layer 5: Payment Isolation & Browser Security Headers
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 Service-role keys and Bybit API secrets isolated strictly to server. Exact integer micro-unit payment verification with replay defense. HSTS, CSP, and X-Content-Type-Options active.
               </p>
             </div>

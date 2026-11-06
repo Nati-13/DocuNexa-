@@ -109,7 +109,7 @@ export default function AdminSettingsPage() {
         </div>
         <button
           onClick={fetchSettings}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-surface transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw size={13} /> Refresh Config
         </button>
@@ -132,7 +132,7 @@ export default function AdminSettingsPage() {
           <div className="space-y-3 text-xs">
             <div className="p-3 rounded-md bg-paper flex items-center justify-between">
               <div>
-                <span className="text-slate-400 text-[11px]">Administrator Access:</span>
+                <span className="text-muted text-[11px]">Administrator Access:</span>
                 <div className="font-bold text-ink mt-0.5">
                   Verified Super-Admin (admin_users table)
                 </div>
@@ -144,7 +144,7 @@ export default function AdminSettingsPage() {
 
             <div className="p-3 rounded-md bg-paper flex items-center justify-between">
               <div>
-                <span className="text-slate-400 text-[11px]">Production Bootstrap State:</span>
+                <span className="text-muted text-[11px]">Production Bootstrap State:</span>
                 <div className="font-bold text-ink mt-0.5">
                   Bootstrap Locked & Sealed
                 </div>
@@ -201,12 +201,12 @@ export default function AdminSettingsPage() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current administrator password..."
-                  className="w-full px-3 py-2 pr-9 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
+                  className="w-full px-3 py-2 pr-9 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand text-xs"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink cursor-pointer"
                 >
                   {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
@@ -224,12 +224,12 @@ export default function AdminSettingsPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new strong password..."
-                  className="w-full px-3 py-2 pr-9 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
+                  className="w-full px-3 py-2 pr-9 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand text-xs"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink cursor-pointer"
                 >
                   {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
@@ -246,7 +246,7 @@ export default function AdminSettingsPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter new password..."
-                className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
+                className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand text-xs"
               />
             </div>
 
@@ -279,7 +279,7 @@ export default function AdminSettingsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-slate-400">
+              <tr className="border-b border-border text-muted">
                 <th className="pb-3 font-semibold">Variable Name</th>
                 <th className="pb-3 font-semibold">Scope</th>
                 <th className="pb-3 font-semibold">Status</th>
@@ -289,15 +289,15 @@ export default function AdminSettingsPage() {
             <tbody className="divide-y divide-border/60 font-mono text-[11px]">
               <tr>
                 <td className="py-3 font-semibold text-ink">NEXT_PUBLIC_SUPABASE_URL</td>
-                <td className="py-3 text-slate-500">Client & Server</td>
+                <td className="py-3 text-muted">Client & Server</td>
                 <td className="py-3 text-emerald-600 dark:text-emerald-400 font-bold">CONFIGURED</td>
-                <td className="py-3 text-slate-400">Public Endpoint</td>
+                <td className="py-3 text-muted">Public Endpoint</td>
               </tr>
               <tr>
                 <td className="py-3 font-semibold text-ink">NEXT_PUBLIC_SUPABASE_ANON_KEY</td>
-                <td className="py-3 text-slate-500">Client & Server</td>
+                <td className="py-3 text-muted">Client & Server</td>
                 <td className="py-3 text-emerald-600 dark:text-emerald-400 font-bold">CONFIGURED</td>
-                <td className="py-3 text-slate-400">Browser Publishable (RLS Guarded)</td>
+                <td className="py-3 text-muted">Browser Publishable (RLS Guarded)</td>
               </tr>
               <tr>
                 <td className="py-3 font-semibold text-ink">SUPABASE_SERVICE_ROLE_KEY</td>
@@ -327,7 +327,7 @@ export default function AdminSettingsPage() {
                 <td className="py-3 font-semibold text-ink">BYBIT_USDT_POLYGON_ADDRESS</td>
                 <td className="py-3 text-brand font-bold">Server-Authoritative</td>
                 <td className="py-3 text-emerald-600 dark:text-emerald-400 font-bold">CONFIGURED</td>
-                <td className="py-3 text-slate-400">Mainnet Polygon PoS Deposit</td>
+                <td className="py-3 text-muted">Mainnet Polygon PoS Deposit</td>
               </tr>
             </tbody>
           </table>

@@ -198,7 +198,7 @@ export default function AdminSupportInboxPage() {
             <h2 className="text-sm font-bold text-ink">
               Telegram Bot Health & Outbox Diagnostics
             </h2>
-            {tgLoading && <Loader2 size={13} className="animate-spin text-slate-400" />}
+            {tgLoading && <Loader2 size={13} className="animate-spin text-muted" />}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -263,7 +263,7 @@ export default function AdminSupportInboxPage() {
         {/* Configuration Status Indicators */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="p-3 rounded-md bg-paper border border-border space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Bot Token</span>
+            <span className="text-[10px] font-bold text-muted uppercase">Bot Token</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.status?.configured ? (
                 <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -278,7 +278,7 @@ export default function AdminSupportInboxPage() {
           </div>
 
           <div className="p-3 rounded-md bg-paper border border-border space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Owner Chat</span>
+            <span className="text-[10px] font-bold text-muted uppercase">Owner Chat</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.status?.ownerConfigured ? (
                 <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -293,7 +293,7 @@ export default function AdminSupportInboxPage() {
           </div>
 
           <div className="p-3 rounded-md bg-paper border border-border space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Webhook Secret</span>
+            <span className="text-[10px] font-bold text-muted uppercase">Webhook Secret</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.status?.webhookSecretConfigured ? (
                 <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -308,14 +308,14 @@ export default function AdminSupportInboxPage() {
           </div>
 
           <div className="p-3 rounded-md bg-paper border border-border space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Live Webhook</span>
+            <span className="text-[10px] font-bold text-muted uppercase">Live Webhook</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.webhookInfo?.configured ? (
                 <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                   <Radio size={13} className="animate-pulse" /> Registered
                 </span>
               ) : (
-                <span className="text-slate-400 flex items-center gap-1">
+                <span className="text-muted flex items-center gap-1">
                   <AlertCircle size={13} /> Not Set
                 </span>
               )}
@@ -327,7 +327,7 @@ export default function AdminSupportInboxPage() {
         {tgData?.metrics && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-border">
             <div>
-              <span className="text-[10px] font-semibold text-slate-400 uppercase">Total Tickets</span>
+              <span className="text-[10px] font-semibold text-muted uppercase">Total Tickets</span>
               <p className="font-mono font-bold text-ink text-base">
                 {tgData.metrics.totalTickets}
               </p>
@@ -395,20 +395,20 @@ export default function AdminSupportInboxPage() {
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tickets by subject, email, or name..."
-            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <option value="all">All Statuses</option>
           <option value="open">Open</option>
@@ -420,7 +420,7 @@ export default function AdminSupportInboxPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <option value="all">All Categories</option>
           <option value="Account">Account</option>
@@ -437,10 +437,10 @@ export default function AdminSupportInboxPage() {
         {loading ? (
           <div className="p-12 text-center space-y-2">
             <Loader2 className="animate-spin text-brand mx-auto" size={24} />
-            <p className="text-xs text-slate-400">Loading support tickets...</p>
+            <p className="text-xs text-muted">Loading support tickets...</p>
           </div>
         ) : tickets.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
+          <div className="p-12 text-center text-muted text-xs">
             No support tickets found matching the filter criteria.
           </div>
         ) : (
@@ -462,7 +462,7 @@ export default function AdminSupportInboxPage() {
                   const isInProgress = t.status === 'in_progress';
 
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-surface/40">
                       <td className="py-3 px-4">
                         {isOpen ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
@@ -486,13 +486,13 @@ export default function AdminSupportInboxPage() {
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-semibold text-ink">{t.name}</p>
-                          <p className="text-[11px] text-slate-400 font-mono">{t.email}</p>
+                          <p className="text-[11px] text-muted font-mono">{t.email}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4 max-w-xs truncate font-medium text-ink">
                         {t.subject}
                       </td>
-                      <td className="py-3 px-4 text-slate-400">
+                      <td className="py-3 px-4 text-muted">
                         {new Date(t.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4 text-right">
@@ -518,7 +518,7 @@ export default function AdminSupportInboxPage() {
           <div className="relative w-full max-w-2xl bg-surface border border-border rounded-md p-6 shadow-subtle space-y-5 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedTicket(null)}
-              className="absolute top-5 right-5 p-1.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+              className="absolute top-5 right-5 p-1.5 text-muted hover:text-ink rounded-full cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -535,21 +535,21 @@ export default function AdminSupportInboxPage() {
             {/* Submitter Info */}
             <div className="grid grid-cols-2 gap-3 p-4 rounded-md bg-paper text-xs">
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Submitter</span>
+                <span className="text-[10px] font-bold uppercase text-muted block">Submitter</span>
                 <span className="font-semibold text-ink">{selectedTicket.name}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Email / Contact</span>
+                <span className="text-[10px] font-bold uppercase text-muted block">Email / Contact</span>
                 <a href={`mailto:${selectedTicket.email}`} className="font-mono text-brand hover:underline">
                   {selectedTicket.email}
                 </a>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Category</span>
+                <span className="text-[10px] font-bold uppercase text-muted block">Category</span>
                 <span className="font-semibold text-ink">{selectedTicket.category}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Submitted</span>
+                <span className="text-[10px] font-bold uppercase text-muted block">Submitted</span>
                 <span className="text-muted">
                   {new Date(selectedTicket.created_at).toLocaleString()}
                 </span>
@@ -575,7 +575,7 @@ export default function AdminSupportInboxPage() {
                 <select
                   value={updateStatus}
                   onChange={(e) => setUpdateStatus(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink font-medium focus:outline-none focus:ring-2 focus:ring-brand"
                 >
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
@@ -593,7 +593,7 @@ export default function AdminSupportInboxPage() {
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Notes about resolutions, responses sent, or bug tickets opened..."
-                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink font-medium focus:outline-none focus:ring-2 focus:ring-brand"
                 />
               </div>
 
@@ -606,7 +606,7 @@ export default function AdminSupportInboxPage() {
               <div className="flex items-center justify-between pt-2">
                 <a
                   href={`mailto:${selectedTicket.email}?subject=Re: ${encodeURIComponent(selectedTicket.subject)}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-paper hover:bg-slate-200 text-ink font-bold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-paper hover:bg-paper text-ink font-bold transition-colors cursor-pointer"
                 >
                   <Mail size={13} /> Reply via Email
                 </a>
@@ -615,7 +615,7 @@ export default function AdminSupportInboxPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedTicket(null)}
-                    className="px-4 py-2 rounded-md text-muted hover:bg-slate-100 font-medium cursor-pointer"
+                    className="px-4 py-2 rounded-md text-muted hover:bg-paper font-medium cursor-pointer"
                   >
                     Close
                   </button>

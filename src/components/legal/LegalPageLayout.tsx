@@ -79,7 +79,7 @@ export function LegalPageLayout({
           <div className="flex items-center gap-3">
             <Link
               href="/legal"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-slate-300 dark:hover:border-slate-700 text-ink font-medium transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-border dark:hover:border-slate-700 text-ink font-medium transition-all"
             >
               <ArrowLeft size={13} />
               <span>All Policies</span>
@@ -102,7 +102,7 @@ export function LegalPageLayout({
           </p>
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted pt-1">
             <span className="flex items-center gap-1.5">
-              <Calendar size={14} className="text-slate-400" />
+              <Calendar size={14} className="text-muted" />
               Effective Date: {lastUpdated}
             </span>
             <span>•</span>
@@ -182,7 +182,7 @@ export function LegalPageLayout({
                     <a
                       key={item.id}
                       href={`#${item.id}`}
-                      className="block py-1.5 px-2 rounded-lg text-muted hover:text-brand hover:bg-slate-50 dark:hover:bg-slate-800 transition-all truncate"
+                      className="block py-1.5 px-2 rounded-lg text-muted hover:text-brand hover:bg-slate-50 dark:hover:bg-surface transition-all truncate"
                     >
                       {item.title}
                     </a>
@@ -207,10 +207,10 @@ export function LegalPageLayout({
                         className={`flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg transition-all ${
                           isCurrent
                             ? 'bg-brand-50 dark:bg-brand-950/60 text-brand font-semibold border border-brand-200/60 dark:border-brand-800/50'
-                            : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
+                            : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-surface'
                         }`}
                       >
-                        <Icon size={14} className={isCurrent ? 'text-brand' : 'text-slate-400'} />
+                        <Icon size={14} className={isCurrent ? 'text-brand' : 'text-muted'} />
                         <span className="truncate">{link.title}</span>
                       </Link>
                     </li>

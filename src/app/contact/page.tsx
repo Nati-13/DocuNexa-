@@ -118,7 +118,7 @@ export default function ContactPage() {
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             Because DocuNexa runs client-side, errors usually correlate with specific PDF structure variations (e.g. encrypted streams, non-standard embedded font encodings, or scanned image sizes). When reporting an issue, please include:
           </p>
-          <ul className="space-y-2 text-xs sm:text-sm text-slate-400">
+          <ul className="space-y-2 text-xs sm:text-sm text-muted">
             <li className="flex items-start gap-2">
               <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
               <span>The name of the tool used (e.g., PDF Unit Cutter, Compress PDF, PDF to Word).</span>
@@ -145,7 +145,7 @@ export default function ContactPage() {
           <p>
             DocuNexa is developed and maintained independently by Natnael Yalew (Nati-13).
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             Canonical Production Website:{' '}
             <a href="https://docunexa.pro.et" className="text-brand hover:underline">
               https://docunexa.pro.et

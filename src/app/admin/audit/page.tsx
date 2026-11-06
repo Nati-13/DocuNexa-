@@ -112,14 +112,14 @@ export default function AdminAuditLogPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter size={14} className="text-slate-400" />
+          <Filter size={14} className="text-muted" />
           <select
             value={actionFilter}
             onChange={(e) => {
               setActionFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           >
             <option value="all">All Audit Actions</option>
             <option value="manual_grant_ad_free">Manual Grant Ad-Free</option>
@@ -137,10 +137,10 @@ export default function AdminAuditLogPage() {
         {loading ? (
           <div className="p-12 text-center space-y-2">
             <Loader2 className="animate-spin text-brand mx-auto" size={24} />
-            <p className="text-xs text-slate-400">Loading audit history...</p>
+            <p className="text-xs text-muted">Loading audit history...</p>
           </div>
         ) : logs.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
+          <div className="p-12 text-center text-muted text-xs">
             No audit logs recorded for this criteria.
           </div>
         ) : (
@@ -157,8 +157,8 @@ export default function AdminAuditLogPage() {
               </thead>
               <tbody className="divide-y divide-border text-ink">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                    <td className="py-3 px-4 whitespace-nowrap text-slate-500 font-mono text-[11px]">
+                  <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-surface/40">
+                    <td className="py-3 px-4 whitespace-nowrap text-muted font-mono text-[11px]">
                       {new Date(log.created_at).toISOString().replace('T', ' ').slice(0, 19)}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
@@ -170,7 +170,7 @@ export default function AdminAuditLogPage() {
                     <td className="py-3 px-4 max-w-xs text-ink break-words">
                       {log.reason || '—'}
                     </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-500 max-w-sm truncate">
+                    <td className="py-3 px-4 font-mono text-[11px] text-muted max-w-sm truncate">
                       {JSON.stringify(log.metadata || {})}
                     </td>
                   </tr>
@@ -190,7 +190,7 @@ export default function AdminAuditLogPage() {
             >
               <ChevronLeft size={13} /> Previous
             </button>
-            <span className="text-slate-500">
+            <span className="text-muted">
               Page {page} of {totalPages} ({totalCount} total events)
             </span>
             <button

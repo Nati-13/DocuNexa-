@@ -77,7 +77,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
         aria-label="Advertisement"
         className={`relative w-full rounded-md overflow-hidden transition-all duration-200 ${minHeightClass} ${className}`}
       >
-        <div className="text-center py-1 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div className="text-center py-1 bg-slate-100/60 dark:bg-slate-800/40 border-b border-border dark:border-slate-800/60">
           <span className="text-[10px] uppercase tracking-wider font-bold text-muted">
             Advertisement
           </span>

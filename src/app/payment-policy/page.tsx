@@ -79,7 +79,7 @@ export default function PaymentPolicyPage() {
             </div>
             <div className="text-right">
               <span className="text-xl font-extrabold text-brand">$2.00 USD</span>
-              <span className="block text-[10px] text-slate-400">Fixed rate in USDT</span>
+              <span className="block text-[10px] text-muted">Fixed rate in USDT</span>
             </div>
           </div>
           <ul className="list-disc pl-5 space-y-1.5 text-muted">

@@ -45,7 +45,7 @@ export default function AdminPlansPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
         <Loader2 className="animate-spin text-brand" size={32} />
-        <p className="text-xs text-slate-500">Loading plan architectures...</p>
+        <p className="text-xs text-muted">Loading plan architectures...</p>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export default function AdminPlansPage() {
 
         <button
           onClick={fetchPlanStats}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-surface transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw size={13} /> Refresh
         </button>
@@ -110,7 +110,7 @@ export default function AdminPlansPage() {
               <h2 className="text-xl font-bold text-ink">Free Plan</h2>
               <div className="text-3xl font-black font-mono text-ink mt-1">
                 {freeCount}{' '}
-                <span className="text-xs font-normal text-slate-400">registered users</span>
+                <span className="text-xs font-normal text-muted">registered users</span>
               </div>
               <p className="text-xs text-muted mt-1">
                 Ad-supported access for anonymous visitors and standard registered users.
@@ -163,7 +163,7 @@ export default function AdminPlansPage() {
               <h2 className="text-xl font-bold text-ink">Ad-Free Plan</h2>
               <div className="text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
                 {adFreeCount}{' '}
-                <span className="text-xs font-normal text-slate-400">upgraded users</span>
+                <span className="text-xs font-normal text-muted">upgraded users</span>
               </div>
               <p className="text-xs text-muted mt-1">
                 Verified lifetime entitlement: zero ads, full privacy, and priority operations.
@@ -210,7 +210,7 @@ export default function AdminPlansPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-border text-slate-400 font-semibold">
+            <thead className="border-b border-border text-muted font-semibold">
               <tr>
                 <th className="pb-3 px-3">Feature / Entitlement</th>
                 <th className="pb-3 px-3">Free Tier</th>
@@ -223,31 +223,31 @@ export default function AdminPlansPage() {
                 <td className="py-3 px-3 font-semibold text-ink">Monetag Ads</td>
                 <td className="py-3 px-3 text-amber-500 font-bold">Active (Zone 289364)</td>
                 <td className="py-3 px-3 text-emerald-500 font-bold">Suppressed ✓</td>
-                <td className="py-3 px-3 font-mono text-[11px] text-slate-400">Guarded by user session plan state</td>
+                <td className="py-3 px-3 font-mono text-[11px] text-muted">Guarded by user session plan state</td>
               </tr>
               <tr>
                 <td className="py-3 px-3 font-semibold text-ink">Service Worker Cache</td>
                 <td className="py-3 px-3">Retains ad worker</td>
                 <td className="py-3 px-3 text-emerald-500 font-bold">Auto-Purged on Login</td>
-                <td className="py-3 px-3 font-mono text-[11px] text-slate-400">public/sw.js unregistration trigger</td>
+                <td className="py-3 px-3 font-mono text-[11px] text-muted">public/sw.js unregistration trigger</td>
               </tr>
               <tr>
                 <td className="py-3 px-3 font-semibold text-ink">PDF Processing Speed</td>
                 <td className="py-3 px-3">Standard Wasm</td>
                 <td className="py-3 px-3 text-brand font-semibold">Max Client Wasm Speed</td>
-                <td className="py-3 px-3 font-mono text-[11px] text-slate-400">Client-side pdf-lib execution</td>
+                <td className="py-3 px-3 font-mono text-[11px] text-muted">Client-side pdf-lib execution</td>
               </tr>
               <tr>
                 <td className="py-3 px-3 font-semibold text-ink">Entitlement Duration</td>
                 <td className="py-3 px-3">Indefinite Free</td>
                 <td className="py-3 px-3 text-emerald-500 font-bold">Lifetime (0 Expired)</td>
-                <td className="py-3 px-3 font-mono text-[11px] text-slate-400">Permanent profile plan attribution</td>
+                <td className="py-3 px-3 font-mono text-[11px] text-muted">Permanent profile plan attribution</td>
               </tr>
               <tr>
                 <td className="py-3 px-3 font-semibold text-ink">Manual Admin Control</td>
                 <td className="py-3 px-3">Default</td>
                 <td className="py-3 px-3">Grant / Revoke with Audit</td>
-                <td className="py-3 px-3 font-mono text-[11px] text-slate-400">Requires documented audit justification</td>
+                <td className="py-3 px-3 font-mono text-[11px] text-muted">Requires documented audit justification</td>
               </tr>
             </tbody>
           </table>

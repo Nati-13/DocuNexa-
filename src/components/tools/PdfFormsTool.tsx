@@ -204,7 +204,7 @@ export function PdfFormsTool() {
                 <p className="leading-relaxed">
                   This PDF contains static text/scanned pages rather than digital interactive AcroForm fields.
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-muted">
                   Tip: To add text anywhere on this document, use the <strong>Edit PDF</strong> or <strong>Sign PDF</strong> tools.
                 </p>
               </div>
@@ -219,7 +219,7 @@ export function PdfFormsTool() {
                       <span className="text-xs font-bold text-ink truncate">
                         {field.name}
                       </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-paper text-slate-500 uppercase">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-paper text-muted uppercase">
                         {field.type}
                       </span>
                     </div>
@@ -230,7 +230,7 @@ export function PdfFormsTool() {
                           type="checkbox"
                           checked={Boolean(formValues[field.name])}
                           onChange={(e) => handleFieldValueChange(field.name, e.target.checked)}
-                          className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                          className="w-4 h-4 rounded text-brand focus:ring-brand"
                         />
                         <span className="text-xs text-muted font-medium">
                           {Boolean(formValues[field.name]) ? 'Checked' : 'Unchecked'}
@@ -254,7 +254,7 @@ export function PdfFormsTool() {
                         value={(formValues[field.name] as string) || ''}
                         onChange={(e) => handleFieldValueChange(field.name, e.target.value)}
                         placeholder="Enter value..."
-                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-ink outline-hidden focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-ink outline-hidden focus:ring-1 focus:ring-brand"
                       />
                     )}
                   </div>

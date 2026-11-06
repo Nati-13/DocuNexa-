@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function ResetPasswordPage() {
   return (
     <main className="min-h-[calc(100vh-140px)] flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8">
-      <Suspense fallback={<div className="p-8 text-center text-sm text-slate-500">Loading recovery form...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-sm text-muted">Loading recovery form...</div>}>
         <ResetPasswordForm />
       </Suspense>
     </main>

@@ -110,7 +110,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
           ? 'bg-brand-50/90 dark:bg-brand-950/40 border-brand-500 shadow-md ring-2 ring-brand-500/20'
           : isSelected
           ? 'bg-brand/10 border-brand'
-          : 'bg-surface border-border hover:border-slate-300 dark:hover:border-slate-700'
+          : 'bg-surface border-border hover:border-border dark:hover:border-slate-700'
       }`}
     >
       {/* Checkbox for multi-page selection */}
@@ -124,7 +124,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
           className={`absolute top-2 left-2 z-10 w-5 h-5 rounded-md flex items-center justify-center text-xs transition-colors shadow-xs ${
             isSelected
               ? 'bg-brand-600 text-white'
-              : 'bg-white/90 dark:bg-slate-800 text-transparent border border-slate-300 dark:border-slate-600 hover:text-slate-400'
+              : 'bg-white/90 dark:bg-slate-800 text-transparent border border-slate-300 dark:border-slate-600 hover:text-muted'
           }`}
         >
           <Check size={12} strokeWidth={3} />
@@ -145,7 +145,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
       >
         <canvas ref={canvasRef} className="max-w-full max-h-full object-contain shadow-2xs" />
         {!rendered && (
-          <div className="w-6 h-6 border-2 border-slate-300 border-t-brand-600 rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-border border-t-brand rounded-full animate-spin" />
         )}
       </div>
 
@@ -164,7 +164,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
                 onRotate(-90);
               }}
               title="Rotate Left 90°"
-              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900"
+              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-muted hover:text-ink"
             >
               <RotateCcw size={11} />
             </button>
@@ -175,7 +175,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
                 onRotate(90);
               }}
               title="Rotate Right 90°"
-              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900"
+              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-muted hover:text-ink"
             >
               <RotateCw size={11} />
             </button>
@@ -227,7 +227,7 @@ export const PdfThumbnailRail: React.FC<PdfThumbnailRailProps> = ({
   }, [pdfBuffer]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-ink/40 rounded-md border border-border p-3 shadow-inner">
+    <div className="flex flex-col h-full overflow-hidden bg-paper/80 dark:bg-ink/40 rounded-md border border-border p-3 shadow-inner">
       <div className="flex items-center justify-between pb-3 mb-2 border-b border-border px-1">
         <span className="text-xs font-bold uppercase tracking-wider text-muted">
           Pages ({totalPages})

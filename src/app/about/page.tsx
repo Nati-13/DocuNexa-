@@ -155,19 +155,19 @@ export default function AboutPage() {
             DocuNexa strictly separates user document processing from external resource downloads:
           </p>
           <div className="space-y-3 text-xs sm:text-sm text-muted">
-            <div className="p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+            <div className="p-4 rounded-md bg-paper border border-border dark:border-slate-700/60 space-y-1">
               <p className="font-bold text-ink">A. Document Processing (Local Only):</p>
               <p>
                 Document bytes remain entirely in browser memory (ArrayBuffer/Uint8Array). All operations—including parsing, unit detection, page extraction, password encryption, and optical character analysis—execute locally inside your browser or Web Worker. Your documents are never uploaded to remote servers for processing.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+            <div className="p-4 rounded-md bg-paper border border-border dark:border-slate-700/60 space-y-1">
               <p className="font-bold text-ink">B. On-Demand OCR Language Data Retrieval:</p>
               <p>
                 When using OCR PDF, Tesseract.js may retrieve required public language trained data models (such as English or Amharic <code>.traineddata.gz</code>) from standard open-source CDN repositories (jsdelivr) on-demand when a language is first selected. The downloaded language file is cached locally in your browser so it is not re-downloaded repeatedly. This download is strictly a retrieval of public optical character recognition model weights; your PDF pages or images are NEVER transmitted externally.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+            <div className="p-4 rounded-md bg-paper border border-border dark:border-slate-700/60 space-y-1">
               <p className="font-bold text-ink">C. Other External Resources:</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>

@@ -118,7 +118,7 @@ export function LockedAccountsConsole() {
       {loading ? (
         <div className="p-8 text-center space-y-2">
           <Loader2 className="animate-spin text-brand mx-auto" size={20} />
-          <p className="text-xs text-slate-400">Inspecting locked account records...</p>
+          <p className="text-xs text-muted">Inspecting locked account records...</p>
         </div>
       ) : lockedAccounts.length === 0 ? (
         <div className="p-8 text-center rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2">
@@ -147,13 +147,13 @@ export function LockedAccountsConsole() {
                 const isOperating = actionLoadingEmail === account.email;
 
                 return (
-                  <tr key={account.email} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <tr key={account.email} className="hover:bg-slate-50 dark:hover:bg-surface/40">
                     <td className="py-3 px-3">
                       <div className="font-semibold text-ink flex items-center gap-1.5">
                         <Lock size={12} className="text-amber-500" />
                         <span>{account.email}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400">{account.lockedReason || 'Locked'}</div>
+                      <div className="text-[10px] text-muted">{account.lockedReason || 'Locked'}</div>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60">
@@ -163,7 +163,7 @@ export function LockedAccountsConsole() {
                     <td className="py-3 px-3 text-muted text-[11px]">
                       {account.lockedAt ? new Date(account.lockedAt).toLocaleString() : 'Recent'}
                     </td>
-                    <td className="py-3 px-3 font-mono text-[10px] text-slate-500">
+                    <td className="py-3 px-3 font-mono text-[10px] text-muted">
                       {account.lastIp || '127.0.0.1'}
                     </td>
                     <td className="py-3 px-3 text-right space-x-2">
@@ -182,7 +182,7 @@ export function LockedAccountsConsole() {
                         type="button"
                         onClick={() => handleAction('unlock', account.email)}
                         disabled={isOperating}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border hover:bg-slate-100 dark:hover:bg-slate-800 text-ink font-medium text-[11px] transition-colors cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border hover:bg-slate-100 dark:hover:bg-surface text-ink font-medium text-[11px] transition-colors cursor-pointer disabled:opacity-50"
                         title="Unlocks account and clears consecutive failure counter"
                       >
                         <Unlock size={10} />

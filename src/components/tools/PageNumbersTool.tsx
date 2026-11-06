@@ -247,7 +247,7 @@ export function PageNumbersTool() {
                 max="9999"
                 value={startNumber}
                 onChange={(e) => setStartNumber(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="w-full px-3.5 py-2 rounded-md border border-border bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-hidden"
+                className="w-full px-3.5 py-2 rounded-md border border-border bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-brand outline-hidden"
               />
             </div>
 
@@ -269,7 +269,7 @@ export function PageNumbersTool() {
                     className={`p-2 rounded-md text-xs font-bold transition-all text-center ${
                       margin === m.pt
                         ? 'bg-brand-600 text-white shadow-xs'
-                        : 'bg-paper text-ink hover:bg-slate-200'
+                        : 'bg-paper text-ink hover:bg-paper'
                     }`}
                   >
                     {m.label}

@@ -158,20 +158,20 @@ export default function AdminCouponsPage() {
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search coupon code..."
-            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase font-mono"
+            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand uppercase font-mono"
           />
         </div>
 
         <select
           value={activeFilter}
           onChange={(e) => setActiveFilter(e.target.value)}
-          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <option value="all">All Coupons</option>
           <option value="active">Active Only</option>
@@ -184,10 +184,10 @@ export default function AdminCouponsPage() {
         {loading ? (
           <div className="p-12 text-center space-y-2">
             <Loader2 className="animate-spin text-brand mx-auto" size={24} />
-            <p className="text-xs text-slate-400">Loading coupons...</p>
+            <p className="text-xs text-muted">Loading coupons...</p>
           </div>
         ) : coupons.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
+          <div className="p-12 text-center text-muted text-xs">
             No coupons found. Click &quot;Create Coupon&quot; to configure your first discount code.
           </div>
         ) : (
@@ -220,13 +220,13 @@ export default function AdminCouponsPage() {
                   const isExpired = c.expires_at && new Date() >= new Date(c.expires_at);
 
                   return (
-                    <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-surface/40">
                       <td className="py-3 px-4">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-900/60 text-brand-700 dark:text-brand-300 font-mono font-bold text-xs">
                           <Tag size={12} /> {c.code}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-500 capitalize">
+                      <td className="py-3 px-4 text-muted capitalize">
                         {isPercent ? 'Percentage' : 'Fixed USDT'}
                       </td>
                       <td className="py-3 px-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -241,7 +241,7 @@ export default function AdminCouponsPage() {
                             <CheckCircle2 size={10} /> Active
                           </span>
                         ) : isExpired ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-paper text-slate-500 font-semibold text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-paper text-muted font-semibold text-[10px]">
                             <Clock size={10} /> Expired
                           </span>
                         ) : (
@@ -252,12 +252,12 @@ export default function AdminCouponsPage() {
                       </td>
                       <td className="py-3 px-4 font-mono">
                         <span className="font-bold text-ink">{c.redemption_count}</span>
-                        <span className="text-slate-400"> / {c.max_redemptions ?? '∞'}</span>
+                        <span className="text-muted"> / {c.max_redemptions ?? '∞'}</span>
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-500">
+                      <td className="py-3 px-4 font-mono text-muted">
                         {c.max_redemptions_per_user || 1}
                       </td>
-                      <td className="py-3 px-4 text-slate-500">
+                      <td className="py-3 px-4 text-muted">
                         {c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="py-3 px-4 text-right">
@@ -293,18 +293,18 @@ export default function AdminCouponsPage() {
           <div className="relative w-full max-w-lg bg-surface border border-border rounded-md p-6 shadow-subtle space-y-4">
             <button
               onClick={() => setCreateModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-full"
+              className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-full"
             >
               <X size={16} />
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-brand-500/10 text-brand-600">
+              <div className="p-2 rounded-md bg-brand-500/10 text-brand">
                 <Tag size={20} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-ink">Create New Coupon</h3>
-                <p className="text-xs text-slate-500">Configure discount code for Ad-Free ($2.00 USD).</p>
+                <p className="text-xs text-muted">Configure discount code for Ad-Free ($2.00 USD).</p>
               </div>
             </div>
 
@@ -328,7 +328,7 @@ export default function AdminCouponsPage() {
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
                     placeholder="e.g. DOCU-8K2N9X"
-                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono font-bold uppercase tracking-wider text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono font-bold uppercase tracking-wider text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                     required
                   />
                 </div>
@@ -340,7 +340,7 @@ export default function AdminCouponsPage() {
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                   >
                     <option value="percent">Percentage Discount (%)</option>
                     <option value="fixed_usdt">Fixed USDT Discount ($)</option>
@@ -361,10 +361,10 @@ export default function AdminCouponsPage() {
                     value={discountValue}
                     onChange={(e) => setDiscountValue(e.target.value)}
                     placeholder={discountType === 'percent' ? '100' : '2.00'}
-                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                     required
                   />
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-muted">
                     {discountType === 'percent'
                       ? 'e.g. 100 gives 100% complimentary access'
                       : 'e.g. 0.50 reduces $2.00 to $1.50'}
@@ -380,10 +380,10 @@ export default function AdminCouponsPage() {
                     min="1"
                     value={maxRedemptionsPerUser}
                     onChange={(e) => setMaxRedemptionsPerUser(e.target.value)}
-                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                     required
                   />
-                  <p className="text-[10px] text-slate-400">Default: 1 use per account.</p>
+                  <p className="text-[10px] text-muted">Default: 1 use per account.</p>
                 </div>
               </div>
 
@@ -398,7 +398,7 @@ export default function AdminCouponsPage() {
                     value={maxRedemptions}
                     onChange={(e) => setMaxRedemptions(e.target.value)}
                     placeholder="Leave blank for unlimited"
-                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                   />
                 </div>
 
@@ -410,7 +410,7 @@ export default function AdminCouponsPage() {
                     type="datetime-local"
                     value={expiresAt}
                     onChange={(e) => setExpiresAt(e.target.value)}
-                    className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                   />
                 </div>
               </div>
@@ -425,7 +425,7 @@ export default function AdminCouponsPage() {
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-slate-800 font-medium"
+                  className="px-4 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-surface font-medium"
                 >
                   Cancel
                 </button>

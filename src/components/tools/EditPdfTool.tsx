@@ -183,9 +183,9 @@ export function EditPdfTool() {
                 onChange={(e) => setAnnotationText(e.target.value)}
                 placeholder="Type text to place onto the document..."
                 rows={3}
-                className="w-full px-3.5 py-2.5 rounded-md border border-border bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-hidden"
+                className="w-full px-3.5 py-2.5 rounded-md border border-border bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-brand outline-hidden"
               />
-              <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+              <p className="text-[11px] text-muted mt-1 flex items-center gap-1">
                 <Move size={12} /> Drag the text box anywhere directly on the PDF!
               </p>
             </div>
@@ -246,7 +246,7 @@ export function EditPdfTool() {
                     className={`p-2 rounded-md border text-left flex items-center gap-2 transition-all ${
                       selectedColor.name === col.name
                         ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 shadow-xs'
-                        : 'border-border hover:bg-slate-50 dark:hover:bg-slate-800'
+                        : 'border-border hover:bg-slate-50 dark:hover:bg-surface'
                     }`}
                   >
                     <span
@@ -273,7 +273,7 @@ export function EditPdfTool() {
                   className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
                     pageScope === 'current'
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-paper text-ink hover:bg-slate-200'
+                      : 'bg-paper text-ink hover:bg-paper'
                   }`}
                 >
                   Current Page Only
@@ -284,7 +284,7 @@ export function EditPdfTool() {
                   className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
                     pageScope === 'all'
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-paper text-ink hover:bg-slate-200'
+                      : 'bg-paper text-ink hover:bg-paper'
                   }`}
                 >
                   All {totalPages} Pages

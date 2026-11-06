@@ -244,7 +244,7 @@ export function BybitPaymentModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+            className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-surface transition-colors cursor-pointer shrink-0"
             aria-label="Close payment modal"
           >
             <X size={18} />
@@ -296,7 +296,7 @@ export function BybitPaymentModal({
                   <span className="font-semibold text-ink">
                     Payment Method ({CRYPTO_SELECTOR_OPTIONS.length} Options)
                   </span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-muted">
                     Choose payment rail
                   </span>
                 </div>
@@ -431,16 +431,16 @@ export function BybitPaymentModal({
                       </button>
                     </div>
 
-                    <div className="space-y-1 text-xs text-muted pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <div className="space-y-1 text-xs text-muted pt-1 border-t border-border dark:border-slate-700/60">
                       <div className="flex justify-between">
                         <span>Original Price</span>
-                        <span className="line-through text-slate-400">${formatPaymentAmount(order.originalPriceUsd || order.basePriceUsd || '2.00')}</span>
+                        <span className="line-through text-muted">${formatPaymentAmount(order.originalPriceUsd || order.basePriceUsd || '2.00')}</span>
                       </div>
                       <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
                         <span>Coupon Discount</span>
                         <span>-{formatPaymentAmount(order.discountAmountUsdt || '0.0000')} {order.currency || 'USDT'}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-ink pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-sm">
+                      <div className="flex justify-between font-bold text-ink pt-1 border-t border-border dark:border-slate-700/60 text-sm">
                         <span>You Pay</span>
                         <span className="text-emerald-600 dark:text-emerald-400 font-mono">${formatPaymentAmount(order.finalPriceUsdt || order.amount)} USD</span>
                       </div>
@@ -484,7 +484,7 @@ export function BybitPaymentModal({
                           setCouponError(null);
                         }}
                         placeholder="e.g. SAVE25"
-                        className="flex-1 px-3 py-1.5 rounded-md text-xs font-mono font-medium uppercase tracking-wider bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className="flex-1 px-3 py-1.5 rounded-md text-xs font-mono font-medium uppercase tracking-wider bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                       />
                       <button
                         type="submit"
@@ -502,7 +502,7 @@ export function BybitPaymentModal({
               </div>
 
               {/* Amount & Timer Highlight Box */}
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60">
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-md bg-paper border border-border dark:border-slate-700/60">
                 {/* Pay Amount */}
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
@@ -696,7 +696,7 @@ export function BybitPaymentModal({
                       </>
                     )}
                   </span>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="text-[11px] font-mono text-muted">
                     Auto-checking every 6s
                   </span>
                 </div>
@@ -704,7 +704,7 @@ export function BybitPaymentModal({
                   {statusMessage}
                 </p>
                 {confirmations && (
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[11px] text-muted font-mono">
                     Block Confirmations: {confirmations}
                   </p>
                 )}

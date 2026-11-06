@@ -29,7 +29,7 @@ export const FloatingSupportButton: React.FC = () => {
         <div
           role="dialog"
           aria-label="Support options"
-          className="mb-3 w-72 sm:w-80 rounded-md bg-white/95 dark:bg-slate-900/95  border border-border shadow-subtle p-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="mb-3 w-72 sm:w-80 rounded-md bg-white/95 dark:bg-slate-900/95  border border-border shadow-subtle p-5 space-y-4 animate-in fade-in slide-in- duration-200"
         >
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export const FloatingSupportButton: React.FC = () => {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-surface transition-colors"
               aria-label="Close support popup"
             >
               <X size={14} />
@@ -77,7 +77,7 @@ export const FloatingSupportButton: React.FC = () => {
             <Link
               href="/support"
               onClick={() => setIsOpen(false)}
-              className="group flex items-center justify-between p-3 rounded-md bg-paper border border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-ink"
+              className="group flex items-center justify-between p-3 rounded-md bg-paper border border-border dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-surface transition-colors text-ink"
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-md bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-xs">

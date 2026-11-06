@@ -180,7 +180,7 @@ export default function SubprocessorsPage() {
               <p className="text-muted">
                 <strong>Data Categories:</strong> {sub.dataProcessed}
               </p>
-              <p className="text-slate-500 dark:text-slate-500 text-xs">
+              <p className="text-slate-500 dark:text-muted text-xs">
                 <strong>Data Processing Location:</strong> {sub.location}
               </p>
             </div>

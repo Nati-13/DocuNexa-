@@ -379,7 +379,7 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
                   type="checkbox"
                   checked={Boolean(widget.value)}
                   onChange={(e) => widget.onChange(e.target.checked)}
-                  className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                  className="w-4 h-4 rounded text-brand focus:ring-brand"
                 />
               </div>
             )}

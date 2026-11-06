@@ -75,7 +75,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       >
         {/* Search input header */}
         <div className="relative flex items-center px-4 py-3.5 border-b border-border">
-          <Search className="w-5 h-5 text-slate-500 mr-3 shrink-0" />
+          <Search className="w-5 h-5 text-muted mr-3 shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -90,7 +90,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           />
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-surface transition-colors"
           >
             <X size={18} />
           </button>
@@ -120,7 +120,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                     className={`flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer transition-colors ${
                       isSelected
                         ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-900 dark:text-brand-100'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-ink'
+                        : 'hover:bg-slate-50 dark:hover:bg-surface/60 text-ink'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">

@@ -287,7 +287,7 @@ export function TelegramAppClient() {
               <h3 className="text-sm font-bold tracking-tight text-ink">
                 ⚡ Quick PDF Actions
               </h3>
-              <span className="text-xs text-slate-500">Popular shortcuts</span>
+              <span className="text-xs text-muted">Popular shortcuts</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -365,14 +365,14 @@ export function TelegramAppClient() {
             <div className="relative">
               <Search
                 size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
               />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tools (e.g. merge, compress, word, ocr)..."
-                className="w-full pl-10 pr-9 py-2.5 rounded-md bg-surface border border-border text-xs sm:text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-10 pr-9 py-2.5 rounded-md bg-surface border border-border text-xs sm:text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand"
               />
               {searchQuery && (
                 <button
@@ -442,7 +442,7 @@ export function TelegramAppClient() {
                     </div>
                     <ArrowRight
                       size={14}
-                      className="text-slate-400 group-hover:text-brand group-hover:translate-x-0.5 transition-all shrink-0 ml-2"
+                      className="text-muted group-hover:text-brand group-hover:translate-x-0.5 transition-all shrink-0 ml-2"
                     />
                   </Link>
                 ))}
@@ -458,7 +458,7 @@ export function TelegramAppClient() {
               </div>
             ) : (
               <div className="p-6 rounded-md bg-surface border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-                <Search size={24} className="mx-auto text-slate-400" />
+                <Search size={24} className="mx-auto text-muted" />
                 <p className="text-xs font-semibold text-muted">
                   No tools found matching &ldquo;{searchQuery}&rdquo;
                 </p>
@@ -467,7 +467,7 @@ export function TelegramAppClient() {
                     setSearchQuery('');
                     setSelectedCategory('all');
                   }}
-                  className="text-xs text-brand-600 font-bold hover:underline"
+                  className="text-xs text-brand font-bold hover:underline"
                 >
                   Reset filters
                 </button>
@@ -485,7 +485,7 @@ export function TelegramAppClient() {
                 <h3 className="text-sm font-bold text-ink">
                   Customer Support Hub
                 </h3>
-                <p className="text-xs text-slate-500">Fast human assistance & inquiries</p>
+                <p className="text-xs text-muted">Fast human assistance & inquiries</p>
               </div>
             </div>
 
@@ -546,7 +546,7 @@ export function TelegramAppClient() {
                           value={formName}
                           onChange={(e) => setFormName(e.target.value)}
                           placeholder="e.g. Alex"
-                          className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand"
                         />
                       </div>
                       <div>
@@ -558,7 +558,7 @@ export function TelegramAppClient() {
                           value={formEmail}
                           onChange={(e) => setFormEmail(e.target.value)}
                           placeholder="alex@example.com"
-                          className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand"
                         />
                       </div>
                     </div>
@@ -570,7 +570,7 @@ export function TelegramAppClient() {
                       <select
                         value={formCategory}
                         onChange={(e) => setFormCategory(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink focus:outline-none focus:ring-1 focus:ring-brand"
                       >
                         <option value="PDF Tools">PDF Tools (Unit Cutter, Merge, Split)</option>
                         <option value="Coupon">Coupon Code &amp; Plans</option>
@@ -591,7 +591,7 @@ export function TelegramAppClient() {
                         value={formSubject}
                         onChange={(e) => setFormSubject(e.target.value)}
                         placeholder="Brief summary of your inquiry"
-                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand"
                       />
                     </div>
 
@@ -605,7 +605,7 @@ export function TelegramAppClient() {
                         value={formMessage}
                         onChange={(e) => setFormMessage(e.target.value)}
                         placeholder="Describe your issue or question in detail..."
-                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand"
                       />
                     </div>
 
@@ -649,7 +649,7 @@ export function TelegramAppClient() {
                 <h3 className="text-sm font-bold text-ink">
                   Help & Frequently Asked Questions
                 </h3>
-                <p className="text-xs text-slate-500">Common questions about tools and coupons</p>
+                <p className="text-xs text-muted">Common questions about tools and coupons</p>
               </div>
             </div>
 
@@ -663,9 +663,9 @@ export function TelegramAppClient() {
                   >
                     <span>{faq.q}</span>
                     {expandedFaq === idx ? (
-                      <ChevronUp size={14} className="shrink-0 text-slate-400" />
+                      <ChevronUp size={14} className="shrink-0 text-muted" />
                     ) : (
-                      <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                      <ChevronDown size={14} className="shrink-0 text-muted" />
                     )}
                   </button>
                   {expandedFaq === idx && (
@@ -679,7 +679,7 @@ export function TelegramAppClient() {
           </section>
 
           {/* Bottom Footer & Website Link */}
-          <footer className="text-center pt-2 pb-6 space-y-3 text-xs text-slate-500">
+          <footer className="text-center pt-2 pb-6 space-y-3 text-xs text-muted">
             <div>
               <a
                 href={DOCUNEXA_SITE_URL}
@@ -700,7 +700,7 @@ export function TelegramAppClient() {
               <Link href="/security" className="hover:underline">Security</Link>
             </div>
 
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-muted">
               DocuNexa — High-Performance Client-Side PDF Workspace.
             </p>
           </footer>

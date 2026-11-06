@@ -25,7 +25,7 @@ import {
 
 
 function getPasswordStrength(pwd: string): { score: number; label: string; color: string; barClass: string } {
-  if (!pwd) return { score: 0, label: '', color: 'text-slate-400', barClass: 'bg-slate-200 w-0' };
+  if (!pwd) return { score: 0, label: '', color: 'text-muted', barClass: 'bg-slate-200 w-0' };
   let score = 0;
   if (pwd.length >= 8) score++;
   if (pwd.length >= 12) score++;
@@ -217,7 +217,7 @@ export function ProtectPdfTool() {
                 <button
                   type="button"
                   onClick={resetAll}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-surface transition-colors flex items-center gap-1.5"
                 >
                   <RefreshCw size={13} />
                   Change PDF
@@ -256,7 +256,7 @@ export function ProtectPdfTool() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Type password..."
-                        className="w-full px-4 py-3 rounded-md border border-border bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 pr-11"
+                        className="w-full px-4 py-3 rounded-md border border-border bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand pr-11"
                       />
                       <button
                         type="button"
@@ -295,7 +295,7 @@ export function ProtectPdfTool() {
                         value={repeatPassword}
                         onChange={(e) => setRepeatPassword(e.target.value)}
                         placeholder="Repeat password..."
-                        className="w-full px-4 py-3 rounded-md border border-border bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 pr-11"
+                        className="w-full px-4 py-3 rounded-md border border-border bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand pr-11"
                       />
                       <button
                         type="button"
@@ -318,36 +318,36 @@ export function ProtectPdfTool() {
                     Document Permissions
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label className="flex items-center gap-2.5 p-3 rounded-md bg-paper border border-slate-200/60 dark:border-slate-800 cursor-pointer">
+                    <label className="flex items-center gap-2.5 p-3 rounded-md bg-paper border border-border dark:border-slate-800 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={allowPrinting}
                         onChange={(e) => setAllowPrinting(e.target.checked)}
-                        className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
+                        className="w-4 h-4 rounded text-brand focus:ring-brand border-border"
                       />
                       <div className="flex items-center gap-1.5 text-xs font-medium text-ink">
                         <Printer size={14} /> Allow Printing
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-2.5 p-3 rounded-md bg-paper border border-slate-200/60 dark:border-slate-800 cursor-pointer">
+                    <label className="flex items-center gap-2.5 p-3 rounded-md bg-paper border border-border dark:border-slate-800 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={allowCopying}
                         onChange={(e) => setAllowCopying(e.target.checked)}
-                        className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
+                        className="w-4 h-4 rounded text-brand focus:ring-brand border-border"
                       />
                       <div className="flex items-center gap-1.5 text-xs font-medium text-ink">
                         <Copy size={14} /> Allow Copying Text
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-2.5 p-3 rounded-md bg-paper border border-slate-200/60 dark:border-slate-800 cursor-pointer">
+                    <label className="flex items-center gap-2.5 p-3 rounded-md bg-paper border border-border dark:border-slate-800 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={allowModifying}
                         onChange={(e) => setAllowModifying(e.target.checked)}
-                        className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
+                        className="w-4 h-4 rounded text-brand focus:ring-brand border-border"
                       />
                       <div className="flex items-center gap-1.5 text-xs font-medium text-ink">
                         <Edit3 size={14} /> Allow Modifying

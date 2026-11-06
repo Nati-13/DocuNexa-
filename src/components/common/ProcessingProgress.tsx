@@ -40,7 +40,7 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-xs font-semibold flex items-center gap-1"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-surface transition-colors text-xs font-semibold flex items-center gap-1"
           >
             <X size={16} />
             <span>Cancel</span>

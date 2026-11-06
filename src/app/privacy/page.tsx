@@ -240,7 +240,7 @@ export default function PrivacyPage() {
               <p className="font-semibold text-white">
                 Advertising Technologies & Plan Safeguards:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
+              <ul className="list-disc pl-5 space-y-1.5 text-muted">
                 <li>
                   <strong>Free Users:</strong> For anonymous visitors and registered Free plan accounts, DocuNexa uses Monetag advertising technology. Monetag and its advertising partners may use cookies, device identifiers, IP addresses, and browsing telemetry to deliver, measure, and optimize advertisements.
                 </li>

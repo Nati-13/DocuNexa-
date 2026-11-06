@@ -91,7 +91,7 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
           </div>
           <div className="min-w-0">
             <h2 className="text-base font-bold text-ink truncate">{title}</h2>
-            <div className="flex items-center gap-2 text-xs text-slate-500 truncate">
+            <div className="flex items-center gap-2 text-xs text-muted truncate">
               <span className="truncate">{filename}</span>
               <span>•</span>
               <span>{totalPages} page(s)</span>
@@ -105,7 +105,7 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-muted hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-muted hover:bg-slate-100 dark:hover:bg-surface text-xs font-semibold transition-colors"
         >
           <RotateCcw size={13} />
           <span>Change Document</span>

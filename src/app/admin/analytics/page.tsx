@@ -49,7 +49,7 @@ export default function AdminAnalyticsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
         <Loader2 className="animate-spin text-brand" size={32} />
-        <p className="text-xs text-slate-500">Aggregating privacy-preserving analytics...</p>
+        <p className="text-xs text-muted">Aggregating privacy-preserving analytics...</p>
       </div>
     );
   }
@@ -119,7 +119,7 @@ export default function AdminAnalyticsPage() {
 
           <button
             onClick={fetchAnalytics}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-surface transition-colors cursor-pointer"
           >
             <RefreshCw size={13} /> Refresh
           </button>
@@ -129,7 +129,7 @@ export default function AdminAnalyticsPage() {
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+          <div className="flex items-center justify-between text-muted text-xs">
             <span>Page Views</span>
             <Eye size={14} className="text-brand" />
           </div>
@@ -139,7 +139,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+          <div className="flex items-center justify-between text-muted text-xs">
             <span>Unique Visitors</span>
             <Users size={14} className="text-cyan-500" />
           </div>
@@ -149,7 +149,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+          <div className="flex items-center justify-between text-muted text-xs">
             <span>Active Now</span>
             <Activity size={14} className="text-emerald-500 animate-pulse" />
           </div>
@@ -159,7 +159,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+          <div className="flex items-center justify-between text-muted text-xs">
             <span>Countries</span>
             <Globe size={14} className="text-brand" />
           </div>
@@ -169,7 +169,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+          <div className="flex items-center justify-between text-muted text-xs">
             <span>Logins</span>
             <UserCheck size={14} className="text-brand" />
           </div>
@@ -179,7 +179,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+          <div className="flex items-center justify-between text-muted text-xs">
             <span>Signups</span>
             <UserPlus size={14} className="text-amber-500" />
           </div>
@@ -212,7 +212,7 @@ export default function AdminAnalyticsPage() {
                       <div className="font-bold text-xs text-ink">
                         {c.countryName}
                       </div>
-                      <div className="font-mono text-[10px] text-slate-400">
+                      <div className="font-mono text-[10px] text-muted">
                         ISO: {c.countryCode}
                       </div>
                     </div>
@@ -224,13 +224,13 @@ export default function AdminAnalyticsPage() {
 
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/80 text-[11px]">
                   <div>
-                    <span className="text-slate-400">Visitors:</span>
+                    <span className="text-muted">Visitors:</span>
                     <div className="font-mono font-bold text-ink">
                       {c.uniqueVisitors}
                     </div>
                   </div>
                   <div>
-                    <span className="text-slate-400">Page Views:</span>
+                    <span className="text-muted">Page Views:</span>
                     <div className="font-mono font-bold text-ink">
                       {c.pageViews}
                     </div>
@@ -253,19 +253,19 @@ export default function AdminAnalyticsPage() {
                 Country Traffic Ranking
               </h3>
             </div>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted">
               Sorted by Page Views
             </span>
           </div>
 
           {countries.length === 0 ? (
-            <p className="text-xs text-slate-400 py-12 text-center">
+            <p className="text-xs text-muted py-12 text-center">
               No country traffic events recorded for this time range.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-border text-slate-400 font-semibold">
+                <thead className="border-b border-border text-muted font-semibold">
                   <tr>
                     <th className="pb-3 px-2 w-10">#</th>
                     <th className="pb-3 px-2">Country / Region</th>
@@ -276,8 +276,8 @@ export default function AdminAnalyticsPage() {
                 </thead>
                 <tbody className="divide-y divide-border/80 text-ink">
                   {countries.map((c: any, idx: number) => (
-                    <tr key={c.countryCode} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                      <td className="py-3 px-2 font-mono text-slate-400 text-[11px] font-bold">
+                    <tr key={c.countryCode} className="hover:bg-slate-50 dark:hover:bg-surface/40">
+                      <td className="py-3 px-2 font-mono text-muted text-[11px] font-bold">
                         {idx + 1}
                       </td>
                       <td className="py-3 px-2">
@@ -287,7 +287,7 @@ export default function AdminAnalyticsPage() {
                             <span className="font-semibold text-ink">
                               {c.countryName}
                             </span>
-                            <span className="font-mono text-[10px] text-slate-400 ml-1.5 uppercase">
+                            <span className="font-mono text-[10px] text-muted ml-1.5 uppercase">
                               [{c.countryCode}]
                             </span>
                           </div>
@@ -307,7 +307,7 @@ export default function AdminAnalyticsPage() {
                               className="h-full rounded-full bg-brand-500"
                             />
                           </div>
-                          <span className="font-mono font-bold text-[10px] text-slate-500 w-8 text-right">
+                          <span className="font-mono font-bold text-[10px] text-muted w-8 text-right">
                             {c.percentage}%
                           </span>
                         </div>
@@ -331,7 +331,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {popularPages.length === 0 ? (
-              <p className="text-xs text-slate-400 py-6 text-center">No page traffic recorded.</p>
+              <p className="text-xs text-muted py-6 text-center">No page traffic recorded.</p>
             ) : (
               <div className="divide-y divide-border/80 text-xs">
                 {popularPages.map((p: any) => (
@@ -341,7 +341,7 @@ export default function AdminAnalyticsPage() {
                     </span>
                     <div className="text-right font-mono text-[11px]">
                       <span className="font-bold text-ink">{p.views} views</span>
-                      <span className="text-slate-400 ml-1.5">({p.uniqueVisitors} users)</span>
+                      <span className="text-muted ml-1.5">({p.uniqueVisitors} users)</span>
                     </div>
                   </div>
                 ))}

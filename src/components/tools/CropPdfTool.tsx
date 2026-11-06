@@ -176,7 +176,7 @@ export function CropPdfTool() {
                   className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
                     cropPreset === 'custom'
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-paper text-ink hover:bg-slate-200'
+                      : 'bg-paper text-ink hover:bg-paper'
                   }`}
                 >
                   Custom Drag
@@ -190,7 +190,7 @@ export function CropPdfTool() {
                   className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
                     cropPreset === 'margins-5'
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-paper text-ink hover:bg-slate-200'
+                      : 'bg-paper text-ink hover:bg-paper'
                   }`}
                 >
                   Trim 5% Margins
@@ -204,7 +204,7 @@ export function CropPdfTool() {
                   className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
                     cropPreset === 'header'
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-paper text-ink hover:bg-slate-200'
+                      : 'bg-paper text-ink hover:bg-paper'
                   }`}
                 >
                   Trim Header
@@ -218,7 +218,7 @@ export function CropPdfTool() {
                   className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
                     cropPreset === 'footer'
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-paper text-ink hover:bg-slate-200'
+                      : 'bg-paper text-ink hover:bg-paper'
                   }`}
                 >
                   Trim Footer

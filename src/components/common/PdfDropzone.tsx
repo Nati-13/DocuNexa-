@@ -73,7 +73,7 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
       className={`group relative rounded-md border-2 border-dashed p-8 md:p-12 text-center cursor-pointer transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
         isDragOver
           ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 scale-[1.01]'
-          : 'border-border bg-white/70 dark:bg-ink/40 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
+          : 'border-border bg-white/70 dark:bg-ink/40 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-paper/80 dark:hover:bg-surface/50'
       } shadow-sm hover:shadow-md ${className}`}
     >
       <input
@@ -95,7 +95,7 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
 
         {/* Text */}
         <div>
-          <h3 className="text-lg md:text-xl font-bold text-ink group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          <h3 className="text-lg md:text-xl font-bold text-ink group-hover:text-brand dark:group-hover:text-brand-400 transition-colors">
             {title}
           </h3>
           <p className="text-xs md:text-sm text-ink mt-1">

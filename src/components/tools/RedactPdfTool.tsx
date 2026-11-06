@@ -235,7 +235,7 @@ export function RedactPdfTool() {
                 <button
                   type="button"
                   onClick={resetAll}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-surface transition-colors flex items-center gap-1.5"
                 >
                   <RefreshCw size={13} />
                   Change PDF
@@ -272,7 +272,7 @@ export function RedactPdfTool() {
                       }`}
                     >
                       <div className="font-bold text-xs flex items-center gap-1.5">
-                        <CheckCircle2 size={13} className={redactionMode === 'sanitize' ? 'text-brand-600' : 'text-slate-400'} />
+                        <CheckCircle2 size={13} className={redactionMode === 'sanitize' ? 'text-brand' : 'text-muted'} />
                         Limited Text Redaction (Experimental)
                       </div>
                       <p className="text-[11px] text-muted mt-0.5">
@@ -290,7 +290,7 @@ export function RedactPdfTool() {
                       }`}
                     >
                       <div className="font-bold text-xs flex items-center gap-1.5">
-                        <AlertTriangle size={13} className={redactionMode === 'overlay' ? 'text-amber-600' : 'text-slate-400'} />
+                        <AlertTriangle size={13} className={redactionMode === 'overlay' ? 'text-amber-600' : 'text-muted'} />
                         Cover with Black Box (Visual Only)
                       </div>
                       <p className="text-[11px] text-muted mt-0.5">
@@ -322,7 +322,7 @@ export function RedactPdfTool() {
                   {redactions.map((redaction, index) => (
                     <div
                       key={redaction.id}
-                      className="p-4 rounded-md bg-paper border border-slate-200/70 dark:border-slate-800 space-y-3"
+                      className="p-4 rounded-md bg-paper border border-border dark:border-slate-800 space-y-3"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-ink">
@@ -332,7 +332,7 @@ export function RedactPdfTool() {
                           <button
                             type="button"
                             onClick={() => removeRedaction(redaction.id)}
-                            className="text-slate-400 hover:text-rose-500 transition-colors"
+                            className="text-muted hover:text-rose-500 transition-colors"
                             title="Remove Zone"
                           >
                             <Trash2 size={15} />

@@ -118,8 +118,8 @@ export function AdminSetupForm() {
   if (loadingStatus) {
     return (
       <div className="w-full max-w-md bg-surface border border-border rounded-md p-8 shadow-subtle text-center space-y-4">
-        <Loader2 size={28} className="animate-spin text-brand-600 mx-auto" />
-        <p className="text-xs text-slate-500">Checking administrator setup status...</p>
+        <Loader2 size={28} className="animate-spin text-brand mx-auto" />
+        <p className="text-xs text-muted">Checking administrator setup status...</p>
       </div>
     );
   }
@@ -205,9 +205,9 @@ export function AdminSetupForm() {
         </div>
 
         <div className="p-3.5 rounded-md bg-paper border border-border text-left text-xs space-y-1.5">
-          <div className="text-slate-500">Sign in with:</div>
+          <div className="text-muted">Sign in with:</div>
           <div className="font-semibold text-ink">Email: {email}</div>
-          <div className="text-slate-500 text-[11px]">Password: The password you provided during setup</div>
+          <div className="text-muted text-[11px]">Password: The password you provided during setup</div>
         </div>
 
         <div className="pt-2 border-t border-border">
@@ -256,7 +256,7 @@ export function AdminSetupForm() {
             Admin Email Address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Mail size={16} />
             </div>
             <input
@@ -267,7 +267,7 @@ export function AdminSetupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="owner@example.com"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
             />
           </div>
         </div>
@@ -280,7 +280,7 @@ export function AdminSetupForm() {
             Admin Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Lock size={16} />
             </div>
             <input
@@ -291,7 +291,7 @@ export function AdminSetupForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min 8 characters"
-              className="w-full pl-9 pr-10 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-10 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
             />
             <button
               type="button"
@@ -311,7 +311,7 @@ export function AdminSetupForm() {
             Confirm Admin Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
               <Lock size={16} />
             </div>
             <input
@@ -322,7 +322,7 @@ export function AdminSetupForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter password"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
             />
           </div>
         </div>
@@ -336,7 +336,7 @@ export function AdminSetupForm() {
               Setup Master Key
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
                 <Key size={16} />
               </div>
               <input
@@ -346,7 +346,7 @@ export function AdminSetupForm() {
                 value={setupKey}
                 onChange={(e) => setSetupKey(e.target.value)}
                 placeholder="ADMIN_SETUP_KEY"
-                className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+                className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
               />
             </div>
           </div>

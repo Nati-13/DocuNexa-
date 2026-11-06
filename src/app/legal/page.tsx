@@ -154,7 +154,7 @@ export default function LegalHubPage() {
             Transparent, accessible, and comprehensive legal agreements governing our client-side PDF workspace,
             protecting international customer privacy, and clarifying technical platform boundaries.
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-muted">
             Current Revision: v2026.11 • Effective: {lastUpdated} • Canonical Domain:{' '}
             <a href="https://docunexa.pro.et" className="text-brand hover:underline">
               https://docunexa.pro.et
@@ -242,13 +242,13 @@ export default function LegalHubPage() {
                             {p.badge}
                           </span>
                         )}
-                        <span className="text-[11px] font-mono text-slate-400">
+                        <span className="text-[11px] font-mono text-muted">
                           {p.version}
                         </span>
                       </div>
                     </div>
 
-                    <h3 className="text-lg font-bold text-ink group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    <h3 className="text-lg font-bold text-ink group-hover:text-brand dark:group-hover:text-brand-400 transition-colors">
                       {p.title}
                     </h3>
 

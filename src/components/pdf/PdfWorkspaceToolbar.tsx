@@ -56,7 +56,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
           aria-label="Previous Page"
-          className="p-1.5 rounded-lg hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className="p-1.5 rounded-lg hover:bg-surface disabled:opacity-30 disabled:pointer-events-none transition-colors"
         >
           <ChevronLeft size={16} />
         </button>
@@ -73,9 +73,9 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
                 onPageChange(val);
               }
             }}
-            className="w-10 text-center bg-slate-800 text-white rounded px-1 py-0.5 border border-slate-700 text-xs focus:ring-1 focus:ring-brand-500 outline-hidden"
+            className="w-10 text-center bg-slate-800 text-white rounded px-1 py-0.5 border border-slate-700 text-xs focus:ring-1 focus:ring-brand outline-hidden"
           />
-          <span className="text-slate-400">/ {totalPages}</span>
+          <span className="text-muted">/ {totalPages}</span>
         </div>
 
         <button
@@ -83,7 +83,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           aria-label="Next Page"
-          className="p-1.5 rounded-lg hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className="p-1.5 rounded-lg hover:bg-surface disabled:opacity-30 disabled:pointer-events-none transition-colors"
         >
           <ChevronRight size={16} />
         </button>
@@ -96,7 +96,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
           onClick={handleZoomOut}
           disabled={zoom <= 0.4}
           aria-label="Zoom Out"
-          className="p-1.5 rounded-lg hover:bg-slate-800 disabled:opacity-30 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-surface disabled:opacity-30 transition-colors"
         >
           <ZoomOut size={15} />
         </button>
@@ -110,7 +110,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
           onClick={handleZoomIn}
           disabled={zoom >= 2.5}
           aria-label="Zoom In"
-          className="p-1.5 rounded-lg hover:bg-slate-800 disabled:opacity-30 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-surface disabled:opacity-30 transition-colors"
         >
           <ZoomIn size={15} />
         </button>
@@ -120,7 +120,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
             type="button"
             onClick={onFitWidth}
             title="Fit to Width"
-            className="px-2 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 transition-colors"
+            className="px-2 py-1 rounded-lg hover:bg-surface text-[11px] font-medium text-slate-300 transition-colors"
           >
             Fit Width
           </button>
@@ -131,7 +131,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
             type="button"
             onClick={onFitPage}
             title="Fit Page"
-            className="px-2 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 transition-colors"
+            className="px-2 py-1 rounded-lg hover:bg-surface text-[11px] font-medium text-slate-300 transition-colors"
           >
             Fit Page
           </button>
@@ -146,7 +146,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
             onClick={onRotateCurrentLeft}
             aria-label="Rotate Page Left 90°"
             title="Rotate Left 90°"
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface text-slate-300 hover:text-white transition-colors"
           >
             <RotateCcw size={15} />
           </button>
@@ -156,7 +156,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
             onClick={onRotateCurrentRight}
             aria-label="Rotate Page Right 90°"
             title="Rotate Right 90°"
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface text-slate-300 hover:text-white transition-colors"
           >
             <RotateCw size={15} />
           </button>

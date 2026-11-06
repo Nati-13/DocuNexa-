@@ -324,7 +324,7 @@ export function SignPdfTool() {
                     className="w-full h-[120px] cursor-crosshair block"
                   />
                   {!hasDrawn && (
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-slate-400 font-medium">
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-muted font-medium">
                       Draw your signature here
                     </div>
                   )}
@@ -347,7 +347,7 @@ export function SignPdfTool() {
                   value={typedName}
                   onChange={(e) => setTypedName(e.target.value)}
                   placeholder="Type your full name..."
-                  className="w-full px-3 py-2.5 rounded-md border border-border bg-surface text-sm font-semibold text-ink focus:ring-2 focus:ring-brand-500 outline-hidden"
+                  className="w-full px-3 py-2.5 rounded-md border border-border bg-surface text-sm font-semibold text-ink focus:ring-2 focus:ring-brand outline-hidden"
                 />
                 {typedName && (
                   <div className="p-3 rounded-md bg-paper border border-border text-center font-serif italic text-xl text-ink">

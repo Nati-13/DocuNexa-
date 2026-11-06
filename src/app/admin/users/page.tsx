@@ -183,7 +183,7 @@ export default function AdminUsersPage() {
             Authoritative user records, activity history, account suspension, and password recovery.
           </p>
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-muted">
           Showing <strong className="text-ink">{users.length}</strong> of{' '}
           <strong className="text-ink">{totalCount}</strong> registered users
         </div>
@@ -192,7 +192,7 @@ export default function AdminUsersPage() {
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={search}
@@ -201,19 +201,19 @@ export default function AdminUsersPage() {
               setPage(1);
             }}
             placeholder="Search users by email..."
-            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter size={14} className="text-slate-400" />
+          <Filter size={14} className="text-muted" />
           <select
             value={planFilter}
             onChange={(e) => {
               setPlanFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           >
             <option value="all">All Plans</option>
             <option value="free">FREE Plan</option>
@@ -226,7 +226,7 @@ export default function AdminUsersPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active Only</option>
@@ -240,10 +240,10 @@ export default function AdminUsersPage() {
         {loading ? (
           <div className="p-12 text-center space-y-2">
             <Loader2 className="animate-spin text-brand mx-auto" size={24} />
-            <p className="text-xs text-slate-400">Loading user records...</p>
+            <p className="text-xs text-muted">Loading user records...</p>
           </div>
         ) : users.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
+          <div className="p-12 text-center text-muted text-xs">
             No users found matching your criteria.
           </div>
         ) : (
@@ -266,10 +266,10 @@ export default function AdminUsersPage() {
                   const isSuspended = u.status === 'suspended';
 
                   return (
-                    <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-surface/40">
                       <td className="py-3 px-4">
                         <div className="font-medium text-ink">{u.email}</div>
-                        <div className="font-mono text-[10px] text-slate-400 truncate max-w-[140px]">
+                        <div className="font-mono text-[10px] text-muted truncate max-w-[140px]">
                           {u.id}
                         </div>
                       </td>
@@ -298,10 +298,10 @@ export default function AdminUsersPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-slate-500 whitespace-nowrap text-[11px]">
+                      <td className="py-3 px-4 text-muted whitespace-nowrap text-[11px]">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="py-3 px-4 text-slate-500 whitespace-nowrap text-[11px]">
+                      <td className="py-3 px-4 text-muted whitespace-nowrap text-[11px]">
                         {u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap space-x-1">
@@ -375,7 +375,7 @@ export default function AdminUsersPage() {
             >
               <ChevronLeft size={13} /> Previous
             </button>
-            <span className="text-slate-500">
+            <span className="text-muted">
               Page {page} of {totalPages}
             </span>
             <button
@@ -411,7 +411,7 @@ export default function AdminUsersPage() {
             {detailLoading ? (
               <div className="p-12 text-center space-y-2">
                 <Loader2 className="animate-spin text-brand mx-auto" size={24} />
-                <p className="text-xs text-slate-400">Loading dossier details...</p>
+                <p className="text-xs text-muted">Loading dossier details...</p>
               </div>
             ) : detailError || !detailData ? (
               <div className="p-4 rounded-md bg-rose-50 dark:bg-rose-950/30 text-rose-600 text-xs">
@@ -426,11 +426,11 @@ export default function AdminUsersPage() {
                       <div className="font-bold text-sm text-ink">
                         {detailData.user.email}
                       </div>
-                      <div className="flex items-center gap-2 font-mono text-[11px] text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-2 font-mono text-[11px] text-muted mt-0.5">
                         <span>ID: {detailData.user.id}</span>
                         <button
                           onClick={() => copyToClipboard(detailData.user.id)}
-                          className="text-slate-500 hover:text-white"
+                          className="text-muted hover:text-white"
                           title="Copy UUID"
                         >
                           {copiedId ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
@@ -452,25 +452,25 @@ export default function AdminUsersPage() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/60 text-[11px]">
                     <div>
-                      <span className="text-slate-400">Current Plan:</span>
+                      <span className="text-muted">Current Plan:</span>
                       <div className="font-semibold text-ink uppercase mt-0.5">
                         {detailData.user.plan}
                       </div>
                     </div>
                     <div>
-                      <span className="text-slate-400">Entitlement:</span>
+                      <span className="text-muted">Entitlement:</span>
                       <div className="font-semibold text-ink mt-0.5">
                         {detailData.user.entitlementExpiry}
                       </div>
                     </div>
                     <div>
-                      <span className="text-slate-400">Registered:</span>
+                      <span className="text-muted">Registered:</span>
                       <div className="font-semibold text-ink mt-0.5">
                         {new Date(detailData.user.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                     <div>
-                      <span className="text-slate-400">Last Sign-in:</span>
+                      <span className="text-muted">Last Sign-in:</span>
                       <div className="font-semibold text-ink mt-0.5">
                         {detailData.user.auth?.lastSignInAt
                           ? new Date(detailData.user.auth.lastSignInAt).toLocaleString()
@@ -488,7 +488,7 @@ export default function AdminUsersPage() {
                   </div>
 
                   {detailData.payments.length === 0 ? (
-                    <p className="text-slate-400 p-3 bg-paper rounded-md text-center">
+                    <p className="text-muted p-3 bg-paper rounded-md text-center">
                       No payment orders on record.
                     </p>
                   ) : (
@@ -499,7 +499,7 @@ export default function AdminUsersPage() {
                             <div className="font-mono font-bold text-ink">
                               {p.order_id}
                             </div>
-                            <div className="text-[10px] text-slate-400">
+                            <div className="text-[10px] text-muted">
                               {new Date(p.created_at).toLocaleString()} • {p.network} ({p.currency})
                             </div>
                           </div>
@@ -514,7 +514,7 @@ export default function AdminUsersPage() {
                                     ? 'text-emerald-500'
                                     : p.status === 'pending'
                                     ? 'text-amber-500'
-                                    : 'text-slate-400'
+                                    : 'text-muted'
                                 }`}
                               >
                                 {p.status}
@@ -535,7 +535,7 @@ export default function AdminUsersPage() {
                   </div>
 
                   {detailData.auditEvents.length === 0 ? (
-                    <p className="text-slate-400 p-3 bg-paper rounded-md text-center">
+                    <p className="text-muted p-3 bg-paper rounded-md text-center">
                       No admin modifications logged for this account.
                     </p>
                   ) : (
@@ -546,12 +546,12 @@ export default function AdminUsersPage() {
                             <span className="font-mono font-semibold text-brand">
                               {a.action}
                             </span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-muted">
                               {new Date(a.created_at).toLocaleString()}
                             </span>
                           </div>
                           {a.reason && (
-                            <p className="text-[11px] text-slate-500 mt-1 italic">
+                            <p className="text-[11px] text-muted mt-1 italic">
                               Reason: &quot;{a.reason}&quot;
                             </p>
                           )}
@@ -623,7 +623,7 @@ export default function AdminUsersPage() {
                     onChange={(e) => setReason(e.target.value)}
                     rows={2}
                     placeholder="Enter reason for this action (min 5 characters)..."
-                    className="w-full p-2.5 rounded-md text-xs bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full p-2.5 rounded-md text-xs bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                   />
                 </div>
               )}
@@ -639,7 +639,7 @@ export default function AdminUsersPage() {
                   type="checkbox"
                   checked={confirmed}
                   onChange={(e) => setConfirmed(e.target.checked)}
-                  className="mt-0.5 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                  className="mt-0.5 rounded text-brand focus:ring-brand cursor-pointer"
                 />
                 <span className="text-[11px] text-muted">
                   I understand this action modifies account state and creates an immutable administrative audit record.
@@ -650,7 +650,7 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={() => setModalUser(null)}
-                  className="px-3 py-1.5 rounded-md border border-border text-xs text-muted hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-3 py-1.5 rounded-md border border-border text-xs text-muted hover:bg-slate-50 dark:hover:bg-surface cursor-pointer"
                 >
                   Cancel
                 </button>

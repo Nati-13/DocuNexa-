@@ -56,7 +56,7 @@ export default function AdminOverviewPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
         <Loader2 className="animate-spin text-brand" size={32} />
-        <p className="text-xs text-slate-500">Loading administrative metrics...</p>
+        <p className="text-xs text-muted">Loading administrative metrics...</p>
       </div>
     );
   }
@@ -104,7 +104,7 @@ export default function AdminOverviewPage() {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             onClick={fetchOverview}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-surface transition-colors cursor-pointer"
           >
             <RefreshCw size={13} /> Refresh
           </button>
@@ -118,10 +118,10 @@ export default function AdminOverviewPage() {
             <Activity size={18} className="animate-pulse" />
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 font-medium">Current Visitors</div>
+            <div className="text-[11px] text-muted font-medium">Current Visitors</div>
             <div className="text-xl font-bold font-mono text-brand-300">
               {analytics?.currentVisitors ?? 0}
-              <span className="text-[10px] ml-1 font-normal text-slate-400">(last 15m)</span>
+              <span className="text-[10px] ml-1 font-normal text-muted">(last 15m)</span>
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function AdminOverviewPage() {
             <Eye size={18} />
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 font-medium">Unique Visitors (30d)</div>
+            <div className="text-[11px] text-muted font-medium">Unique Visitors (30d)</div>
             <div className="text-xl font-bold font-mono text-white">
               {analytics?.uniqueVisitors ?? 0}
             </div>
@@ -143,9 +143,9 @@ export default function AdminOverviewPage() {
             <UserCheck size={18} />
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 font-medium">Active Users (DAU/MAU)</div>
+            <div className="text-[11px] text-muted font-medium">Active Users (DAU/MAU)</div>
             <div className="text-xl font-bold font-mono text-brand">
-              {users?.dau ?? 0} <span className="text-xs text-slate-400 font-normal">/ {users?.mau ?? 0}</span>
+              {users?.dau ?? 0} <span className="text-xs text-muted font-normal">/ {users?.mau ?? 0}</span>
             </div>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function AdminOverviewPage() {
             <ShieldCheck size={18} />
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 font-medium">Successful Logins</div>
+            <div className="text-[11px] text-muted font-medium">Successful Logins</div>
             <div className="text-xl font-bold font-mono text-brand">
               {users?.successfulLogins ?? 0}
             </div>
@@ -176,15 +176,15 @@ export default function AdminOverviewPage() {
           <div>
             <div className="text-2xl sm:text-3xl font-black font-mono text-ink">
               {revenue.totalRevenueUsdt}{' '}
-              <span className="text-xs font-bold text-slate-500">USDT</span>
+              <span className="text-xs font-bold text-muted">USDT</span>
             </div>
             <p className="text-[11px] text-muted mt-1">
               {revenue.confirmedPurchasesCount} verified Ad-Free upgrades
             </p>
           </div>
           <div className="pt-2 border-t border-border/80 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500">Today: <strong className="font-mono text-ink">{revenue.revenueTodayUsdt}</strong></span>
-            <span className="text-slate-500">7 Days: <strong className="font-mono text-ink">{revenue.revenueThisWeekUsdt}</strong></span>
+            <span className="text-muted">Today: <strong className="font-mono text-ink">{revenue.revenueTodayUsdt}</strong></span>
+            <span className="text-muted">7 Days: <strong className="font-mono text-ink">{revenue.revenueThisWeekUsdt}</strong></span>
           </div>
         </div>
 
@@ -201,13 +201,13 @@ export default function AdminOverviewPage() {
               {users.total}
             </div>
             <div className="flex items-center gap-2 mt-1 text-[11px] text-muted">
-              <span>Today: <strong className="text-brand-600">+{users.signupsToday}</strong></span>
+              <span>Today: <strong className="text-brand">+{users.signupsToday}</strong></span>
               <span>•</span>
-              <span>This week: <strong className="text-brand-600">+{users.signupsThisWeek}</strong></span>
+              <span>This week: <strong className="text-brand">+{users.signupsThisWeek}</strong></span>
             </div>
           </div>
           <div className="pt-2 border-t border-border/80 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500">Free: <strong className="text-ink">{users.free}</strong></span>
+            <span className="text-muted">Free: <strong className="text-ink">{users.free}</strong></span>
             <span className="text-slate-500">Ad-Free: <strong className="text-emerald-600 dark:text-emerald-400">{users.adFree}</strong></span>
             {users.suspended > 0 && (
               <span className="text-rose-500 font-semibold">Suspended: {users.suspended}</span>
@@ -233,7 +233,7 @@ export default function AdminOverviewPage() {
           </div>
           <div className="pt-2 border-t border-border/80 flex items-center justify-between text-[11px]">
             <span className="text-amber-500 font-medium">Pending: {payments.pending}</span>
-            <span className="text-slate-400">Expired: {payments.expired}</span>
+            <span className="text-muted">Expired: {payments.expired}</span>
             {payments.manuallyReviewed > 0 && (
               <span className="text-brand">Reviewed: {payments.manuallyReviewed}</span>
             )}
@@ -257,7 +257,7 @@ export default function AdminOverviewPage() {
             </p>
           </div>
           <div className="pt-2 border-t border-border/80 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500">WAU: <strong className="text-ink">{users.wau}</strong></span>
+            <span className="text-muted">WAU: <strong className="text-ink">{users.wau}</strong></span>
             <Link href="/admin/analytics" className="text-brand font-semibold hover:underline">
               View Analytics →
             </Link>
@@ -276,7 +276,7 @@ export default function AdminOverviewPage() {
                 New Registrations Trend (Past 14 Days)
               </h3>
             </div>
-            <span className="text-[11px] text-slate-400 font-medium">Daily signups</span>
+            <span className="text-[11px] text-muted font-medium">Daily signups</span>
           </div>
 
           {users?.registrationTrends?.length > 0 ? (
@@ -306,13 +306,13 @@ export default function AdminOverviewPage() {
                   );
                 })}
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono px-1">
+              <div className="flex justify-between text-[10px] text-muted font-mono px-1">
                 <span>{users.registrationTrends[0]?.date?.slice(5)}</span>
                 <span>{users.registrationTrends[users.registrationTrends.length - 1]?.date?.slice(5)}</span>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-slate-400 py-8 text-center">No registration data recorded in range.</p>
+            <p className="text-xs text-muted py-8 text-center">No registration data recorded in range.</p>
           )}
         </div>
 
@@ -358,13 +358,13 @@ export default function AdminOverviewPage() {
                   );
                 })}
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono px-1">
+              <div className="flex justify-between text-[10px] text-muted font-mono px-1">
                 <span>{revenue.dailyRevenueTrends[0]?.date?.slice(5)}</span>
                 <span>{revenue.dailyRevenueTrends[revenue.dailyRevenueTrends.length - 1]?.date?.slice(5)}</span>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-slate-400 py-8 text-center">No revenue recorded in range.</p>
+            <p className="text-xs text-muted py-8 text-center">No revenue recorded in range.</p>
           )}
         </div>
       </div>
@@ -401,13 +401,13 @@ export default function AdminOverviewPage() {
                     <span className="font-mono font-bold text-ink">
                       {c.uniqueVisitors} visitors
                     </span>
-                    <span className="text-[10px] text-slate-400 ml-2">({c.percentage}%)</span>
+                    <span className="text-[10px] text-muted ml-2">({c.percentage}%)</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 py-6 text-center">
+            <p className="text-xs text-muted py-6 text-center">
               No country geolocation events recorded yet.
             </p>
           )}
@@ -445,7 +445,7 @@ export default function AdminOverviewPage() {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 py-6 text-center">
+            <p className="text-xs text-muted py-6 text-center">
               No pageview records recorded yet.
             </p>
           )}
@@ -470,7 +470,7 @@ export default function AdminOverviewPage() {
             <div className="p-3 rounded-md bg-paper flex items-center justify-between">
               <div>
                 <div className="font-bold text-ink">Free Plan</div>
-                <div className="text-[11px] text-slate-400">Ad-supported (Monetag zone 289364)</div>
+                <div className="text-[11px] text-muted">Ad-supported (Monetag zone 289364)</div>
               </div>
               <span className="font-mono text-base font-bold text-ink">
                 {users.free}
@@ -490,9 +490,9 @@ export default function AdminOverviewPage() {
             <div className="p-3 rounded-md bg-paper flex items-center justify-between">
               <div>
                 <div className="font-semibold text-ink">Expired Entitlements</div>
-                <div className="text-[11px] text-slate-400">Lifetime access model</div>
+                <div className="text-[11px] text-muted">Lifetime access model</div>
               </div>
-              <span className="font-mono text-xs font-bold text-slate-400">
+              <span className="font-mono text-xs font-bold text-muted">
                 0 Expired
               </span>
             </div>

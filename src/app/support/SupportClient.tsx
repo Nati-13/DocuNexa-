@@ -126,7 +126,7 @@ export function SupportClient() {
               <span>Open @docunexa_bot in Telegram</span>
               <ExternalLink size={15} />
             </a>
-            <p className="text-[11px] text-center text-slate-400 mt-2">
+            <p className="text-[11px] text-center text-muted mt-2">
               Opens the official @docunexa_bot Telegram client
             </p>
           </div>
@@ -227,7 +227,7 @@ export function SupportClient() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Alex Taylor"
-                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>
 
@@ -243,7 +243,7 @@ export function SupportClient() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ export function SupportClient() {
                 id="support-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand"
               >
                 {SUPPORT_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -280,7 +280,7 @@ export function SupportClient() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Brief summary of your question or issue"
-                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>
           </div>
@@ -297,12 +297,12 @@ export function SupportClient() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe what happened, error messages, textbook format details, or coupon code..."
-              className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full px-3.5 py-2.5 rounded-md bg-paper border border-border text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-border">
-            <div className="text-[11px] text-slate-400">
+            <div className="text-[11px] text-muted">
               Or chat via Telegram: <a href={TELEGRAM_BOT_URL} target="_blank" rel="noopener noreferrer" className="text-sky-600 dark:text-sky-400 font-bold hover:underline">@docunexa_bot</a>
             </div>
 
@@ -337,7 +337,7 @@ export function SupportClient() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-4 rounded-md bg-surface/80 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+          <div className="p-4 rounded-md bg-surface/80 border border-border dark:border-slate-700/80 space-y-2">
             <h4 className="font-bold text-ink">
               Why was only part of my textbook detected in PDF Unit Cutter?
             </h4>
@@ -346,7 +346,7 @@ export function SupportClient() {
             </p>
           </div>
 
-          <div className="p-4 rounded-md bg-surface/80 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+          <div className="p-4 rounded-md bg-surface/80 border border-border dark:border-slate-700/80 space-y-2">
             <h4 className="font-bold text-ink">
               How do 100% coupon codes work?
             </h4>
@@ -355,7 +355,7 @@ export function SupportClient() {
             </p>
           </div>
 
-          <div className="p-4 rounded-md bg-surface/80 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+          <div className="p-4 rounded-md bg-surface/80 border border-border dark:border-slate-700/80 space-y-2">
             <h4 className="font-bold text-ink">
               Are my uploaded PDFs stored on your servers?
             </h4>
@@ -364,7 +364,7 @@ export function SupportClient() {
             </p>
           </div>
 
-          <div className="p-4 rounded-md bg-surface/80 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+          <div className="p-4 rounded-md bg-surface/80 border border-border dark:border-slate-700/80 space-y-2">
             <h4 className="font-bold text-ink">
               How long does payment confirmation take?
             </h4>

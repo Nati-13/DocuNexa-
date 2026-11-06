@@ -118,7 +118,7 @@ export default function HowItWorksPage() {
             {unitCutterSteps.map((uc, i) => (
               <div
                 key={i}
-                className="p-4 rounded-md bg-white/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out flex flex-col justify-between"
+                className="p-4 rounded-md bg-white/90 dark:bg-slate-800/80 border border-border dark:border-slate-700/60 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <span className="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-bold text-xs flex items-center justify-center">

@@ -36,10 +36,10 @@ export const AdminNav: React.FC = () => {
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${
               isActive
                 ? 'bg-brand-50 dark:bg-brand-950/60 text-brand font-bold border border-brand-200/60 dark:border-brand-800/60 shadow-xs'
-                : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface/60'
             }`}
           >
-            <Icon size={14} className={isActive ? 'text-brand' : 'text-slate-400'} />
+            <Icon size={14} className={isActive ? 'text-brand' : 'text-muted'} />
             <span>{item.label}</span>
           </Link>
         );

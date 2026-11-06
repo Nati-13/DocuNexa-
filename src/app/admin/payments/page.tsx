@@ -136,7 +136,7 @@ export default function AdminPaymentsPage() {
             Real-time direct Bybit USDT Polygon orders, blockchain confirmations, and review cases.
           </p>
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-muted">
           Total orders: <strong className="text-ink">{totalCount}</strong>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function AdminPaymentsPage() {
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={search}
@@ -153,12 +153,12 @@ export default function AdminPaymentsPage() {
               setPage(1);
             }}
             placeholder="Search by order ID or Polygon transaction hash..."
-            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs text-muted">
             <input
               type="date"
               value={startDate}
@@ -167,7 +167,7 @@ export default function AdminPaymentsPage() {
                 setPage(1);
               }}
               title="Filter from date"
-              className="px-2.5 py-1.5 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-2.5 py-1.5 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
             />
             <span>to</span>
             <input
@@ -178,19 +178,19 @@ export default function AdminPaymentsPage() {
                 setPage(1);
               }}
               title="Filter to date"
-              className="px-2.5 py-1.5 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-2.5 py-1.5 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter size={14} className="text-slate-400" />
+            <Filter size={14} className="text-muted" />
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
             >
               <option value="all">All Statuses</option>
               <option value="confirmed">Confirmed</option>
@@ -208,7 +208,7 @@ export default function AdminPaymentsPage() {
                 setNetworkFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
             >
               <option value="all">All Networks</option>
               <option value="Polygon">Polygon (PoS)</option>
@@ -231,10 +231,10 @@ export default function AdminPaymentsPage() {
         {loading ? (
           <div className="p-12 text-center space-y-2">
             <Loader2 className="animate-spin text-brand mx-auto" size={24} />
-            <p className="text-xs text-slate-400">Loading payment orders...</p>
+            <p className="text-xs text-muted">Loading payment orders...</p>
           </div>
         ) : payments.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
+          <div className="p-12 text-center text-muted text-xs">
             No payment orders found matching criteria.
           </div>
         ) : (
@@ -265,8 +265,8 @@ export default function AdminPaymentsPage() {
                   const isExpired = p.status === 'expired';
 
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                      <td className="py-3 px-3 text-slate-500">
+                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-surface/40">
+                      <td className="py-3 px-3 text-muted">
                         {new Date(p.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-3 font-mono font-bold text-ink">
@@ -275,7 +275,7 @@ export default function AdminPaymentsPage() {
                       <td className="py-3 px-3 text-ink">
                         {p.userEmail}
                       </td>
-                      <td className="py-3 px-3 font-mono text-slate-400">
+                      <td className="py-3 px-3 font-mono text-muted">
                         ${formatPaymentAmount(p.originalAmountUsd || 2.00)}
                       </td>
                       <td className="py-3 px-3">
@@ -289,7 +289,7 @@ export default function AdminPaymentsPage() {
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-muted">—</span>
                         )}
                       </td>
                       <td className="py-3 px-3 font-mono font-black text-brand">
@@ -301,7 +301,7 @@ export default function AdminPaymentsPage() {
                             {formatPaymentAmount(p.receivedAmount)}
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-muted">—</span>
                         )}
                       </td>
                       <td className="py-3 px-3">
@@ -337,11 +337,11 @@ export default function AdminPaymentsPage() {
                             <AlertTriangle size={10} /> Mismatch
                           </span>
                         ) : isExpired ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-slate-500 font-semibold text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-muted font-semibold text-[10px]">
                             Expired
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-slate-500 text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-muted text-[10px]">
                             {p.status}
                           </span>
                         )}
@@ -362,7 +362,7 @@ export default function AdminPaymentsPage() {
                             {p.txId.slice(0, 8)}... <ExternalLink size={10} />
                           </a>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-muted">—</span>
                         )}
                       </td>
                       <td className="py-3 px-3 text-right">
@@ -393,7 +393,7 @@ export default function AdminPaymentsPage() {
             >
               <ChevronLeft size={13} /> Previous
             </button>
-            <span className="text-slate-500">
+            <span className="text-muted">
               Page {page} of {totalPages}
             </span>
             <button
@@ -413,7 +413,7 @@ export default function AdminPaymentsPage() {
           <div className="relative w-full max-w-lg bg-surface border border-border rounded-md p-6 shadow-subtle space-y-4">
             <button
               onClick={() => setReviewOrder(null)}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-full"
+              className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-full"
             >
               <X size={16} />
             </button>
@@ -426,28 +426,28 @@ export default function AdminPaymentsPage() {
                 <h3 className="text-base font-bold text-ink">
                   Payment Order Investigation
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted">
                   Order <span className="font-mono font-bold">{reviewOrder.orderId}</span> ({reviewOrder.status})
                 </p>
               </div>
             </div>
 
             {/* Diagnostic Snapshot */}
-            <div className="p-3 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 text-xs space-y-1">
+            <div className="p-3 rounded-md bg-paper border border-border dark:border-slate-700/60 text-xs space-y-1">
               <div className="flex justify-between">
-                <span className="text-slate-500">Network:</span>
+                <span className="text-muted">Network:</span>
                 <span className="font-semibold text-ink">{reviewOrder.network || 'Polygon'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Expected USDT:</span>
+                <span className="text-muted">Expected USDT:</span>
                 <span className="font-mono font-bold text-ink">{formatPaymentAmount(reviewOrder.paymentAmountUsdt)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Received USDT:</span>
-                <span className="font-mono font-bold text-brand-600">{reviewOrder.receivedAmount ? formatPaymentAmount(reviewOrder.receivedAmount) : 'Not detected'}</span>
+                <span className="text-muted">Received USDT:</span>
+                <span className="font-mono font-bold text-brand">{reviewOrder.receivedAmount ? formatPaymentAmount(reviewOrder.receivedAmount) : 'Not detected'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Target Address:</span>
+                <span className="text-muted">Target Address:</span>
                 <span className="font-mono text-[11px] text-muted truncate max-w-[260px]">
                   {reviewOrder.destinationAddress}
                 </span>
@@ -471,7 +471,7 @@ export default function AdminPaymentsPage() {
                     className={`py-2 px-3 rounded-md font-bold border text-center transition-colors cursor-pointer ${
                       reviewAction === 'approve'
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                        : 'border-border text-slate-600 hover:bg-slate-50'
+                        : 'border-border text-slate-600 hover:bg-paper'
                     }`}
                   >
                     Approve & Upgrade
@@ -482,7 +482,7 @@ export default function AdminPaymentsPage() {
                     className={`py-2 px-3 rounded-md font-bold border text-center transition-colors cursor-pointer ${
                       reviewAction === 'reject'
                         ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-700 dark:text-rose-300'
-                        : 'border-border text-slate-600 hover:bg-slate-50'
+                        : 'border-border text-slate-600 hover:bg-paper'
                     }`}
                   >
                     Reject Order
@@ -499,7 +499,7 @@ export default function AdminPaymentsPage() {
                   value={reviewTxId}
                   onChange={(e) => setReviewTxId(e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                 />
               </div>
 
@@ -512,7 +512,7 @@ export default function AdminPaymentsPage() {
                   value={reviewReason}
                   onChange={(e) => setReviewReason(e.target.value)}
                   placeholder="Explain why this decision is being made for the permanent audit log..."
-                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
                   required
                 />
               </div>
@@ -523,7 +523,7 @@ export default function AdminPaymentsPage() {
                   id="confirmReview"
                   checked={reviewConfirmed}
                   onChange={(e) => setReviewConfirmed(e.target.checked)}
-                  className="mt-0.5 rounded text-brand-600 focus:ring-brand-500"
+                  className="mt-0.5 rounded text-brand focus:ring-brand"
                 />
                 <label
                   htmlFor="confirmReview"
@@ -549,7 +549,7 @@ export default function AdminPaymentsPage() {
                 <button
                   type="button"
                   onClick={() => setReviewOrder(null)}
-                  className="px-3.5 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium"
+                  className="px-3.5 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-surface transition-colors font-medium"
                 >
                   Cancel
                 </button>

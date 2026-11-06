@@ -150,19 +150,19 @@ export default function TermsPage() {
             <div className="p-5 rounded-md bg-surface border border-border space-y-3 text-xs sm:text-sm">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pb-3 border-b border-border text-ink">
                 <div>
-                  <span className="block text-[11px] font-bold uppercase text-slate-400">Price</span>
+                  <span className="block text-[11px] font-bold uppercase text-muted">Price</span>
                   <span className="font-bold text-ink">$2.00 USD</span>
                 </div>
                 <div>
-                  <span className="block text-[11px] font-bold uppercase text-slate-400">Currency</span>
+                  <span className="block text-[11px] font-bold uppercase text-muted">Currency</span>
                   <span className="font-bold text-ink">USDT</span>
                 </div>
                 <div>
-                  <span className="block text-[11px] font-bold uppercase text-slate-400">Network</span>
+                  <span className="block text-[11px] font-bold uppercase text-muted">Network</span>
                   <span className="font-bold text-ink">Polygon (PoS)</span>
                 </div>
                 <div>
-                  <span className="block text-[11px] font-bold uppercase text-slate-400">Type</span>
+                  <span className="block text-[11px] font-bold uppercase text-muted">Type</span>
                   <span className="font-bold text-ink">One-time payment</span>
                 </div>
               </div>

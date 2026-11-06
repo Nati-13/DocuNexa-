@@ -94,7 +94,7 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
           {seo.howToSteps.map((step, idx) => (
             <li
               key={idx}
-              className="p-4 rounded-md bg-surface border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs"
+              className="p-4 rounded-md bg-surface border border-border dark:border-slate-800 space-y-2 shadow-xs"
             >
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-brand-50 dark:bg-brand-950/80 text-brand font-bold text-xs">
                 {idx + 1}
