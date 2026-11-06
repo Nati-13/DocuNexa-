@@ -323,8 +323,8 @@ export function BybitPaymentModal({
                           }}
                           className={`py-2.5 px-2.5 sm:px-3 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 min-w-0 ${
                             isSelected
-                              ? 'bg-surface text-ink shadow-sm border border-purple-300 dark:border-purple-700 ring-1 ring-purple-400/30'
-                              : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-850'
+                              ? 'bg-surface text-ink shadow-sm border border-brand ring-1 ring-brand/30'
+                              : 'text-muted hover:text-ink hover:bg-paper'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
