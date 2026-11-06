@@ -34,6 +34,7 @@ import { DynamicIcon } from '@/components/common/DynamicIcon';
 import { ToolCategory } from '@/types';
 import { createSampleTextbookPdf } from '@/lib/sampleGenerator';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { Reveal } from '@/components/ui/Reveal';
 
 export default function HomePage() {
   const router = useRouter();
@@ -135,7 +136,7 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 1. HERO SECTION */}
       {/* ============================================================ */}
-      <section className="relative pt-12 md:pt-20 lg:pt-24 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-7">
+      <Reveal as="section" className="relative pt-12 md:pt-20 lg:pt-24 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-7">
         {/* Eyebrow */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md bg-surface border border-border text-brand text-xs font-semibold uppercase tracking-wider">
           <span className="w-2 h-2 rounded-full bg-brand" />
@@ -183,12 +184,12 @@ export default function HomePage() {
           <span>•</span>
           <span>Completely Free</span>
         </div>
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 2. QUICK PDF UPLOAD ZONE */}
       {/* ============================================================ */}
-      <section id="quick-upload" className="max-w-4xl mx-auto px-4 sm:px-6 scroll-mt-24">
+      <Reveal as="section" delay={50} id="quick-upload" className="max-w-4xl mx-auto px-4 sm:px-6 scroll-mt-24">
         {!droppedFile ? (
           <div
             onDragOver={(e) => {
@@ -358,12 +359,12 @@ export default function HomePage() {
             </div>
           </div>
         )}
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 3. POPULAR TOOLS */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <Reveal as="section" delay={50} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-border">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-brand">
@@ -435,12 +436,12 @@ export default function HomePage() {
             );
           })}
         </div>
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 4. FEATURED TOOL: PDF UNIT CUTTER */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Reveal as="section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-md bg-brand text-brand-fg p-8 sm:p-12 lg:p-14 border border-brand shadow-subtle overflow-hidden">
           <div className="relative z-10 max-w-3xl space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-brand-fg/10 border border-brand-fg/20 text-brand-fg text-xs font-semibold uppercase tracking-wider">
@@ -496,7 +497,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Advertisement Banner - Pre-Tools */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -506,7 +507,7 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 5. ALL PDF TOOLS (Searchable & Filterable) */}
       {/* ============================================================ */}
-      <section id="all-tools" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7 scroll-mt-20">
+      <Reveal as="section" id="all-tools" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7 scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Complete Toolbox
@@ -639,12 +640,12 @@ export default function HomePage() {
             );
           })}
         </div>
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 6. AI PDF TOOLS SECTION */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Reveal as="section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-md p-8 md:p-12 bg-surface border border-border space-y-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-border">
             <div className="space-y-2 max-w-xl">
@@ -710,7 +711,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* Advertisement Banner - Section Divider */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -720,7 +721,7 @@ export default function HomePage() {
       {/* ============================================================ */}
       {/* 7. WHY DOCUNEXA (Privacy & Architecture) */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <Reveal as="section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Privacy First
@@ -768,12 +769,12 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 8. HOW IT WORKS (3 Simple Steps) */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <Reveal as="section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Simple Process
@@ -816,12 +817,12 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 9. 100% FREE PUBLIC RESOURCE */}
       {/* ============================================================ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <Reveal as="section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-3xl mx-auto space-y-2.5">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-paper border border-border text-brand text-xs font-semibold uppercase tracking-wider">
             <Check size={14} /> 100% Free Document Toolkit
@@ -943,12 +944,12 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* ============================================================ */}
       {/* 10. FAQ SECTION */}
       {/* ============================================================ */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <Reveal as="section" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Answers & Questions
@@ -994,7 +995,7 @@ export default function HomePage() {
             );
           })}
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }

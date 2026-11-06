@@ -27,7 +27,7 @@ export default function NotFound() {
         <div>
           <Link
             href="/tools"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-brand hover:bg-brand/90 text-brand-fg text-sm font-semibold shadow-subtle transition-colors"
           >
             <ArrowLeft size={16} />
             <span>Browse All 34 Tools</span>

@@ -10,6 +10,8 @@ import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController'
 import { MonetagZone, MonetagMainZone } from '@/components/ads/MonetagZone';
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { FloatingSupportButton } from '@/components/layout/FloatingSupportButton';
+import { ScrollProgress } from '@/components/ui/ScrollProgress';
+import { BackToTop } from '@/components/ui/BackToTop';
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -150,9 +152,11 @@ export default async function RootLayout({
         <AnalyticsTracker />
         <AuthProvider initialUser={user ? { id: user.id, email: user.email, plan: user.plan, created_at: user.created_at } : null}>
           <Navbar />
+          <ScrollProgress />
           <div className="flex-1">
             {children}
           </div>
+          <BackToTop />
           <FloatingSupportButton />
           <Footer />
           <MonetagZone />

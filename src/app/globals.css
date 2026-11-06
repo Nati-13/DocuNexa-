@@ -75,6 +75,11 @@
     --foreground: 38 31% 91%;
   }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
+  }
+
   body {
     background-color: rgb(var(--paper));
     color: rgb(var(--ink));
