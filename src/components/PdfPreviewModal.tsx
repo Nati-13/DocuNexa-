@@ -9,7 +9,9 @@ import {
   ZoomOut, 
   RefreshCw, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  SkipBack,
+  SkipForward
 } from 'lucide-react';
 import { DetectedPart } from '@/types';
 import { renderPdfPageToCanvas } from '@/lib/pdfReader';
@@ -18,6 +20,7 @@ interface PdfPreviewModalProps {
   part: DetectedPart | null;
   fileBuffer: ArrayBuffer | null;
   totalPages: number;
+  initialPage?: number;
   onClose: () => void;
 }
 
@@ -25,6 +28,7 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
   part,
   fileBuffer,
   totalPages,
+  initialPage,
   onClose,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -38,9 +42,13 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
 
   useEffect(() => {
     if (part) {
-      setCurrentPage(startPage);
+      if (initialPage && initialPage >= startPage && initialPage <= endPage) {
+        setCurrentPage(initialPage);
+      } else {
+        setCurrentPage(startPage);
+      }
     }
-  }, [part, startPage]);
+  }, [part, startPage, endPage, initialPage]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -104,18 +112,32 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           </button>
         </div>
 
-        {/* Toolbar: Navigation & Zoom */}
+        {/* Toolbar: Navigation, Boundary Jumps & Zoom */}
         <div className="px-6 py-2.5 bg-paper border-b border-border flex flex-wrap items-center justify-between gap-3 text-xs">
-          {/* Previous / Next buttons */}
-          <div className="flex items-center space-x-2">
+          {/* Boundary Quick-Jump & Stepping Buttons */}
+          <div className="flex items-center flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(startPage)}
+              className={`inline-flex items-center px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer ${
+                currentPage === startPage
+                  ? 'bg-brand text-brand-fg border-brand font-semibold'
+                  : 'bg-surface border-border text-ink hover:bg-paper'
+              }`}
+              title={`Jump to first page of this unit (Page ${startPage})`}
+            >
+              <SkipBack className="w-3.5 h-3.5 mr-1" />
+              First Page ({startPage})
+            </button>
+
             <button
               type="button"
               disabled={currentPage <= startPage}
               onClick={() => setCurrentPage((p) => Math.max(startPage, p - 1))}
-              className="inline-flex items-center px-3 py-1.5 rounded-md border border-border bg-surface text-ink hover:bg-paper font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              className="inline-flex items-center px-2.5 py-1.5 rounded-md border border-border bg-surface text-ink hover:bg-paper font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous Page
+              <ChevronLeft className="w-4 h-4 mr-0.5" />
+              Prev
             </button>
 
             <span className="px-3 py-1.5 font-mono font-medium bg-surface border border-border rounded-md text-ink">
@@ -126,10 +148,24 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
               type="button"
               disabled={currentPage >= endPage}
               onClick={() => setCurrentPage((p) => Math.min(endPage, p + 1))}
-              className="inline-flex items-center px-3 py-1.5 rounded-md border border-border bg-surface text-ink hover:bg-paper font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              className="inline-flex items-center px-2.5 py-1.5 rounded-md border border-border bg-surface text-ink hover:bg-paper font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
-              Next Page
-              <ChevronRight className="w-4 h-4 ml-1" />
+              Next
+              <ChevronRight className="w-4 h-4 ml-0.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage(endPage)}
+              className={`inline-flex items-center px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer ${
+                currentPage === endPage
+                  ? 'bg-brand text-brand-fg border-brand font-semibold'
+                  : 'bg-surface border-border text-ink hover:bg-paper'
+              }`}
+              title={`Jump to last page of this unit (Page ${endPage})`}
+            >
+              Last Page ({endPage})
+              <SkipForward className="w-3.5 h-3.5 ml-1" />
             </button>
           </div>
 
@@ -157,7 +193,7 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
           </div>
         </div>
 
-        {/* Canvas Display Viewport: Neutral paper background, authentic white sheet */}
+        {/* Canvas Display Viewport: Neutral paper background, authentic white document paper (no canvas color inversion) */}
         <div className="flex-1 bg-paper overflow-auto p-4 flex items-center justify-center relative">
           {isLoading && (
             <div className="absolute inset-0 bg-surface/80 flex flex-col items-center justify-center space-y-2 z-10">

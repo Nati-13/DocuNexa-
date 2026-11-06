@@ -77,6 +77,7 @@ export default function PdfUnitCutterPage() {
 
   // Modals & Interactivity
   const [previewPart, setPreviewPart] = useState<DetectedPart | null>(null);
+  const [previewInitialPage, setPreviewInitialPage] = useState<number | undefined>(undefined);
   const [completionItems, setCompletionItems] = useState<CutProgressItem[] | null>(null);
   const [isCuttingCancelled, setIsCuttingCancelled] = useState<boolean>(false);
 
@@ -683,7 +684,10 @@ export default function PdfUnitCutterPage() {
                 onResetParts={handleResetParts}
                 onApplyAll={handleApplyAll}
                 onHandleFrontMatter={handleFrontMatter}
-                onPreviewPart={(part) => setPreviewPart(part)}
+                onPreviewPart={(part, initialPage) => {
+                  setPreviewPart(part);
+                  setPreviewInitialPage(initialPage);
+                }}
                 onDownloadSinglePart={handleDownloadSinglePart}
                 onChooseFolder={handleChooseFolder}
                 onCutPdf={handleCutPdf}
@@ -705,7 +709,11 @@ export default function PdfUnitCutterPage() {
             part={previewPart}
             fileBuffer={fileBuffer}
             totalPages={fileInfo?.totalPages || 1}
-            onClose={() => setPreviewPart(null)}
+            initialPage={previewInitialPage}
+            onClose={() => {
+              setPreviewPart(null);
+              setPreviewInitialPage(undefined);
+            }}
           />
         )}
 

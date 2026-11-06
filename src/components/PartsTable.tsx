@@ -18,9 +18,9 @@ import {
   Scissors,
   CheckCircle2,
   Settings2,
-  HelpCircle,
   Sparkles,
-  Info
+  Info,
+  BookOpen
 } from 'lucide-react';
 import { DetectedPart, ValidationResult, ConfidenceLevel } from '@/types';
 import { sanitizeFilename } from '@/lib/validator';
@@ -39,7 +39,7 @@ interface PartsTableProps {
   onMovePart: (index: number, direction: 'up' | 'down') => void;
   onResetParts: () => void;
   onApplyAll: () => void;
-  onPreviewPart: (part: DetectedPart) => void;
+  onPreviewPart: (part: DetectedPart, initialPage?: number) => void;
   onDownloadSinglePart: (part: DetectedPart) => void;
   onCutPdf: () => void;
   onSaveProject: () => void;
@@ -60,7 +60,6 @@ interface PartsTableProps {
 
 export const PartsTable: React.FC<PartsTableProps> = ({
   parts,
-  originalParts,
   totalPages,
   originalFileName,
   splitMode,
@@ -104,7 +103,6 @@ export const PartsTable: React.FC<PartsTableProps> = ({
   );
 
   const handleOpenAddModal = () => {
-    // Smart default for next part
     const lastPart = parts[parts.length - 1];
     const defaultStart = lastPart ? Math.min(lastPart.endPage + 1, totalPages) : 1;
     const defaultEnd = Math.min(defaultStart + 19, totalPages);
@@ -142,31 +140,56 @@ export const PartsTable: React.FC<PartsTableProps> = ({
   };
 
   // Compute coverage statistics
-  const assignedPagesCount = parts.reduce((acc, p) => {
-    return acc + Math.max(0, (p.endPage || 0) - (p.startPage || 0) + 1);
-  }, 0);
+  const assignedPagesSet = new Set<number>();
+  parts.forEach((p) => {
+    const start = Math.max(1, p.startPage);
+    const end = Math.min(totalPages, p.endPage);
+    for (let pg = start; pg <= end; pg++) {
+      assignedPagesSet.add(pg);
+    }
+  });
+
+  const assignedPagesCount = assignedPagesSet.size;
   const unassignedPagesCount = Math.max(0, totalPages - assignedPagesCount);
-  const computedConfidence: ConfidenceLevel = overallConfidence || (
-    parts.length > 0 && parts.every((p) => p.confidence === 'High') ? 'High' : 'Medium'
-  );
+
+  // Compute unassigned page ranges for user summary
+  const unassignedRanges: string[] = [];
+  let rangeStart: number | null = null;
+  for (let pg = 1; pg <= totalPages; pg++) {
+    if (!assignedPagesSet.has(pg)) {
+      if (rangeStart === null) rangeStart = pg;
+    } else {
+      if (rangeStart !== null) {
+        unassignedRanges.push(rangeStart === pg - 1 ? `p. ${rangeStart}` : `pp. ${rangeStart}–${pg - 1}`);
+        rangeStart = null;
+      }
+    }
+  }
+  if (rangeStart !== null) {
+    unassignedRanges.push(rangeStart === totalPages ? `p. ${rangeStart}` : `pp. ${rangeStart}–${totalPages}`);
+  }
+
+  const computedConfidence: ConfidenceLevel =
+    overallConfidence ||
+    (parts.length > 0 && parts.every((p) => p.confidence === 'High') ? 'High' : 'Medium');
 
   const getConfidenceBadge = (confidence: ConfidenceLevel) => {
     switch (confidence) {
       case 'High':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-brand/10 text-brand border border-brand/20">
             High
           </span>
         );
       case 'Medium':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
             Medium
           </span>
         );
       case 'Low':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-paper text-muted border border-border">
             Low
           </span>
         );
@@ -174,18 +197,18 @@ export const PartsTable: React.FC<PartsTableProps> = ({
   };
 
   return (
-    <div className="bg-surface rounded-md border border-border p-6 shadow-subtle space-y-6 relative overflow-hidden">
+    <div className="bg-surface rounded-md border border-border p-6 shadow-subtle space-y-6 relative overflow-hidden text-ink">
       {/* Top Bar: Mode Selection & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="flex items-center space-x-3">
-          <div className="bg-slate-100 p-1 rounded-md flex items-center space-x-1 border border-slate-200/70">
+          <div className="bg-paper p-1 rounded-md flex items-center space-x-1 border border-border">
             <button
               type="button"
               onClick={() => setSplitMode('auto')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 splitMode === 'auto'
-                  ? 'btn-aurora shadow-xs font-bold'
-                  : 'text-muted hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-brand text-brand-fg font-bold shadow-subtle'
+                  : 'text-muted hover:text-ink hover:bg-surface'
               }`}
             >
               Auto Detect Units
@@ -193,17 +216,17 @@ export const PartsTable: React.FC<PartsTableProps> = ({
             <button
               type="button"
               onClick={() => setSplitMode('manual')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 splitMode === 'manual'
-                  ? 'btn-aurora shadow-xs font-bold'
-                  : 'text-muted hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-brand text-brand-fg font-bold shadow-subtle'
+                  : 'text-muted hover:text-ink hover:bg-surface'
               }`}
             >
               Manual Split
             </button>
           </div>
 
-          <span className="text-xs text-slate-500 hidden md:inline-block">
+          <span className="text-xs text-muted hidden md:inline-block">
             {parts.length} {parts.length === 1 ? 'part' : 'parts'} defined
           </span>
         </div>
@@ -213,78 +236,82 @@ export const PartsTable: React.FC<PartsTableProps> = ({
           <button
             type="button"
             onClick={onLoadProject}
-            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
+            className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium text-ink bg-surface hover:bg-paper border border-border transition-colors cursor-pointer"
             title="Load existing .project.json settings"
           >
-            <FolderOpen className="w-3.5 h-3.5 mr-1 text-slate-500" />
+            <FolderOpen className="w-3.5 h-3.5 mr-1 text-muted" />
             Load Project
           </button>
           <button
             type="button"
             onClick={onSaveProject}
-            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
+            className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium text-ink bg-surface hover:bg-paper border border-border transition-colors cursor-pointer"
             title="Save your parts & ranges as .project.json"
           >
-            <Save className="w-3.5 h-3.5 mr-1 text-slate-500" />
+            <Save className="w-3.5 h-3.5 mr-1 text-muted" />
             Save Project
           </button>
           <button
             type="button"
             onClick={onResetParts}
-            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
+            className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium text-ink bg-surface hover:bg-paper border border-border transition-colors cursor-pointer"
             title="Reset parts back to initial state"
           >
-            <RefreshCw className="w-3.5 h-3.5 mr-1 text-slate-500" />
+            <RefreshCw className="w-3.5 h-3.5 mr-1 text-muted" />
             Reset
           </button>
         </div>
       </div>
 
       {/* Analysis & Physical Page Coverage Summary */}
-      <div className="p-4 rounded-md bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+      <div className="p-4 rounded-md bg-paper border border-border space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-brand" />
             <h4 className="text-xs font-bold uppercase tracking-wider text-ink">
-              Analysis &amp; Coverage Summary
+              Detection Review &amp; Page Coverage Summary
             </h4>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500">Overall Confidence:</span>
+            <span className="text-muted">Overall Confidence:</span>
             {getConfidenceBadge(computedConfidence)}
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="p-2.5 rounded-lg bg-surface border border-slate-200/60 dark:border-slate-800/60">
-            <span className="text-slate-500 block text-[11px]">Total Physical Pages</span>
+          <div className="p-2.5 rounded-md bg-surface border border-border">
+            <span className="text-muted block text-[11px]">Total Physical Pages</span>
             <span className="font-bold text-ink text-sm">{totalPages}</span>
           </div>
-          <div className="p-2.5 rounded-lg bg-surface border border-slate-200/60 dark:border-slate-800/60">
-            <span className="text-slate-500 block text-[11px]">Units Defined</span>
+          <div className="p-2.5 rounded-md bg-surface border border-border">
+            <span className="text-muted block text-[11px]">Units Defined</span>
             <span className="font-bold text-ink text-sm">{parts.length}</span>
           </div>
-          <div className="p-2.5 rounded-lg bg-surface border border-slate-200/60 dark:border-slate-800/60">
-            <span className="text-slate-500 block text-[11px]">Assigned Pages</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-              {assignedPagesCount} / {totalPages}
+          <div className="p-2.5 rounded-md bg-surface border border-border">
+            <span className="text-muted block text-[11px]">Included in Cut</span>
+            <span className="font-bold text-brand text-sm">
+              {assignedPagesCount} / {totalPages} pages
             </span>
           </div>
-          <div className="p-2.5 rounded-lg bg-surface border border-slate-200/60 dark:border-slate-800/60">
-            <span className="text-slate-500 block text-[11px]">Unassigned Pages</span>
-            <span className={`font-bold text-sm ${unassignedPagesCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted'}`}>
-              {unassignedPagesCount}
+          <div className="p-2.5 rounded-md bg-surface border border-border">
+            <span className="text-muted block text-[11px]">Excluded Pages</span>
+            <span
+              className={`font-bold text-sm ${
+                unassignedPagesCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted'
+              }`}
+            >
+              {unassignedPagesCount} {unassignedPagesCount > 0 ? `(${unassignedRanges.join(', ')})` : ''}
             </span>
           </div>
         </div>
 
         {/* Warning: Single Unit in Multi-Page Document */}
         {parts.length === 1 && totalPages > 15 && (
-          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold">Review Recommended: Only 1 unit detected across {totalPages} pages.</span>
-              <p className="mt-0.5 text-amber-700 dark:text-amber-400">
+              <p className="mt-0.5 text-muted">
                 Textbooks usually contain multiple units or chapters. If additional units are present, please use &ldquo;+ Add Part&rdquo; or switch to &ldquo;Manual Split&rdquo; to define individual unit boundaries before cutting.
               </p>
             </div>
@@ -296,13 +323,13 @@ export const PartsTable: React.FC<PartsTableProps> = ({
           <div
             className={`p-3.5 rounded-md border text-xs transition-colors ${
               isBoundariesConfirmed
-                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
-                : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+                ? 'bg-brand/10 border-brand/30 text-ink'
+                : 'bg-amber-500/10 border-amber-500/30 text-ink'
             }`}
           >
             <div className="flex items-start gap-2.5">
               {isBoundariesConfirmed ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-brand shrink-0 mt-0.5" />
               ) : (
                 <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               )}
@@ -312,14 +339,15 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                     ? 'Unit Boundaries Confirmed'
                     : 'Manual Boundary Confirmation Required'}
                 </span>
-                <p className={isBoundariesConfirmed ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
-                  {uncertaintyReason || 'TOC-to-physical-page mapping could not be conclusively verified against physical headings.'}
+                <p className="text-muted">
+                  {uncertaintyReason ||
+                    'TOC-to-physical-page mapping could not be conclusively verified against physical headings.'}
                 </p>
                 {!isBoundariesConfirmed ? (
                   <div className="space-y-3 pt-1">
                     {/* Unit Boundaries Review List */}
-                    <div className="p-2.5 rounded-lg bg-amber-100/70 dark:bg-amber-900/30 border border-amber-200/80 dark:border-amber-800/80">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200 mb-1.5 flex items-center justify-between">
+                    <div className="p-2.5 rounded-md bg-surface border border-border">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
                         <span>Unit Boundaries for Review ({parts.length} total):</span>
                         <span className="text-[10px] font-normal lowercase">Physical page numbers</span>
                       </div>
@@ -327,12 +355,12 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         {parts.map((p, idx) => (
                           <div
                             key={p.id || idx}
-                            className="flex items-center justify-between py-1 border-b border-amber-200/40 dark:border-amber-800/40 last:border-0"
+                            className="flex items-center justify-between py-1 border-b border-border last:border-0"
                           >
                             <span className="font-medium truncate max-w-[280px] text-ink">
                               {p.title}
                             </span>
-                            <span className="font-mono font-bold text-amber-950 dark:text-amber-100 shrink-0 ml-2">
+                            <span className="font-mono font-bold text-ink shrink-0 ml-2">
                               Pages {p.startPage} – {p.endPage} ({Math.max(0, p.endPage - p.startPage + 1)} pp)
                             </span>
                           </div>
@@ -341,13 +369,13 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
-                      <p className="text-[11px] text-amber-800 dark:text-amber-300 max-w-md">
+                      <p className="text-[11px] text-muted max-w-md">
                         Please review each unit&apos;s start and end pages above or edit them in the table below. Confirming approves these exact physical ranges for extraction.
                       </p>
                       <button
                         type="button"
                         onClick={onConfirmBoundaries}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs shadow-md transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs shadow-subtle transition-colors cursor-pointer"
                       >
                         <Check className="w-4 h-4" />
                         <span>Approve &amp; Confirm Displayed Page Boundaries</span>
@@ -355,7 +383,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="pt-0.5 text-[11px] text-emerald-700 dark:text-emerald-300 font-medium flex items-center justify-between">
+                  <div className="pt-0.5 text-[11px] text-brand font-medium flex items-center justify-between">
                     <span>✓ Page boundaries reviewed and approved for all {parts.length} units. CUT PDF is unlocked.</span>
                   </div>
                 )}
@@ -379,21 +407,21 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onHandleFrontMatter('separate')}
-                  className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand/90 text-brand-fg font-medium rounded-md transition-colors"
+                  className="px-3 py-1.5 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-medium transition-colors cursor-pointer"
                 >
                   Create &quot;Part 0 — Front Matter&quot; (Pages 1–{frontMatterRange.end})
                 </button>
                 <button
                   type="button"
                   onClick={() => onHandleFrontMatter('include')}
-                  className="px-3 py-1.5 rounded-lg bg-surface text-ink font-medium border border-border hover:bg-paper rounded-md transition-colors"
+                  className="px-3 py-1.5 rounded-md bg-surface text-ink font-medium border border-border hover:bg-paper transition-colors cursor-pointer"
                 >
                   Include in Unit 1 (Extend start to page 1)
                 </button>
                 <button
                   type="button"
                   onClick={() => onHandleFrontMatter('exclude')}
-                  className="px-3 py-1.5 rounded-lg bg-white text-slate-600 font-medium border border-slate-300 hover:bg-slate-100 transition-colors"
+                  className="px-3 py-1.5 rounded-md bg-surface text-muted font-medium border border-border hover:bg-paper transition-colors cursor-pointer"
                 >
                   Exclude Front Matter
                 </button>
@@ -405,9 +433,9 @@ export const PartsTable: React.FC<PartsTableProps> = ({
 
       {/* Validation Feedback Banners */}
       {!validation.isValid && validation.errors.length > 0 && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md space-y-1 text-xs text-red-700">
-          <div className="flex items-center space-x-2 font-semibold text-red-900 mb-1">
-            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+        <div className="p-4 bg-accent/10 border border-accent/30 rounded-md space-y-1 text-xs text-accent">
+          <div className="flex items-center space-x-2 font-semibold mb-1">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Please resolve the following errors:</span>
           </div>
           <ul className="list-disc list-inside space-y-0.5 pl-1">
@@ -419,9 +447,9 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       )}
 
       {validation.warnings.length > 0 && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md space-y-1 text-xs text-amber-800">
-          <div className="flex items-center space-x-2 font-semibold text-amber-900 mb-1">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-md space-y-1 text-xs text-amber-800 dark:text-amber-200">
+          <div className="flex items-center space-x-2 font-semibold mb-1">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>Range &amp; Filename Warnings:</span>
           </div>
           <ul className="list-disc list-inside space-y-0.5 pl-1">
@@ -433,9 +461,9 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       )}
 
       {/* Output Filename Naming Pattern Toolbar */}
-      <div className="bg-slate-50 border border-slate-200/80 rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+      <div className="bg-paper border border-border rounded-md p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
         <div className="flex items-center space-x-4">
-          <span className="font-semibold text-slate-700 flex items-center">
+          <span className="font-semibold text-ink flex items-center">
             <Settings2 className="w-4 h-4 mr-1.5 text-brand" />
             Output Filename Format:
           </span>
@@ -444,18 +472,18 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               type="radio"
               checked={namingMode === 'custom'}
               onChange={() => setNamingMode('custom')}
-              className="text-brand focus:ring-indigo-500"
+              className="text-brand focus:ring-brand"
             />
-            <span className="text-slate-600 font-medium">Custom names</span>
+            <span className="text-muted font-medium">Custom names</span>
           </label>
           <label className="flex items-center space-x-1.5 cursor-pointer">
             <input
               type="radio"
               checked={namingMode === 'auto'}
               onChange={() => setNamingMode('auto')}
-              className="text-brand focus:ring-indigo-500"
+              className="text-brand focus:ring-brand"
             />
-            <span className="text-slate-600 font-medium">Automatic prefix</span>
+            <span className="text-muted font-medium">Automatic prefix</span>
           </label>
         </div>
 
@@ -466,12 +494,12 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               value={autoPrefix}
               onChange={(e) => setAutoPrefix(e.target.value)}
               placeholder="e.g. Biology Grade 10"
-              className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              className="px-2.5 py-1.5 border border-border rounded-md text-xs bg-surface text-ink focus:outline-hidden focus:border-brand"
             />
             <button
               type="button"
               onClick={handleAutoRenameAll}
-              className="px-3 py-1.5 rounded-lg bg-brand text-brand-fg hover:bg-brand/90 font-medium text-xs transition-colors"
+              className="px-3 py-1.5 rounded-md bg-brand text-brand-fg hover:bg-brand/90 font-medium text-xs transition-colors cursor-pointer"
             >
               Apply to All Files
             </button>
@@ -480,21 +508,21 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       </div>
 
       {/* Parts Table */}
-      <div className="overflow-x-auto rounded-md border border-slate-200">
+      <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+            <tr className="bg-paper border-b border-border text-muted font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-3 px-3 w-10 text-center">#</th>
               <th className="py-3 px-3 min-w-[180px]">Section Title</th>
               <th className="py-3 px-3 w-24 text-center">Start</th>
               <th className="py-3 px-3 w-24 text-center">End</th>
               <th className="py-3 px-3 w-20 text-center">Pages</th>
               <th className="py-3 px-3 w-28 text-center">Confidence</th>
-              <th className="py-3 px-3 min-w-[220px]">Output Filename</th>
-              <th className="py-3 px-3 w-36 text-center">Actions</th>
+              <th className="py-3 px-3 min-w-[200px]">Output Filename</th>
+              <th className="py-3 px-3 w-48 text-center">Boundary Preview &amp; Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
+          <tbody className="divide-y divide-border bg-surface">
             {parts.map((part, index) => {
               const pageCount =
                 part.startPage && part.endPage
@@ -504,10 +532,10 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               return (
                 <tr
                   key={part.id}
-                  className="hover:bg-paper transition-colors group"
+                  className="hover:bg-paper/50 transition-colors group"
                 >
                   {/* Number index */}
-                  <td className="py-2.5 px-3 text-center text-slate-400 font-medium font-mono text-xs">
+                  <td className="py-2.5 px-3 text-center text-muted font-medium font-mono text-xs">
                     {index + 1}
                   </td>
 
@@ -528,7 +556,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         });
                       }}
                       placeholder="Section Title"
-                      className="w-full px-2.5 py-1.5 border border-transparent hover:border-slate-300 focus:border-indigo-500 rounded-lg bg-transparent focus:bg-white text-slate-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-indigo-500 transition-all text-xs sm:text-sm"
+                      className="w-full px-2.5 py-1.5 border border-transparent hover:border-border focus:border-brand rounded-md bg-transparent focus:bg-surface text-ink font-medium focus:outline-hidden transition-all text-xs sm:text-sm"
                     />
                   </td>
 
@@ -544,7 +572,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                           startPage: parseInt(e.target.value, 10) || 1,
                         })
                       }
-                      className="w-18 px-2 py-1.5 text-center font-mono border border-slate-200 rounded-lg text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white text-xs sm:text-sm"
+                      className="w-18 px-2 py-1.5 text-center font-mono border border-border rounded-md text-ink focus:outline-hidden focus:border-brand bg-paper/60 focus:bg-surface text-xs sm:text-sm"
                     />
                   </td>
 
@@ -560,13 +588,13 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                           endPage: parseInt(e.target.value, 10) || 1,
                         })
                       }
-                      className="w-18 px-2 py-1.5 text-center font-mono border border-slate-200 rounded-lg text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white text-xs sm:text-sm"
+                      className="w-18 px-2 py-1.5 text-center font-mono border border-border rounded-md text-ink focus:outline-hidden focus:border-brand bg-paper/60 focus:bg-surface text-xs sm:text-sm"
                     />
                   </td>
 
                   {/* Pages badge */}
                   <td className="py-2 px-3 text-center">
-                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-sm bg-paper text-ink border border-border">
                       {pageCount}
                     </span>
                   </td>
@@ -587,22 +615,33 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                             filename: sanitizeFilename(e.target.value),
                           })
                         }
-                        className="w-full px-2.5 py-1.5 font-mono text-xs border border-slate-200 rounded-lg bg-slate-50/40 hover:border-slate-300 focus:border-indigo-500 focus:bg-white text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 transition-all"
+                        className="w-full px-2.5 py-1.5 font-mono text-xs border border-border rounded-md bg-paper/40 hover:border-border focus:border-brand focus:bg-surface text-ink focus:outline-hidden transition-all"
                       />
                     </div>
                   </td>
 
-                  {/* Action Buttons */}
+                  {/* Boundary Preview & Action Buttons */}
                   <td className="py-2 px-3 text-center">
                     <div className="flex items-center justify-center space-x-1">
-                      {/* Preview Button */}
+                      {/* Preview First Page */}
                       <button
                         type="button"
-                        onClick={() => onPreviewPart(part)}
-                        title="Preview pages in this part"
-                        className="p-1.5 rounded-md text-muted hover:text-brand hover:bg-paper transition-colors"
+                        onClick={() => onPreviewPart(part, part.startPage)}
+                        title={`Preview first page of "${part.title}" (Page ${part.startPage})`}
+                        className="px-1.5 py-1 rounded-md text-[11px] font-medium text-muted hover:text-brand hover:bg-paper border border-transparent hover:border-border transition-colors cursor-pointer"
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        <Eye className="w-3.5 h-3.5 inline mr-0.5" />
+                        p.{part.startPage}
+                      </button>
+
+                      {/* Preview Last Page */}
+                      <button
+                        type="button"
+                        onClick={() => onPreviewPart(part, part.endPage)}
+                        title={`Preview last page of "${part.title}" (Page ${part.endPage})`}
+                        className="px-1.5 py-1 rounded-md text-[11px] font-medium text-muted hover:text-brand hover:bg-paper border border-transparent hover:border-border transition-colors cursor-pointer"
+                      >
+                        p.{part.endPage}
                       </button>
 
                       {/* Individual Download Button */}
@@ -615,7 +654,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                             ? 'Please review and confirm page boundaries before downloading individual parts'
                             : 'Download this single PDF part now'
                         }
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="p-1.5 rounded-md text-muted hover:text-brand hover:bg-paper disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
@@ -625,7 +664,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         type="button"
                         onClick={() => onDuplicatePart(part.id)}
                         title="Duplicate this part (e.g. into Part A / B)"
-                        className="p-1.5 rounded-md text-muted hover:text-brand hover:bg-paper transition-colors"
+                        className="p-1.5 rounded-md text-muted hover:text-brand hover:bg-paper transition-colors cursor-pointer"
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
@@ -636,7 +675,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         disabled={index === 0}
                         onClick={() => onMovePart(index, 'up')}
                         title="Move Up"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                        className="p-1.5 rounded-md text-muted hover:text-ink hover:bg-paper disabled:opacity-30 transition-colors cursor-pointer"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
@@ -647,7 +686,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         disabled={index === parts.length - 1}
                         onClick={() => onMovePart(index, 'down')}
                         title="Move Down"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                        className="p-1.5 rounded-md text-muted hover:text-ink hover:bg-paper disabled:opacity-30 transition-colors cursor-pointer"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -657,7 +696,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         type="button"
                         onClick={() => onDeletePart(part.id)}
                         title="Delete part"
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-md text-muted hover:text-accent hover:bg-accent/10 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -675,9 +714,9 @@ export const PartsTable: React.FC<PartsTableProps> = ({
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-md border border-dashed border-brand-300 dark:border-brand-700 hover:border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-semibold text-xs sm:text-sm transition-all shadow-xs hover:shadow-sm"
+          className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-md border border-dashed border-border hover:border-brand bg-paper hover:bg-paper/80 text-ink font-semibold text-xs sm:text-sm transition-colors shadow-subtle cursor-pointer"
         >
-          <Plus className="w-4 h-4 mr-1.5" />
+          <Plus className="w-4 h-4 mr-1.5 text-brand" />
           + Add Part
         </button>
 
@@ -685,7 +724,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
           <button
             type="button"
             onClick={onApplyAll}
-            className="px-4 py-2 rounded-md text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-colors"
+            className="px-4 py-2 rounded-md text-xs font-semibold text-ink bg-surface hover:bg-paper border border-border transition-colors cursor-pointer"
           >
             Apply Changes
           </button>
@@ -696,23 +735,23 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       <div className="pt-6 border-t border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-paper -mx-6 -mb-6 p-6 rounded-b-md">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-semibold text-slate-700">Output Folder:</span>
+            <span className="text-xs font-semibold text-ink">Output Folder:</span>
             {isFolderSupported ? (
               <button
                 type="button"
                 onClick={onChooseFolder}
-                className="text-xs font-medium text-brand hover:text-muted underline flex items-center"
+                className="text-xs font-medium text-brand hover:underline flex items-center cursor-pointer"
               >
                 <FolderOpen className="w-3.5 h-3.5 mr-1" />
                 {selectedFolderText || 'Choose Folder (File System Access)'}
               </button>
             ) : (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-muted">
                 Direct browser download / Universal ZIP bundle
               </span>
             )}
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-muted">
             Split into {parts.length} lossless high-resolution PDFs preserving all vectors, text, and images.
           </p>
         </div>
@@ -745,12 +784,12 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40">
           <div className="bg-surface rounded-md p-6 max-w-md w-full shadow-subtle border border-border text-ink space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base">Add New Part</h3>
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="font-bold text-ink text-base">Add New Part</h3>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm"
+                className="text-muted hover:text-ink text-sm cursor-pointer"
               >
                 ✕
               </button>
@@ -758,7 +797,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
 
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs sm:text-sm">
               <div>
-                <label className="block text-slate-700 font-medium mb-1">
+                <label className="block text-ink font-medium mb-1">
                   Part Name
                 </label>
                 <input
@@ -771,13 +810,13 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                     setNewFilename(sanitizeFilename(`${val || 'Part'}.pdf`));
                   }}
                   placeholder="e.g. Unit 3A – Cell Respiration"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-paper text-ink focus:outline-hidden focus:border-brand"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 font-medium mb-1">
+                  <label className="block text-ink font-medium mb-1">
                     Start Page
                   </label>
                   <input
@@ -787,11 +826,11 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                     required
                     value={newStart}
                     onChange={(e) => setNewStart(parseInt(e.target.value, 10) || 1)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-md font-mono bg-paper text-ink focus:outline-hidden focus:border-brand"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-medium mb-1">
+                  <label className="block text-ink font-medium mb-1">
                     End Page
                   </label>
                   <input
@@ -801,13 +840,13 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                     required
                     value={newEnd}
                     onChange={(e) => setNewEnd(parseInt(e.target.value, 10) || 1)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-md font-mono bg-paper text-ink focus:outline-hidden focus:border-brand"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-700 font-medium mb-1">
+                <label className="block text-ink font-medium mb-1">
                   Filename
                 </label>
                 <input
@@ -816,21 +855,21 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                   value={newFilename}
                   onChange={(e) => setNewFilename(sanitizeFilename(e.target.value))}
                   placeholder="e.g. Unit 3A.pdf"
-                  className="w-full px-3 py-2 font-mono text-xs border border-slate-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 font-mono text-xs border border-border rounded-md bg-paper text-ink focus:outline-hidden focus:border-brand"
                 />
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100 font-medium transition-colors"
+                  className="px-4 py-2 rounded-md text-muted hover:text-ink hover:bg-paper font-medium transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-md bg-brand text-brand-fg hover:bg-brand/90 font-semibold shadow-subtle transition-all"
+                  className="px-5 py-2 rounded-md bg-brand text-brand-fg hover:bg-brand/90 font-semibold shadow-subtle transition-colors cursor-pointer"
                 >
                   Add Part
                 </button>
