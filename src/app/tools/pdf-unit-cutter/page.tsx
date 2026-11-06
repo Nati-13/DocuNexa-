@@ -547,10 +547,10 @@ export default function PdfUnitCutterPage() {
                   <UploadCloud size={32} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-xl font-bold text-ink">
                     Upload Your Textbook or Document
                   </h3>
-                  <p className="text-sm text-slate-700 dark:text-slate-200 mt-1">
+                  <p className="text-sm text-ink mt-1">
                     Select a multi-unit textbook, syllabus, or course document to detect units.
                   </p>
                 </div>
@@ -573,12 +573,12 @@ export default function PdfUnitCutterPage() {
                     onClick={handleLoadSample}
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-surface hover:bg-paper border border-border text-ink text-sm font-semibold transition-colors"
                   >
-                    <BookOpen size={16} className="text-brand-600 dark:text-brand-400" />
+                    <BookOpen size={16} className="text-brand" />
                     <span>Try with Sample Textbook</span>
                   </button>
                 </div>
 
-                <p className="text-xs text-slate-600 dark:text-slate-300 pt-3">
+                <p className="text-xs text-muted pt-3">
                   Sample: &ldquo;Biology Grade 10.pdf&rdquo; with Units 1–3, TOC, and front matter.
                 </p>
               </div>
@@ -594,10 +594,10 @@ export default function PdfUnitCutterPage() {
                   <FileText size={22} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">
+                  <h3 className="font-bold text-base text-ink truncate">
                     {fileInfo.name}
                   </h3>
-                  <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-200 mt-0.5">
+                  <div className="flex items-center gap-3 text-xs text-ink mt-0.5">
                     <span>{fileInfo.totalPages} total pages</span>
                     <span>•</span>
                     <span>{(fileInfo.size / (1024 * 1024)).toFixed(2)} MB</span>
@@ -643,7 +643,7 @@ export default function PdfUnitCutterPage() {
             {isAnalyzing && (
               <div className="p-6 rounded-md bg-surface border border-border shadow-subtle space-y-3">
                 <div className="flex justify-between text-sm font-semibold">
-                  <span className="text-brand-600 dark:text-brand-400">
+                  <span className="text-brand">
                     Scanning page headings & Table of Contents...
                   </span>
                   <span>

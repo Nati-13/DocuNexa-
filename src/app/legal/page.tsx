@@ -139,24 +139,24 @@ export default function LegalHubPage() {
   const lastUpdated = 'November 1, 2026';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-16 md:py-24 transition-colors">
+    <div className="min-h-screen bg-paper text-ink py-16 md:py-24 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand border border-brand-200 dark:border-brand-800 text-xs font-bold uppercase tracking-wider">
             <Scale size={14} />
             <span>International Trust & Compliance Center</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
             DocuNexa Legal & Policies
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-sm sm:text-base text-muted leading-relaxed">
             Transparent, accessible, and comprehensive legal agreements governing our client-side PDF workspace,
             protecting international customer privacy, and clarifying technical platform boundaries.
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-500">
             Current Revision: v2026.11 • Effective: {lastUpdated} • Canonical Domain:{' '}
-            <a href="https://docunexa.pro.et" className="text-brand-600 dark:text-brand-400 hover:underline">
+            <a href="https://docunexa.pro.et" className="text-brand hover:underline">
               https://docunexa.pro.et
             </a>
           </p>
@@ -164,40 +164,40 @@ export default function LegalHubPage() {
 
         {/* Global Principles Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+          <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
               <ShieldCheck size={20} />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-ink">
               100% Client-Side Privacy
             </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Files loaded into DocuNexa are processed in your personal device RAM using WebAssembly and PDF.js.
               Your files never upload to our servers, ensuring absolute confidentiality.
             </p>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+          <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-md bg-brand-50 dark:bg-brand-950/50 text-brand flex items-center justify-center font-bold">
               <Globe size={20} />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-ink">
               International Audience
             </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               DocuNexa serves users worldwide. Our policies respect mandatory international consumer rights,
               GDPR/CCPA privacy standards, and universal fair access principles across borders.
             </p>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+          <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-md bg-brand/10 text-brand flex items-center justify-center font-bold">
               <HeartHandshake size={20} />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-ink">
               User Document Ownership
             </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               You retain full, exclusive copyright and ownership of every document processed. DocuNexa never claims
               licenses, ownership, or training rights over your PDFs or their textual contents.
             </p>
@@ -206,12 +206,12 @@ export default function LegalHubPage() {
 
         {/* Directory Grid */}
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-ink">
                 Policy & Legal Directory
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-xs sm:text-sm text-muted">
                 Browse our complete suite of 10 official legal, privacy, and compliance documents.
               </p>
             </div>
@@ -224,21 +224,21 @@ export default function LegalHubPage() {
                 <Link
                   key={p.href}
                   href={p.href}
-                  className="group p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 dark:hover:border-brand-500/50 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                  className="group p-6 rounded-md bg-surface border border-border hover:border-brand-500/50 dark:hover:border-brand-500/50 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 flex items-center justify-center group-hover:bg-brand-50 dark:group-hover:bg-brand-950/50 transition-colors">
+                        <div className="w-9 h-9 rounded-md bg-paper text-brand flex items-center justify-center group-hover:bg-brand-50 dark:group-hover:bg-brand-950/50 transition-colors">
                           <Icon size={18} />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
                           {p.category}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         {p.badge && (
-                          <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 text-[10px] font-bold border border-brand-200 dark:border-brand-800">
+                          <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/50 text-brand text-[10px] font-bold border border-brand-200 dark:border-brand-800">
                             {p.badge}
                           </span>
                         )}
@@ -248,16 +248,16 @@ export default function LegalHubPage() {
                       </div>
                     </div>
 
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    <h3 className="text-lg font-bold text-ink group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                       {p.title}
                     </h3>
 
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted leading-relaxed">
                       {p.description}
                     </p>
                   </div>
 
-                  <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform">
+                  <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-brand group-hover:translate-x-1 transition-transform">
                     <span>Read Policy</span>
                     <ArrowRight size={14} />
                   </div>
@@ -268,8 +268,8 @@ export default function LegalHubPage() {
         </div>
 
         {/* Legal Disclaimer & Review Note */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-3 leading-relaxed">
-          <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+        <div className="p-6 sm:p-8 rounded-md bg-slate-100 dark:bg-ink/40 border border-border text-xs text-muted space-y-3 leading-relaxed">
+          <h4 className="text-sm font-bold text-ink">
             Legal Business Notice & Professional Review Marker
           </h4>
           <p>
@@ -279,7 +279,7 @@ export default function LegalHubPage() {
           </p>
           <p>
             For legal service of process, regulatory compliance inquiries, or certified translation requests, contact our legal team at{' '}
-            <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+            <a href="mailto:docunexa.security@gmail.com" className="text-brand font-semibold hover:underline">
               docunexa.security@gmail.com
             </a>.
           </p>

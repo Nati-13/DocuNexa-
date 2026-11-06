@@ -75,14 +75,14 @@ export const AdSlot: React.FC<AdSlotProps> = ({
     return (
       <aside
         aria-label="Advertisement"
-        className={`relative w-full rounded-2xl overflow-hidden transition-all duration-200 ${minHeightClass} ${className}`}
+        className={`relative w-full rounded-md overflow-hidden transition-all duration-200 ${minHeightClass} ${className}`}
       >
         <div className="text-center py-1 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200/60 dark:border-slate-800/60">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-muted">
             Advertisement
           </span>
         </div>
-        <div className="flex items-center justify-center p-3 bg-white dark:bg-slate-900">
+        <div className="flex items-center justify-center p-3 bg-surface">
           <ins
             className="adsbygoogle"
             style={{ display: 'block', textAlign: 'center' }}

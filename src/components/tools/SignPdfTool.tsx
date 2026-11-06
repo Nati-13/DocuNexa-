@@ -244,7 +244,7 @@ export function SignPdfTool() {
     return (
       <div className="w-full space-y-4">
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+          <div className="p-4 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -271,14 +271,14 @@ export function SignPdfTool() {
           {/* Right Panel Controls */}
           <div className="space-y-4">
             {/* Signature Creation Tabs */}
-            <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
+            <div className="flex rounded-md bg-paper p-1">
               <button
                 type="button"
                 onClick={() => setSignMode('draw')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                   signMode === 'draw'
-                    ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'bg-white dark:bg-slate-700 text-brand shadow-xs'
+                    : 'text-muted'
                 }`}
               >
                 <PenTool size={13} />
@@ -289,8 +289,8 @@ export function SignPdfTool() {
                 onClick={() => setSignMode('type')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                   signMode === 'type'
-                    ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'bg-white dark:bg-slate-700 text-brand shadow-xs'
+                    : 'text-muted'
                 }`}
               >
                 <Type size={13} />
@@ -301,8 +301,8 @@ export function SignPdfTool() {
                 onClick={() => setSignMode('upload')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                   signMode === 'upload'
-                    ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'bg-white dark:bg-slate-700 text-brand shadow-xs'
+                    : 'text-muted'
                 }`}
               >
                 <Upload size={13} />
@@ -313,7 +313,7 @@ export function SignPdfTool() {
             {/* Mode 1: DRAW CANVAS */}
             {signMode === 'draw' && (
               <div className="space-y-2">
-                <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-inner touch-none">
+                <div className="relative border-2 border-dashed border-border rounded-md bg-surface overflow-hidden shadow-inner touch-none">
                   <canvas
                     ref={canvasRef}
                     width={320}
@@ -347,10 +347,10 @@ export function SignPdfTool() {
                   value={typedName}
                   onChange={(e) => setTypedName(e.target.value)}
                   placeholder="Type your full name..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-brand-500 outline-hidden"
+                  className="w-full px-3 py-2.5 rounded-md border border-border bg-surface text-sm font-semibold text-ink focus:ring-2 focus:ring-brand-500 outline-hidden"
                 />
                 {typedName && (
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-center font-serif italic text-xl text-slate-900 dark:text-white">
+                  <div className="p-3 rounded-md bg-paper border border-border text-center font-serif italic text-xl text-ink">
                     {typedName}
                   </div>
                 )}
@@ -360,19 +360,19 @@ export function SignPdfTool() {
             {/* Mode 3: UPLOAD */}
             {signMode === 'upload' && (
               <div className="space-y-2">
-                <label className="block p-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-center cursor-pointer hover:border-brand-500 transition-colors">
+                <label className="block p-4 border-2 border-dashed border-border rounded-md text-center cursor-pointer hover:border-brand-500 transition-colors">
                   <input
                     type="file"
                     accept="image/png, image/jpeg"
                     onChange={handleSignatureUpload}
                     className="hidden"
                   />
-                  <span className="text-xs font-semibold text-brand-600 dark:text-brand-400">
+                  <span className="text-xs font-semibold text-brand">
                     Upload Signature Image (PNG/JPG)
                   </span>
                 </label>
                 {uploadedSigUrl && (
-                  <div className="h-16 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-xl p-2 border border-slate-200 dark:border-slate-700">
+                  <div className="h-16 flex items-center justify-center bg-paper rounded-md p-2 border border-border">
                     <img src={uploadedSigUrl} alt="Signature preview" className="max-h-full object-contain" />
                   </div>
                 )}
@@ -381,13 +381,13 @@ export function SignPdfTool() {
 
             {/* Page Selector for Signature Target */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+              <label className="text-xs font-semibold text-ink block mb-1">
                 Target Page
               </label>
               <select
                 value={targetPage}
                 onChange={(e) => setTargetPage(parseInt(e.target.value, 10))}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                className="w-full px-3 py-2 rounded-md border border-border bg-surface text-xs font-semibold"
               >
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <option key={p} value={p}>
@@ -397,7 +397,7 @@ export function SignPdfTool() {
               </select>
             </div>
 
-            <div className="p-3 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-[11px] text-indigo-900 dark:text-indigo-200 space-y-1">
+            <div className="p-3 rounded-md bg-brand/10 border border-brand/20 text-[11px] text-ink space-y-1">
               <span className="font-bold block">💡 Drag to Position:</span>
               <p>
                 Click and drag the signature box on the document preview to position it exactly above the signature line.
@@ -412,7 +412,7 @@ export function SignPdfTool() {
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6 text-center">
       {errorMessage && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+        <div className="p-4 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
           <AlertCircle size={16} className="shrink-0" />
           <span>{errorMessage}</span>
         </div>

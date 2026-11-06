@@ -117,7 +117,7 @@ export function AdminSetupForm() {
 
   if (loadingStatus) {
     return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl text-center space-y-4">
+      <div className="w-full max-w-md bg-surface border border-border rounded-md p-8 shadow-subtle text-center space-y-4">
         <Loader2 size={28} className="animate-spin text-brand-600 mx-auto" />
         <p className="text-xs text-slate-500">Checking administrator setup status...</p>
       </div>
@@ -126,20 +126,20 @@ export function AdminSetupForm() {
 
   if (keyRequiredMissing) {
     return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/80 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-5">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400">
+      <div className="w-full max-w-md bg-surface border border-amber-200 dark:border-amber-800/80 rounded-md p-6 sm:p-8 shadow-subtle text-center space-y-5">
+        <div className="w-14 h-14 mx-auto rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400">
           <ShieldAlert size={28} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Master Setup Key Required</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+          <h1 className="text-xl font-bold text-ink">Master Setup Key Required</h1>
+          <p className="text-xs text-muted mt-2 leading-relaxed">
             Administrator bootstrap is locked in production until <strong>ADMIN_SETUP_KEY</strong> is configured in server environment variables. This prevents unauthorized administrative takeover of this deployment.
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left text-xs space-y-2">
-          <div className="font-semibold text-slate-800 dark:text-slate-200">Owner Action Required:</div>
-          <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+        <div className="p-3.5 rounded-md bg-paper border border-border text-left text-xs space-y-2">
+          <div className="font-semibold text-ink">Owner Action Required:</div>
+          <ol className="list-decimal list-inside space-y-1 text-muted text-[11px] leading-relaxed">
             <li>Open Vercel Project Settings &rarr; <strong>Environment Variables</strong>.</li>
             <li>Add <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700 font-mono text-[10px]">ADMIN_SETUP_KEY</code> with your generated secret.</li>
             <li>Redeploy or promote the production build.</li>
@@ -147,7 +147,7 @@ export function AdminSetupForm() {
           </ol>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="pt-2 border-t border-border">
           <Link
             href="/"
             className="inline-block text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -162,21 +162,21 @@ export function AdminSetupForm() {
   // If already setup and no success message from this current session
   if (isSetup && !success) {
     return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-5">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400">
+      <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle text-center space-y-5">
+        <div className="w-14 h-14 mx-auto rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400">
           <ShieldAlert size={28} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Setup Locked</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+          <h1 className="text-xl font-bold text-ink">Setup Locked</h1>
+          <p className="text-xs text-muted mt-2 leading-relaxed">
             An administrator account has already been initialized for this DocuNexa instance. First-time setup is permanently locked for security.
           </p>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        <div className="pt-2 border-t border-border space-y-2">
           <Link
             href="/login?redirect=/admin"
-            className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-md flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 rounded-md bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-subtle flex items-center justify-center gap-2"
           >
             Sign In with Admin Credentials <ArrowRight size={14} />
           </Link>
@@ -193,27 +193,27 @@ export function AdminSetupForm() {
 
   if (success) {
     return (
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-5">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+      <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle text-center space-y-5">
+        <div className="w-14 h-14 mx-auto rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 size={28} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Admin Initialized</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+          <h1 className="text-xl font-bold text-ink">Admin Initialized</h1>
+          <p className="text-xs text-muted mt-2 leading-relaxed">
             {success}
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left text-xs space-y-1.5">
+        <div className="p-3.5 rounded-md bg-paper border border-border text-left text-xs space-y-1.5">
           <div className="text-slate-500">Sign in with:</div>
-          <div className="font-semibold text-slate-900 dark:text-white">Email: {email}</div>
+          <div className="font-semibold text-ink">Email: {email}</div>
           <div className="text-slate-500 text-[11px]">Password: The password you provided during setup</div>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="pt-2 border-t border-border">
           <Link
             href="/login?redirect=/admin"
-            className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-md flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 rounded-md bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-subtle flex items-center justify-center gap-2"
           >
             Go to Admin Sign In <ArrowRight size={14} />
           </Link>
@@ -223,16 +223,16 @@ export function AdminSetupForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+    <div className="w-full max-w-md bg-surface border border-border rounded-md p-6 sm:p-8 shadow-subtle space-y-6">
       <div className="flex flex-col items-center text-center space-y-2">
         <DocuNexaLogo size="md" />
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-[10px] font-bold uppercase tracking-wider mt-3">
           <ShieldCheck size={12} /> Initial Setup
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-2xl font-bold tracking-tight text-ink">
           Initialize Administrator
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           Create the first administrator account for DocuNexa. This interface will permanently lock once complete.
         </p>
       </div>
@@ -240,7 +240,7 @@ export function AdminSetupForm() {
       {error && (
         <div
           role="alert"
-          className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400"
+          className="p-3.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400"
         >
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{error}</span>
@@ -251,7 +251,7 @@ export function AdminSetupForm() {
         <div>
           <label
             htmlFor="admin-email"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Admin Email Address
           </label>
@@ -267,7 +267,7 @@ export function AdminSetupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="owner@example.com"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
             />
           </div>
         </div>
@@ -275,7 +275,7 @@ export function AdminSetupForm() {
         <div>
           <label
             htmlFor="admin-password"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Admin Password
           </label>
@@ -291,7 +291,7 @@ export function AdminSetupForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min 8 characters"
-              className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-10 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
             />
             <button
               type="button"
@@ -306,7 +306,7 @@ export function AdminSetupForm() {
         <div>
           <label
             htmlFor="admin-confirm-password"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+            className="block text-xs font-semibold text-ink mb-1.5"
           >
             Confirm Admin Password
           </label>
@@ -322,7 +322,7 @@ export function AdminSetupForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter password"
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+              className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
             />
           </div>
         </div>
@@ -331,7 +331,7 @@ export function AdminSetupForm() {
           <div>
             <label
               htmlFor="admin-setup-key"
-              className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
+              className="block text-xs font-semibold text-ink mb-1.5"
             >
               Setup Master Key
             </label>
@@ -346,20 +346,20 @@ export function AdminSetupForm() {
                 value={setupKey}
                 onChange={(e) => setSetupKey(e.target.value)}
                 placeholder="ADMIN_SETUP_KEY"
-                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+                className="w-full pl-9 pr-3.5 py-2.5 rounded-md border border-border bg-paper text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
               />
             </div>
           </div>
         )}
 
-        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+        <div className="p-3 rounded-md bg-paper border border-border text-[11px] text-muted leading-relaxed">
           <strong>Security Note:</strong> Passwords are never stored in plaintext and are securely handled exclusively by Supabase Auth.
         </div>
 
         <button
           type="submit"
           disabled={submitting}
-          className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-sm transition-all shadow-md shadow-brand-500/20 hover:shadow-brand-500/35 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="w-full mt-2 py-3 px-4 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-sm transition-all shadow-subtle shadow-brand-500/20 hover:shadow-brand-500/35 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
           {submitting ? (
             <>

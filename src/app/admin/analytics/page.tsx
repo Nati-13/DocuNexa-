@@ -48,7 +48,7 @@ export default function AdminAnalyticsPage() {
   if (loading && !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
-        <Loader2 className="animate-spin text-brand-600 dark:text-brand-400" size={32} />
+        <Loader2 className="animate-spin text-brand" size={32} />
         <p className="text-xs text-slate-500">Aggregating privacy-preserving analytics...</p>
       </div>
     );
@@ -56,13 +56,13 @@ export default function AdminAnalyticsPage() {
 
   if (error && !data) {
     return (
-      <div className="p-6 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-center space-y-3">
+      <div className="p-6 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-center space-y-3">
         <AlertTriangle className="mx-auto text-rose-500" size={32} />
-        <h3 className="font-bold text-slate-900 dark:text-white text-base">Error Loading Analytics</h3>
+        <h3 className="font-bold text-ink text-base">Error Loading Analytics</h3>
         <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>
         <button
           onClick={fetchAnalytics}
-          className="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold hover:bg-brand-500 transition-colors cursor-pointer"
+          className="px-4 py-2 rounded-md bg-brand-600 text-white text-xs font-semibold hover:bg-brand-500 transition-colors cursor-pointer"
         >
           Try Again
         </button>
@@ -88,25 +88,25 @@ export default function AdminAnalyticsPage() {
       {/* Top Header & Range Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
             Country-Level Analytics & Traffic
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Privacy-preserving geolocation metrics, unique visitors, page views, and conversion activity.
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           {/* Date Range Selector */}
-          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs">
+          <div className="flex items-center p-1 rounded-md bg-paper border border-border/60 text-xs">
             {(['7d', '30d', '90d', 'all'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
                 className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                   range === r
-                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-surface text-brand shadow-xs'
+                    : 'text-muted hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {r === '7d' && '7 Days'}
@@ -119,7 +119,7 @@ export default function AdminAnalyticsPage() {
 
           <button
             onClick={fetchAnalytics}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <RefreshCw size={13} /> Refresh
           </button>
@@ -128,27 +128,27 @@ export default function AdminAnalyticsPage() {
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span>Page Views</span>
-            <Eye size={14} className="text-brand-500" />
+            <Eye size={14} className="text-brand" />
           </div>
-          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+          <div className="text-2xl font-black font-mono text-ink">
             {totalPageViews}
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span>Unique Visitors</span>
             <Users size={14} className="text-cyan-500" />
           </div>
-          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+          <div className="text-2xl font-black font-mono text-ink">
             {uniqueVisitors}
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span>Active Now</span>
             <Activity size={14} className="text-emerald-500 animate-pulse" />
@@ -158,27 +158,27 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span>Countries</span>
-            <Globe size={14} className="text-purple-500" />
+            <Globe size={14} className="text-brand" />
           </div>
-          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+          <div className="text-2xl font-black font-mono text-ink">
             {countries.length}
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span>Logins</span>
-            <UserCheck size={14} className="text-indigo-500" />
+            <UserCheck size={14} className="text-brand" />
           </div>
-          <div className="text-2xl font-black font-mono text-indigo-600 dark:text-indigo-400">
+          <div className="text-2xl font-black font-mono text-brand">
             {successfulLogins}
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span>Signups</span>
             <UserPlus size={14} className="text-amber-500" />
@@ -193,8 +193,8 @@ export default function AdminAnalyticsPage() {
       {countries.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-brand-500" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+            <MapPin size={16} className="text-brand" />
+            <h3 className="text-sm font-bold text-ink">
               Primary Regional Origins
             </h3>
           </div>
@@ -203,13 +203,13 @@ export default function AdminAnalyticsPage() {
             {countries.slice(0, 4).map((c: any) => (
               <div
                 key={c.countryCode}
-                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2"
+                className="p-4 rounded-md bg-surface border border-border space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{c.flag}</span>
                     <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">
+                      <div className="font-bold text-xs text-ink">
                         {c.countryName}
                       </div>
                       <div className="font-mono text-[10px] text-slate-400">
@@ -217,21 +217,21 @@ export default function AdminAnalyticsPage() {
                       </div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold text-[10px]">
+                  <span className="px-2 py-0.5 rounded-full bg-brand-500/10 text-brand font-bold text-[10px]">
                     {c.percentage}%
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/80 text-[11px]">
                   <div>
                     <span className="text-slate-400">Visitors:</span>
-                    <div className="font-mono font-bold text-slate-900 dark:text-white">
+                    <div className="font-mono font-bold text-ink">
                       {c.uniqueVisitors}
                     </div>
                   </div>
                   <div>
                     <span className="text-slate-400">Page Views:</span>
-                    <div className="font-mono font-bold text-slate-900 dark:text-white">
+                    <div className="font-mono font-bold text-ink">
                       {c.pageViews}
                     </div>
                   </div>
@@ -245,11 +245,11 @@ export default function AdminAnalyticsPage() {
       {/* Main Ranking Table & Traffic Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Country Ranking Table (2 cols on lg) */}
-        <div className="lg:col-span-2 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs space-y-4 p-6">
+        <div className="lg:col-span-2 rounded-md bg-surface border border-border overflow-hidden shadow-xs space-y-4 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Globe size={16} className="text-brand-500" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              <Globe size={16} className="text-brand" />
+              <h3 className="text-sm font-bold text-ink">
                 Country Traffic Ranking
               </h3>
             </div>
@@ -265,7 +265,7 @@ export default function AdminAnalyticsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold">
+                <thead className="border-b border-border text-slate-400 font-semibold">
                   <tr>
                     <th className="pb-3 px-2 w-10">#</th>
                     <th className="pb-3 px-2">Country / Region</th>
@@ -274,7 +274,7 @@ export default function AdminAnalyticsPage() {
                     <th className="pb-3 px-2 w-36">Traffic Share</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
+                <tbody className="divide-y divide-border/80 text-ink">
                   {countries.map((c: any, idx: number) => (
                     <tr key={c.countryCode} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="py-3 px-2 font-mono text-slate-400 text-[11px] font-bold">
@@ -284,7 +284,7 @@ export default function AdminAnalyticsPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-base">{c.flag}</span>
                           <div>
-                            <span className="font-semibold text-slate-900 dark:text-white">
+                            <span className="font-semibold text-ink">
                               {c.countryName}
                             </span>
                             <span className="font-mono text-[10px] text-slate-400 ml-1.5 uppercase">
@@ -293,15 +293,15 @@ export default function AdminAnalyticsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-2 font-mono font-semibold text-slate-900 dark:text-white">
+                      <td className="py-3 px-2 font-mono font-semibold text-ink">
                         {c.uniqueVisitors}
                       </td>
-                      <td className="py-3 px-2 font-mono font-semibold text-slate-900 dark:text-white">
+                      <td className="py-3 px-2 font-mono font-semibold text-ink">
                         {c.pageViews}
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                          <div className="flex-1 h-2 rounded-full bg-paper overflow-hidden">
                             <div
                               style={{ width: `${Math.max(2, c.percentage)}%` }}
                               className="h-full rounded-full bg-brand-500"
@@ -322,10 +322,10 @@ export default function AdminAnalyticsPage() {
 
         {/* Popular Pages & Conversion Activity */}
         <div className="space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="p-6 rounded-md bg-surface border border-border shadow-xs space-y-4">
             <div className="flex items-center gap-2">
               <FileText size={16} className="text-cyan-500" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-bold text-ink">
                 Popular Site Paths
               </h3>
             </div>
@@ -333,14 +333,14 @@ export default function AdminAnalyticsPage() {
             {popularPages.length === 0 ? (
               <p className="text-xs text-slate-400 py-6 text-center">No page traffic recorded.</p>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+              <div className="divide-y divide-border/80 text-xs">
                 {popularPages.map((p: any) => (
                   <div key={p.path} className="py-2.5 flex items-center justify-between">
-                    <span className="font-mono text-slate-900 dark:text-white truncate max-w-[170px]">
+                    <span className="font-mono text-ink truncate max-w-[170px]">
                       {p.path}
                     </span>
                     <div className="text-right font-mono text-[11px]">
-                      <span className="font-bold text-slate-900 dark:text-white">{p.views} views</span>
+                      <span className="font-bold text-ink">{p.views} views</span>
                       <span className="text-slate-400 ml-1.5">({p.uniqueVisitors} users)</span>
                     </div>
                   </div>
@@ -350,13 +350,13 @@ export default function AdminAnalyticsPage() {
           </div>
 
           {/* Privacy Guarantee Card */}
-          <div className="p-5 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+          <div className="p-5 rounded-md bg-slate-50 dark:bg-ink/40 border border-border space-y-2 text-xs">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck size={16} />
               <h4>Privacy-Preserving Telemetry</h4>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-              DocuNexa strictly avoids retaining raw client IP addresses. Geolocation is resolved via trusted edge headers (<code className="font-mono text-[10px] bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">x-vercel-ip-country</code>). Visitor identifiers are pseudonymized with daily rotating cryptographic salt hashes.
+            <p className="text-muted text-[11px] leading-relaxed">
+              DocuNexa strictly avoids retaining raw client IP addresses. Geolocation is resolved via trusted edge headers (<code className="font-mono text-[10px] bg-border px-1 py-0.5 rounded">x-vercel-ip-country</code>). Visitor identifiers are pseudonymized with daily rotating cryptographic salt hashes.
             </p>
           </div>
         </div>

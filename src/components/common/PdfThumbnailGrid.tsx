@@ -73,7 +73,7 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
   }, [fileBuffer, totalPages]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 max-h-[520px] overflow-y-auto rounded-2xl bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 max-h-[520px] overflow-y-auto rounded-md bg-slate-100/70 dark:bg-slate-800/40 border border-border/60">
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
         const isSelected = selectedSet.has(pageNum);
         const thumbUrl = renderedThumbnails[pageNum];
@@ -82,14 +82,14 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
           <div
             key={pageNum}
             onClick={() => onTogglePage && onTogglePage(pageNum)}
-            className={`group relative flex flex-col items-center rounded-xl p-2.5 transition-all cursor-pointer ${
+            className={`group relative flex flex-col items-center rounded-md p-2.5 transition-all cursor-pointer ${
               isSelected
-                ? 'bg-brand-50 dark:bg-brand-950/60 border-2 border-brand-500 shadow-md scale-[1.02]'
-                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-600 shadow-xs'
+                ? 'bg-brand/10 border-2 border-brand shadow-subtle scale-[1.02]'
+                : 'bg-surface border border-border hover:border-brand/40 shadow-subtle'
             }`}
           >
-            {/* Thumbnail Canvas / Image */}
-            <div className="relative w-full aspect-[3/4] bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden flex items-center justify-center border border-slate-100 dark:border-slate-700/50">
+            {/* Thumbnail Canvas / Image: authentic white document sheet */}
+            <div className="relative w-full aspect-[3/4] bg-white rounded-md overflow-hidden flex items-center justify-center border border-border/50">
               {thumbUrl ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -98,7 +98,7 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
                   className="w-full h-full object-contain pointer-events-none"
                 />
               ) : (
-                <span className="text-xs text-slate-400 font-mono">P.{pageNum}</span>
+                <span className="text-xs text-muted font-mono">P.{pageNum}</span>
               )}
 
               {/* Selection Checkmark Badge */}
@@ -106,8 +106,8 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
                 <div
                   className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-transform ${
                     isSelected
-                      ? 'bg-brand-600 text-white shadow-xs scale-100'
-                      : 'bg-slate-200/80 dark:bg-slate-700/80 text-transparent opacity-0 group-hover:opacity-100 scale-90'
+                      ? 'bg-brand text-brand-fg shadow-subtle scale-100'
+                      : 'bg-paper border border-border text-transparent opacity-0 group-hover:opacity-100 scale-90'
                   }`}
                 >
                   <Check size={14} />
@@ -116,7 +116,7 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
 
               {/* Organize Controls */}
               {actionType === 'organize' && (
-                <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-x-0 bottom-0 p-1.5 bg-ink/70 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   {onRotatePage && (
                     <button
                       onClick={(e) => {
@@ -124,7 +124,7 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
                         onRotatePage(pageNum);
                       }}
                       title="Rotate Page"
-                      className="p-1 rounded-md bg-white/90 text-slate-800 hover:bg-white transition-colors"
+                      className="p-1 rounded-md bg-surface text-ink hover:bg-paper transition-colors"
                     >
                       <RotateCw size={13} />
                     </button>
@@ -146,7 +146,7 @@ export const PdfThumbnailGrid: React.FC<PdfThumbnailGridProps> = ({
             </div>
 
             {/* Page Number Label */}
-            <span className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <span className="mt-2 text-xs font-semibold text-ink">
               Page {pageNum}
             </span>
           </div>

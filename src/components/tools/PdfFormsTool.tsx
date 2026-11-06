@@ -136,7 +136,7 @@ export function PdfFormsTool() {
     return (
       <div className="w-full space-y-4">
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+          <div className="p-4 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -175,7 +175,7 @@ export function PdfFormsTool() {
           {/* Side Panel Form Field Editor */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-ink">
                 Form Fields ({formFields ? formFields.length : 0})
               </label>
               {formFields && formFields.length > 0 && (
@@ -186,19 +186,19 @@ export function PdfFormsTool() {
             </div>
 
             {xfaNotice ? (
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-2">
+              <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-2">
                 <div className="flex items-center gap-1.5 font-bold">
                   <AlertTriangle size={15} />
                   <span>Adobe XFA Detected</span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-muted leading-relaxed">
                   {xfaNotice}
                 </p>
               </div>
             ) : hasScannedNotice ? (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-2">
-                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-                  <Info size={15} className="text-brand-500" />
+              <div className="p-4 rounded-md bg-paper border border-border text-xs text-muted space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-ink">
+                  <Info size={15} className="text-brand" />
                   <span>Flat Document (No AcroForms)</span>
                 </div>
                 <p className="leading-relaxed">
@@ -213,13 +213,13 @@ export function PdfFormsTool() {
                 {formFields.map((field) => (
                   <div
                     key={field.name}
-                    className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5 shadow-xs"
+                    className="p-3 rounded-md border border-border bg-surface space-y-1.5 shadow-xs"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                      <span className="text-xs font-bold text-ink truncate">
                         {field.name}
                       </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-paper text-slate-500 uppercase">
                         {field.type}
                       </span>
                     </div>
@@ -232,7 +232,7 @@ export function PdfFormsTool() {
                           onChange={(e) => handleFieldValueChange(field.name, e.target.checked)}
                           className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
                         />
-                        <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                        <span className="text-xs text-muted font-medium">
                           {Boolean(formValues[field.name]) ? 'Checked' : 'Unchecked'}
                         </span>
                       </label>
@@ -240,7 +240,7 @@ export function PdfFormsTool() {
                       <select
                         value={(formValues[field.name] as string) || ''}
                         onChange={(e) => handleFieldValueChange(field.name, e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-ink"
                       >
                         {field.options.map((opt, oIdx) => (
                           <option key={oIdx} value={opt}>
@@ -254,7 +254,7 @@ export function PdfFormsTool() {
                         value={(formValues[field.name] as string) || ''}
                         onChange={(e) => handleFieldValueChange(field.name, e.target.value)}
                         placeholder="Enter value..."
-                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-hidden focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-ink outline-hidden focus:ring-1 focus:ring-brand-500"
                       />
                     )}
                   </div>
@@ -270,10 +270,10 @@ export function PdfFormsTool() {
   return (
     <div className="w-full space-y-6">
       <div className="text-center max-w-2xl mx-auto space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
           Fill PDF Forms
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        <p className="text-sm text-muted leading-relaxed">
           Inspect, fill, and export interactive AcroForm PDF documents with real-time field preview and zero data loss.
         </p>
       </div>

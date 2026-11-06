@@ -29,14 +29,14 @@ export const FloatingSupportButton: React.FC = () => {
         <div
           role="dialog"
           aria-label="Support options"
-          className="mb-3 w-72 sm:w-80 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="mb-3 w-72 sm:w-80 rounded-md bg-white/95 dark:bg-slate-900/95  border border-border shadow-subtle p-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-200"
         >
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400">
+              <div className="p-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand">
                 <LifeBuoy size={16} />
               </div>
-              <span className="font-bold text-xs text-slate-900 dark:text-white">
+              <span className="font-bold text-xs text-ink">
                 DocuNexa Support
               </span>
             </div>
@@ -56,10 +56,10 @@ export const FloatingSupportButton: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
-              className="group flex items-center justify-between p-3 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-900/60 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors text-sky-900 dark:text-sky-200 cursor-pointer"
+              className="group flex items-center justify-between p-3 rounded-md bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-900/60 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors text-sky-900 dark:text-sky-200 cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-8 h-8 rounded-md bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Send size={15} className="rotate-45" />
                 </div>
                 <div>
@@ -77,15 +77,15 @@ export const FloatingSupportButton: React.FC = () => {
             <Link
               href="/support"
               onClick={() => setIsOpen(false)}
-              className="group flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-800 dark:text-slate-200"
+              className="group flex items-center justify-between p-3 rounded-md bg-paper border border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-ink"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-8 h-8 rounded-md bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <MessageSquare size={15} />
                 </div>
                 <div>
                   <div className="font-bold text-[11px]">Web Support Form</div>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <span className="text-[10px] text-muted">
                     Open a support ticket
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export const FloatingSupportButton: React.FC = () => {
             </Link>
           </div>
 
-          <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 pt-1">
+          <p className="text-[10px] text-center text-muted pt-1">
             Fast assistance for PDF tools & accounts
           </p>
         </div>
@@ -103,7 +103,7 @@ export const FloatingSupportButton: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Support & Help"
-        className="group relative flex items-center gap-2 px-4 py-3 rounded-full bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 transition-all hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
+        className="group relative flex items-center gap-2 px-4 py-3 rounded-full bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white shadow-subtle shadow-brand-500/30 hover:shadow-brand-500/40 transition-all hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
       >
         <span className="flex items-center justify-center">
           {isOpen ? <ChevronUp size={18} /> : <LifeBuoy size={18} className="animate-pulse" />}

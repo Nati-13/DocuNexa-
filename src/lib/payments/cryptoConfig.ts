@@ -157,7 +157,7 @@ export const CRYPTO_SELECTOR_OPTIONS: CryptoSelectorOption[] = [
     contractAddress: OFFICIAL_CONTRACTS.POLYGON_USDT,
     badgeText: 'Active',
     badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    indicatorColor: 'bg-purple-500',
+    indicatorColor: 'bg-[#8247E5]',
     tooltip: 'Active payment method: Verified on Polygon PoS network via Bybit deposit API.',
   },
   {

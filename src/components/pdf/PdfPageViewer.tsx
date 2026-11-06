@@ -134,7 +134,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
     <div className="relative flex items-center justify-center p-4 sm:p-8 min-h-[400px] w-full overflow-auto">
       {/* Canvas and Overlay Container */}
       <div
-        className="relative shadow-2xl rounded-lg bg-white overflow-hidden transition-all duration-150"
+        className="relative shadow-subtle rounded-lg bg-white overflow-hidden transition-all duration-150"
         style={{
           width: canvasDimensions.width || 'auto',
           height: canvasDimensions.height || 'auto',
@@ -144,8 +144,8 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
 
         {/* Loading overlay */}
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-xs text-white z-20 transition-opacity">
-            <RefreshCw size={28} className="animate-spin text-brand-400 mb-2" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-ink/40 text-brand-fg z-20 transition-opacity">
+            <RefreshCw size={28} className="animate-spin text-brand mb-2" />
             <span className="text-xs font-semibold tracking-wide">Rendering Page {currentPage}...</span>
           </div>
         )}

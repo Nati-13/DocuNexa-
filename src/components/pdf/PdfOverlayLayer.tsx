@@ -227,7 +227,7 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
           onPointerDown={handleWatermarkPointerDown}
           onPointerMove={handleWatermarkPointerMove}
           onPointerUp={handleWatermarkPointerUp}
-          className="absolute pointer-events-auto cursor-grab active:cursor-grabbing p-3 rounded-xl border border-dashed border-brand-500/80 bg-brand-500/10 hover:bg-brand-500/15 backdrop-blur-xs transition-shadow shadow-lg group touch-none"
+          className="absolute pointer-events-auto cursor-grab active:cursor-grabbing p-3 rounded-md border border-dashed border-brand-500/80 bg-brand-500/10 hover:bg-brand-500/15 -xs transition-shadow shadow-subtle group touch-none"
           style={{
             left: `${watermarkProps.position.x}px`,
             top: `${watermarkProps.position.y}px`,
@@ -272,7 +272,7 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
             onPointerDown={(e) => handleCropPointerDown(e, 'drag')}
             className="w-full h-full cursor-move flex items-center justify-center text-white/90 font-mono text-xs font-bold drop-shadow-md"
           >
-            <span className="bg-slate-900/80 px-2 py-1 rounded-md">
+            <span className="bg-ink/40 px-2 py-1 rounded-md">
               {Math.round(cropProps.rect.width / scale)} × {Math.round(cropProps.rect.height / scale)} pt
             </span>
           </div>
@@ -305,7 +305,7 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
           onPointerDown={handleSigPointerDown}
           onPointerMove={handleSigPointerMove}
           onPointerUp={handleSigPointerUp}
-          className="absolute pointer-events-auto cursor-grab active:cursor-grabbing p-2 rounded-xl border border-dashed border-indigo-500 bg-white/90 dark:bg-slate-900/90 shadow-xl touch-none group"
+          className="absolute pointer-events-auto cursor-grab active:cursor-grabbing p-2 rounded-md border border-dashed border-indigo-500 bg-surface shadow-subtle touch-none group"
           style={{
             left: `${signatureProps.rect.x}px`,
             top: `${signatureProps.rect.y}px`,
@@ -320,12 +320,12 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
               className="w-full h-full object-contain pointer-events-none"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center font-serif italic text-slate-800 dark:text-slate-200 text-lg">
+            <div className="w-full h-full flex items-center justify-center font-serif italic text-ink text-lg">
               {signatureProps.typedText || 'Signature'}
             </div>
           )}
 
-          <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md text-xs cursor-move">
+          <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-brand text-brand-fg text-white flex items-center justify-center shadow-md text-xs cursor-move">
             <Move size={12} />
           </div>
         </div>
@@ -370,7 +370,7 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
                 value={(widget.value as string) || ''}
                 onChange={(e) => widget.onChange(e.target.value)}
                 placeholder={widget.name}
-                className="w-full h-full px-1 text-xs bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 border-none outline-hidden font-medium"
+                className="w-full h-full px-1 text-xs bg-surface text-ink border-none outline-hidden font-medium"
               />
             )}
             {widget.type === 'checkbox' && (
@@ -387,7 +387,7 @@ export const PdfOverlayLayer: React.FC<PdfOverlayLayerProps> = ({
               <select
                 value={(widget.value as string) || ''}
                 onChange={(e) => widget.onChange(e.target.value)}
-                className="w-full h-full text-xs bg-white dark:bg-slate-900 border-none rounded"
+                className="w-full h-full text-xs bg-surface border-none rounded"
               >
                 {widget.options.map((opt, idx) => (
                   <option key={idx} value={opt}>

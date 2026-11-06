@@ -79,19 +79,19 @@ export default function AdminAuditLogPage() {
         );
       case 'payment_manually_approved':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold text-[10px]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20 font-bold text-[10px]">
             <CreditCard size={11} /> Payment Approved
           </span>
         );
       case 'payment_manually_rejected':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-ink font-bold text-[10px]">
             <CreditCard size={11} /> Payment Rejected
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-ink font-bold text-[10px]">
             <FileText size={11} /> {action}
           </span>
         );
@@ -103,10 +103,10 @@ export default function AdminAuditLogPage() {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
             Administrative Audit Log
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Immutable append-only record of all administrative overrides, coupon modifications, and payment reviews.
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function AdminAuditLogPage() {
               setActionFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="all">All Audit Actions</option>
             <option value="manual_grant_ad_free">Manual Grant Ad-Free</option>
@@ -133,10 +133,10 @@ export default function AdminAuditLogPage() {
       </div>
 
       {/* Logs Table */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      <div className="rounded-md bg-surface border border-border overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-12 text-center space-y-2">
-            <Loader2 className="animate-spin text-brand-500 mx-auto" size={24} />
+            <Loader2 className="animate-spin text-brand mx-auto" size={24} />
             <p className="text-xs text-slate-400">Loading audit history...</p>
           </div>
         ) : logs.length === 0 ? (
@@ -146,7 +146,7 @@ export default function AdminAuditLogPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-semibold">
+              <thead className="border-b border-border bg-paper text-muted font-semibold">
                 <tr>
                   <th className="py-3 px-4">Timestamp (UTC)</th>
                   <th className="py-3 px-4">Action</th>
@@ -155,7 +155,7 @@ export default function AdminAuditLogPage() {
                   <th className="py-3 px-4">Metadata</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+              <tbody className="divide-y divide-border text-ink">
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td className="py-3 px-4 whitespace-nowrap text-slate-500 font-mono text-[11px]">
@@ -164,10 +164,10 @@ export default function AdminAuditLogPage() {
                     <td className="py-3 px-4 whitespace-nowrap">
                       {getActionBadge(log.action)}
                     </td>
-                    <td className="py-3 px-4 font-mono text-slate-900 dark:text-white font-semibold">
+                    <td className="py-3 px-4 font-mono text-ink font-semibold">
                       {log.metadata?.adminEmail || log.admin_user_id || 'System'}
                     </td>
-                    <td className="py-3 px-4 max-w-xs text-slate-800 dark:text-slate-200 break-words">
+                    <td className="py-3 px-4 max-w-xs text-ink break-words">
                       {log.reason || '—'}
                     </td>
                     <td className="py-3 px-4 font-mono text-[11px] text-slate-500 max-w-sm truncate">
@@ -182,11 +182,11 @@ export default function AdminAuditLogPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-3 border-t border-slate-200 dark:border-slate-800 text-xs">
+          <div className="flex items-center justify-between p-3 border-t border-border text-xs">
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border disabled:opacity-50 transition-colors"
             >
               <ChevronLeft size={13} /> Previous
             </button>
@@ -196,7 +196,7 @@ export default function AdminAuditLogPage() {
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border disabled:opacity-50 transition-colors"
             >
               Next <ChevronRight size={13} />
             </button>

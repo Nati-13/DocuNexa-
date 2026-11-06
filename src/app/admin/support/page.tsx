@@ -148,10 +148,10 @@ export default function AdminSupportInboxPage() {
       {/* Title Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <LifeBuoy className="text-brand-500" /> Support Inbox & Telegram Console
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+            <LifeBuoy className="text-brand" /> Support Inbox & Telegram Console
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Review user inquiries, textbook issues, coupon questions, and bidirectional Telegram support routing.
           </p>
         </div>
@@ -161,7 +161,7 @@ export default function AdminSupportInboxPage() {
             href={TELEGRAM_BOT_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs hover:bg-sky-500/20 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 font-bold text-xs hover:bg-sky-500/20 transition-colors cursor-pointer"
           >
             <Send size={13} className="rotate-45" /> Telegram Bot: @docunexa_bot <ExternalLink size={12} />
           </a>
@@ -171,7 +171,7 @@ export default function AdminSupportInboxPage() {
       {/* Action Result Banner */}
       {actionAlert && (
         <div
-          className={`p-3.5 rounded-2xl text-xs font-semibold border flex items-center justify-between gap-2 animate-fade-in ${
+          className={`p-3.5 rounded-md text-xs font-semibold border flex items-center justify-between gap-2 animate-fade-in ${
             actionAlert.type === 'error'
               ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
               : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
@@ -191,11 +191,11 @@ export default function AdminSupportInboxPage() {
       )}
 
       {/* Telegram Bot Diagnostic & Control Console */}
-      <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
           <div className="flex items-center gap-2">
             <Bot className="text-sky-500" size={20} />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-ink">
               Telegram Bot Health & Outbox Diagnostics
             </h2>
             {tgLoading && <Loader2 size={13} className="animate-spin text-slate-400" />}
@@ -205,11 +205,11 @@ export default function AdminSupportInboxPage() {
             <button
               onClick={() => handleTelegramAction('sync_webhook')}
               disabled={tgActionLoading !== null}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-paper border border-border text-ink font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
               title="Registers the live webhook URL with Telegram"
             >
               {tgActionLoading === 'sync_webhook' ? (
-                <Loader2 size={12} className="animate-spin text-brand-500" />
+                <Loader2 size={12} className="animate-spin text-brand" />
               ) : (
                 <RefreshCw size={12} />
               )}
@@ -219,11 +219,11 @@ export default function AdminSupportInboxPage() {
             <button
               onClick={() => handleTelegramAction('sync_commands')}
               disabled={tgActionLoading !== null}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-900/60 text-brand-700 dark:text-brand-300 font-semibold text-xs hover:bg-brand-100 transition-colors disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-900/60 text-brand-700 dark:text-brand-300 font-semibold text-xs hover:bg-brand-100 transition-colors disabled:opacity-50 cursor-pointer"
               title="Registers official commands and Mini App menu button with Telegram"
             >
               {tgActionLoading === 'sync_commands' ? (
-                <Loader2 size={12} className="animate-spin text-brand-500" />
+                <Loader2 size={12} className="animate-spin text-brand" />
               ) : (
                 <Sparkles size={12} />
               )}
@@ -233,7 +233,7 @@ export default function AdminSupportInboxPage() {
             <button
               onClick={() => handleTelegramAction('test_notification')}
               disabled={tgActionLoading !== null}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200/60 dark:border-sky-900/60 text-sky-700 dark:text-sky-300 font-semibold text-xs hover:bg-sky-100 transition-colors disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-sky-50 dark:bg-sky-950/60 border border-sky-200/60 dark:border-sky-900/60 text-sky-700 dark:text-sky-300 font-semibold text-xs hover:bg-sky-100 transition-colors disabled:opacity-50 cursor-pointer"
               title="Sends a live diagnostic ping message to the configured owner chat"
             >
               {tgActionLoading === 'test_notification' ? (
@@ -247,7 +247,7 @@ export default function AdminSupportInboxPage() {
             <button
               onClick={() => handleTelegramAction('retry_failed')}
               disabled={tgActionLoading !== null}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-100 transition-colors disabled:opacity-50 cursor-pointer"
               title="Retries all pending or failed Telegram support notifications"
             >
               {tgActionLoading === 'retry_failed' ? (
@@ -262,7 +262,7 @@ export default function AdminSupportInboxPage() {
 
         {/* Configuration Status Indicators */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+          <div className="p-3 rounded-md bg-paper border border-border space-y-1">
             <span className="text-[10px] font-bold text-slate-400 uppercase">Bot Token</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.status?.configured ? (
@@ -277,7 +277,7 @@ export default function AdminSupportInboxPage() {
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+          <div className="p-3 rounded-md bg-paper border border-border space-y-1">
             <span className="text-[10px] font-bold text-slate-400 uppercase">Owner Chat</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.status?.ownerConfigured ? (
@@ -292,7 +292,7 @@ export default function AdminSupportInboxPage() {
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+          <div className="p-3 rounded-md bg-paper border border-border space-y-1">
             <span className="text-[10px] font-bold text-slate-400 uppercase">Webhook Secret</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.status?.webhookSecretConfigured ? (
@@ -307,7 +307,7 @@ export default function AdminSupportInboxPage() {
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+          <div className="p-3 rounded-md bg-paper border border-border space-y-1">
             <span className="text-[10px] font-bold text-slate-400 uppercase">Live Webhook</span>
             <div className="flex items-center gap-1.5 font-bold">
               {tgData?.webhookInfo?.configured ? (
@@ -325,10 +325,10 @@ export default function AdminSupportInboxPage() {
 
         {/* Live Delivery Metrics */}
         {tgData?.metrics && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-border">
             <div>
               <span className="text-[10px] font-semibold text-slate-400 uppercase">Total Tickets</span>
-              <p className="font-mono font-bold text-slate-900 dark:text-white text-base">
+              <p className="font-mono font-bold text-ink text-base">
                 {tgData.metrics.totalTickets}
               </p>
             </div>
@@ -355,7 +355,7 @@ export default function AdminSupportInboxPage() {
 
         {/* Sanitize and display webhook error if present */}
         {tgData?.webhookInfo?.info?.lastErrorMessage && (
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
             <AlertCircle size={14} className="shrink-0" />
             <span>
               Telegram Webhook Last Error: {tgData.webhookInfo.info.lastErrorMessage} (
@@ -370,25 +370,25 @@ export default function AdminSupportInboxPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-500">
             Open Requests
           </span>
-          <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">{openCount}</p>
+          <p className="text-2xl font-black text-ink font-mono">{openCount}</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-500">
             In Progress
           </span>
-          <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">{inProgressCount}</p>
+          <p className="text-2xl font-black text-ink font-mono">{inProgressCount}</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+        <div className="p-4 rounded-md bg-surface border border-border shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-500">
             Resolved / Closed
           </span>
-          <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">{resolvedCount}</p>
+          <p className="text-2xl font-black text-ink font-mono">{resolvedCount}</p>
         </div>
       </div>
 
@@ -401,14 +401,14 @@ export default function AdminSupportInboxPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tickets by subject, email, or name..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
         >
           <option value="all">All Statuses</option>
           <option value="open">Open</option>
@@ -420,7 +420,7 @@ export default function AdminSupportInboxPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
         >
           <option value="all">All Categories</option>
           <option value="Account">Account</option>
@@ -433,10 +433,10 @@ export default function AdminSupportInboxPage() {
       </div>
 
       {/* Tickets Table */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      <div className="rounded-md bg-surface border border-border overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-12 text-center space-y-2">
-            <Loader2 className="animate-spin text-brand-500 mx-auto" size={24} />
+            <Loader2 className="animate-spin text-brand mx-auto" size={24} />
             <p className="text-xs text-slate-400">Loading support tickets...</p>
           </div>
         ) : tickets.length === 0 ? (
@@ -446,7 +446,7 @@ export default function AdminSupportInboxPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-semibold">
+              <thead className="border-b border-border bg-paper text-muted font-semibold">
                 <tr>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Category</th>
@@ -456,7 +456,7 @@ export default function AdminSupportInboxPage() {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+              <tbody className="divide-y divide-border text-ink">
                 {tickets.map((t) => {
                   const isOpen = t.status === 'open';
                   const isInProgress = t.status === 'in_progress';
@@ -479,17 +479,17 @@ export default function AdminSupportInboxPage() {
                         )}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-paper text-ink font-semibold text-[11px]">
                           {t.category}
                         </span>
                       </td>
                       <td className="py-3 px-4">
                         <div>
-                          <p className="font-semibold text-slate-900 dark:text-white">{t.name}</p>
+                          <p className="font-semibold text-ink">{t.name}</p>
                           <p className="text-[11px] text-slate-400 font-mono">{t.email}</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4 max-w-xs truncate font-medium text-slate-900 dark:text-white">
+                      <td className="py-3 px-4 max-w-xs truncate font-medium text-ink">
                         {t.subject}
                       </td>
                       <td className="py-3 px-4 text-slate-400">
@@ -498,7 +498,7 @@ export default function AdminSupportInboxPage() {
                       <td className="py-3 px-4 text-right">
                         <button
                           onClick={() => handleOpenTicket(t)}
-                          className="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-900/60 text-brand-700 dark:text-brand-300 font-bold text-[11px] hover:bg-brand-100 transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-md bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-900/60 text-brand-700 dark:text-brand-300 font-bold text-[11px] hover:bg-brand-100 transition-colors cursor-pointer"
                         >
                           Review Ticket
                         </button>
@@ -514,8 +514,8 @@ export default function AdminSupportInboxPage() {
 
       {/* Review Ticket Modal */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40  animate-fade-in">
+          <div className="relative w-full max-w-2xl bg-surface border border-border rounded-md p-6 shadow-subtle space-y-5 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedTicket(null)}
               className="absolute top-5 right-5 p-1.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
@@ -527,30 +527,30 @@ export default function AdminSupportInboxPage() {
               <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-mono text-[10px] font-bold">
                 Ticket #{selectedTicket.id?.slice(0, 12)}
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-bold text-ink">
                 {selectedTicket.subject}
               </h3>
             </div>
 
             {/* Submitter Info */}
-            <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+            <div className="grid grid-cols-2 gap-3 p-4 rounded-md bg-paper text-xs">
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">Submitter</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{selectedTicket.name}</span>
+                <span className="font-semibold text-ink">{selectedTicket.name}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">Email / Contact</span>
-                <a href={`mailto:${selectedTicket.email}`} className="font-mono text-brand-600 dark:text-brand-400 hover:underline">
+                <a href={`mailto:${selectedTicket.email}`} className="font-mono text-brand hover:underline">
                   {selectedTicket.email}
                 </a>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">Category</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{selectedTicket.category}</span>
+                <span className="font-semibold text-ink">{selectedTicket.category}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">Submitted</span>
-                <span className="text-slate-600 dark:text-slate-300">
+                <span className="text-muted">
                   {new Date(selectedTicket.created_at).toLocaleString()}
                 </span>
               </div>
@@ -558,24 +558,24 @@ export default function AdminSupportInboxPage() {
 
             {/* Message Content */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+              <span className="text-xs font-bold text-ink block">
                 User Message:
               </span>
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+              <div className="p-4 rounded-md bg-paper border border-border text-xs text-ink whitespace-pre-wrap leading-relaxed">
                 {selectedTicket.message}
               </div>
             </div>
 
             {/* Status & Admin Notes */}
-            <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div className="space-y-4 pt-3 border-t border-border text-xs">
               <div className="space-y-1.5">
-                <label className="block font-bold text-slate-700 dark:text-slate-300">
+                <label className="block font-bold text-ink">
                   Update Ticket Status:
                 </label>
                 <select
                   value={updateStatus}
                   onChange={(e) => setUpdateStatus(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
@@ -585,7 +585,7 @@ export default function AdminSupportInboxPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block font-bold text-slate-700 dark:text-slate-300">
+                <label className="block font-bold text-ink">
                   Internal Admin Notes:
                 </label>
                 <textarea
@@ -593,12 +593,12 @@ export default function AdminSupportInboxPage() {
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Notes about resolutions, responses sent, or bug tickets opened..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
 
               {actionSuccess && (
-                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <div className="p-2.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                   <CheckCircle2 size={14} /> {actionSuccess}
                 </div>
               )}
@@ -606,7 +606,7 @@ export default function AdminSupportInboxPage() {
               <div className="flex items-center justify-between pt-2">
                 <a
                   href={`mailto:${selectedTicket.email}?subject=Re: ${encodeURIComponent(selectedTicket.subject)}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-paper hover:bg-slate-200 text-ink font-bold transition-colors cursor-pointer"
                 >
                   <Mail size={13} /> Reply via Email
                 </a>
@@ -615,7 +615,7 @@ export default function AdminSupportInboxPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedTicket(null)}
-                    className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 font-medium cursor-pointer"
+                    className="px-4 py-2 rounded-md text-muted hover:bg-slate-100 font-medium cursor-pointer"
                   >
                     Close
                   </button>
@@ -623,7 +623,7 @@ export default function AdminSupportInboxPage() {
                     type="button"
                     disabled={updating}
                     onClick={handleSaveTicket}
-                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-md bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                   >
                     {updating ? <Loader2 size={13} className="animate-spin" /> : null}
                     Save Changes

@@ -45,14 +45,14 @@ export function QrCode({ value, size = 150, className = '' }: QrCodeProps) {
     return (
       <div
         style={{ width: size, height: size }}
-        className={`inline-flex items-center justify-center p-2 bg-white rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-pulse ${className}`}
+        className={`inline-flex items-center justify-center p-2 bg-white rounded-md border border-border shadow-sm animate-pulse ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`inline-block p-2 bg-white rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm ${className}`}
+      className={`inline-block p-2 bg-white rounded-md border border-border shadow-sm ${className}`}
       dangerouslySetInnerHTML={{ __html: svgHtml }}
     />
   );

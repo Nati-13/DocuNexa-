@@ -70,10 +70,10 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
-      className={`group relative rounded-3xl border-2 border-dashed p-8 md:p-12 text-center cursor-pointer transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
+      className={`group relative rounded-md border-2 border-dashed p-8 md:p-12 text-center cursor-pointer transition-all duration-200 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
         isDragOver
           ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 scale-[1.01]'
-          : 'border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
+          : 'border-border bg-white/70 dark:bg-ink/40 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
       } shadow-sm hover:shadow-md ${className}`}
     >
       <input
@@ -89,28 +89,28 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
 
       <div className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
         {/* Upload Icon Badge */}
-        <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-200">
+        <div className="w-16 h-16 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-200">
           <UploadCloud size={32} />
         </div>
 
         {/* Text */}
         <div>
-          <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          <h3 className="text-lg md:text-xl font-bold text-ink group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
             {title}
           </h3>
-          <p className="text-xs md:text-sm text-slate-700 dark:text-slate-200 mt-1">
+          <p className="text-xs md:text-sm text-ink mt-1">
             {subtitle}
           </p>
         </div>
 
         {/* Action Button Indicator */}
-        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 group-hover:bg-brand-700 text-white text-xs md:text-sm font-semibold shadow-sm transition-colors">
+        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-brand-600 group-hover:bg-brand-700 text-white text-xs md:text-sm font-semibold shadow-sm transition-colors">
           <Plus size={16} />
           <span>Choose {multiple ? 'Files' : 'File'}</span>
         </div>
 
         {/* Formats & Privacy Guarantee */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px] text-slate-600 dark:text-slate-300">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px] text-muted">
           <span>{supportedFormats}</span>
           <span className="hidden sm:inline">•</span>
           <span className="text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-1">

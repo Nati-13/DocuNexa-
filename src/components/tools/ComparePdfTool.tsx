@@ -134,14 +134,14 @@ export function ComparePdfTool() {
       {comparisonResult ? (
         <div className="space-y-6">
           {/* Summary Header */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-border">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-lg font-bold text-ink flex items-center gap-2">
                   <CheckCircle2 size={20} className="text-emerald-500" />
                   Comparison Complete
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   Audited {Math.max(comparisonResult.docA.pageCount, comparisonResult.docB.pageCount)} pages across both documents.
                 </p>
               </div>
@@ -150,14 +150,14 @@ export function ComparePdfTool() {
                 <button
                   type="button"
                   onClick={downloadReport}
-                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+                  className="px-4 py-2 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
                 >
                   <Download size={14} /> Download Report (.md)
                 </button>
                 <button
                   type="button"
                   onClick={resetAll}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                  className="px-3 py-2 rounded-md border border-border hover:bg-slate-100 dark:hover:bg-slate-800 text-ink text-xs font-semibold transition-colors flex items-center gap-1.5"
                 >
                   <RefreshCw size={14} /> New Compare
                 </button>
@@ -166,11 +166,11 @@ export function ComparePdfTool() {
 
             {/* Metrics cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800">
+              <div className="p-4 rounded-md bg-paper border border-slate-200/60 dark:border-slate-800">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Document A (Original)
                 </span>
-                <h4 className="text-base font-bold text-slate-900 dark:text-white line-clamp-1 mt-1">
+                <h4 className="text-base font-bold text-ink line-clamp-1 mt-1">
                   {comparisonResult.docA.name}
                 </h4>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
@@ -180,11 +180,11 @@ export function ComparePdfTool() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800">
+              <div className="p-4 rounded-md bg-paper border border-slate-200/60 dark:border-slate-800">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Document B (Modified)
                 </span>
-                <h4 className="text-base font-bold text-slate-900 dark:text-white line-clamp-1 mt-1">
+                <h4 className="text-base font-bold text-ink line-clamp-1 mt-1">
                   {comparisonResult.docB.name}
                 </h4>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
@@ -194,15 +194,15 @@ export function ComparePdfTool() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-brand-50/50 dark:bg-brand-950/30 border border-brand-200/50 dark:border-brand-800/50">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <div className="p-4 rounded-md bg-brand-50/50 dark:bg-brand-950/30 border border-brand-200/50 dark:border-brand-800/50">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-brand">
                   Detected Discrepancies
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-2xl font-black text-brand-700 dark:text-brand-300">
                     {comparisonResult.totalChangesCount}
                   </span>
-                  <span className="text-xs text-brand-600 dark:text-brand-400">
+                  <span className="text-xs text-brand">
                     {comparisonResult.totalChangesCount === 1 ? 'changed page' : 'changed pages'}
                   </span>
                 </div>
@@ -216,18 +216,18 @@ export function ComparePdfTool() {
 
             {/* Filter Toggle */}
             <div className="flex items-center justify-between pt-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted">
                 Page-by-Page Audit Breakdown
               </span>
 
-              <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
+              <div className="flex rounded-md bg-paper p-1">
                 <button
                   type="button"
                   onClick={() => setFilterMode('differences')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     filterMode === 'differences'
-                      ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'bg-surface text-brand shadow-xs'
+                      : 'text-muted'
                   }`}
                 >
                   Differences Only ({comparisonResult.totalChangesCount})
@@ -237,8 +237,8 @@ export function ComparePdfTool() {
                   onClick={() => setFilterMode('all')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     filterMode === 'all'
-                      ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'bg-surface text-brand shadow-xs'
+                      : 'text-muted'
                   }`}
                 >
                   All Pages ({comparisonResult.pageDiffs.length})
@@ -247,7 +247,7 @@ export function ComparePdfTool() {
             </div>
 
             {/* Differences Table */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="border border-border rounded-md overflow-hidden divide-y divide-border">
               {filteredDiffs.length === 0 ? (
                 <div className="p-8 text-center text-slate-500 text-xs">
                   ✓ No differences found for this filter. Both documents appear identical!
@@ -257,7 +257,7 @@ export function ComparePdfTool() {
                   <div key={diff.pageNumber} className="p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">
+                        <span className="font-bold text-xs text-ink">
                           Page {diff.pageNumber}
                         </span>
                         <span
@@ -267,7 +267,7 @@ export function ComparePdfTool() {
                               : diff.status === 'modified'
                               ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'
                               : diff.status === 'added'
-                              ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400'
+                              ? 'bg-brand/10 text-brand'
                               : 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
                           }`}
                         >
@@ -280,16 +280,16 @@ export function ComparePdfTool() {
                     </div>
 
                     {diff.status !== 'identical' && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200/50 dark:border-slate-800">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] bg-paper p-3 rounded-md border border-slate-200/50 dark:border-slate-800">
                         <div>
                           <span className="font-bold text-slate-500 block mb-1">Snippet A (Original):</span>
-                          <p className="font-mono text-slate-700 dark:text-slate-300">
+                          <p className="font-mono text-ink">
                             {diff.snippetA || '<Empty or missing page>'}
                           </p>
                         </div>
                         <div>
                           <span className="font-bold text-slate-500 block mb-1">Snippet B (Modified):</span>
-                          <p className="font-mono text-slate-700 dark:text-slate-300">
+                          <p className="font-mono text-ink">
                             {diff.snippetB || '<Empty or missing page>'}
                           </p>
                         </div>
@@ -309,7 +309,7 @@ export function ComparePdfTool() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Document A */}
             <div className="space-y-3">
-              <span className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              <span className="block text-xs font-bold uppercase tracking-wider text-ink">
                 Document A (Original Baseline)
               </span>
               {!fileA ? (
@@ -321,11 +321,11 @@ export function ComparePdfTool() {
                   subtitle="Select first PDF for comparison"
                 />
               ) : (
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div className="p-4 rounded-md bg-surface border border-border shadow-sm flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText size={20} className="text-brand-600" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                      <h4 className="text-xs font-bold text-ink line-clamp-1">
                         {fileA.name}
                       </h4>
                       <span className="text-[11px] text-slate-400">
@@ -349,7 +349,7 @@ export function ComparePdfTool() {
 
             {/* Document B */}
             <div className="space-y-3">
-              <span className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              <span className="block text-xs font-bold uppercase tracking-wider text-ink">
                 Document B (Modified Version)
               </span>
               {!fileB ? (
@@ -361,11 +361,11 @@ export function ComparePdfTool() {
                   subtitle="Select second PDF to compare against Document A"
                 />
               ) : (
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div className="p-4 rounded-md bg-surface border border-border shadow-sm flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText size={20} className="text-emerald-600" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                      <h4 className="text-xs font-bold text-ink line-clamp-1">
                         {fileB.name}
                       </h4>
                       <span className="text-[11px] text-slate-400">
@@ -389,7 +389,7 @@ export function ComparePdfTool() {
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -401,10 +401,10 @@ export function ComparePdfTool() {
               type="button"
               disabled={!isFormValid || isProcessing}
               onClick={handleCompare}
-              className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
+              className={`w-full py-4 rounded-md font-bold text-sm flex items-center justify-center gap-2 shadow-subtle transition-all ${
                 isFormValid
                   ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/25 cursor-pointer transform hover:-translate-y-0.5'
-                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
+                  : 'bg-border text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
               }`}
             >
               <GitCompare size={18} />
@@ -412,7 +412,7 @@ export function ComparePdfTool() {
             </button>
 
             {!isFormValid && (
-              <p className="text-center text-[11px] text-slate-600 dark:text-slate-300 mt-2">
+              <p className="text-center text-[11px] text-muted mt-2">
                 Please upload both Document A and Document B to enable comparison
               </p>
             )}

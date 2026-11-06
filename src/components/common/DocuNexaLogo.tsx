@@ -27,8 +27,8 @@ export const DocuNexaLogo: React.FC<LogoProps> = ({
   return (
     <Link href="/" aria-label="DocuNexa" className={`inline-flex items-center gap-3 group select-none ${className}`}>
       {/* Brand Icon */}
-      <div className={`relative flex items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-rose-500 p-0.5 shadow-md shadow-brand-500/20 transition-all duration-300 group-hover:shadow-brand-500/35 group-hover:scale-105 ${iconSizes[size]}`}>
-        <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[10px] flex items-center justify-center p-1.5">
+      <div className={`relative flex items-center justify-center rounded-md bg-brand text-brand-fg p-0.5 transition-all duration-300 group-hover:scale-105 ${iconSizes[size]}`}>
+        <div className="w-full h-full bg-surface rounded-[10px] flex items-center justify-center p-1.5">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -36,7 +36,7 @@ export const DocuNexaLogo: React.FC<LogoProps> = ({
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="w-full h-full text-brand-600 dark:text-brand-400 transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-full text-brand transition-transform duration-300 group-hover:scale-110"
           >
             {/* Document sheet with smart layered fold */}
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
@@ -53,11 +53,11 @@ export const DocuNexaLogo: React.FC<LogoProps> = ({
 
       {/* Brand Text */}
       <div className="flex flex-col leading-none">
-        <span className={`font-bold tracking-tight text-slate-900 dark:text-white ${textSizes[size]}`}>
-          Docu<span className="text-brand-600 dark:text-brand-400">Nexa</span>
+        <span className={`font-bold tracking-tight text-ink ${textSizes[size]}`}>
+          Docu<span className="text-brand">Nexa</span>
         </span>
         {showTagline && (
-          <span className="text-[10px] font-medium tracking-wide text-slate-600 dark:text-slate-300 mt-0.5">
+          <span className="text-[10px] font-medium tracking-wide text-muted mt-0.5">
             Every PDF tool. One simple workspace.
           </span>
         )}

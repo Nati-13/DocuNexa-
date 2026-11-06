@@ -106,7 +106,7 @@ export default function SubprocessorsPage() {
     >
       {/* 1. Overview */}
       <section id="overview" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           1. Subprocessor Policy Overview
         </h2>
         <p>
@@ -121,10 +121,10 @@ export default function SubprocessorsPage() {
 
       {/* 2. Zero Document Transfer Guarantee */}
       <section id="zero-document-transfer" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           2. Zero Document Transfer Guarantee &amp; Data Classification
         </h2>
-        <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm text-emerald-950 dark:text-emerald-100 space-y-3">
+        <div className="p-5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm text-emerald-950 dark:text-emerald-100 space-y-3">
           <p className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
             <ShieldCheck size={16} />
             No Subprocessor Receives Your Document Files, Extracted Text, or Page Images
@@ -153,31 +153,31 @@ export default function SubprocessorsPage() {
 
       {/* 3. List */}
       <section id="active-subprocessors" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           3. List of Active Subprocessors
         </h2>
         <div className="space-y-4">
           {SUBPROCESSORS.map((sub, idx) => (
             <div
               key={idx}
-              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs sm:text-sm"
+              className="p-5 rounded-md bg-surface border border-border space-y-2 text-xs sm:text-sm"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                <span className="font-bold text-slate-900 dark:text-white text-base">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
+                <span className="font-bold text-ink text-base">
                   {sub.name}
                 </span>
                 <a
                   href={sub.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
                 >
                   <span>Visit Provider</span>
                   <ExternalLink size={12} />
                 </a>
               </div>
               <p><strong>Service Role:</strong> {sub.role}</p>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-muted">
                 <strong>Data Categories:</strong> {sub.dataProcessed}
               </p>
               <p className="text-slate-500 dark:text-slate-500 text-xs">
@@ -190,10 +190,10 @@ export default function SubprocessorsPage() {
 
       {/* 4. Data Transfers */}
       <section id="data-transfers" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           4. International Data Transfers &amp; Safeguards
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted leading-relaxed">
           Where personal account metadata or technical telemetry crosses international borders, transfers are governed by
           Standard Contractual Clauses (SCCs), robust Data Processing Addenda (DPAs), and encryption in transit (TLS 1.3)
           and at rest (AES-256).
@@ -202,23 +202,23 @@ export default function SubprocessorsPage() {
 
       {/* 5. Updates */}
       <section id="updates" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           5. Subprocessor Notification &amp; Updates
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted leading-relaxed">
           DocuNexa periodically evaluates its vendor relationships to guarantee maximum performance and security.
           Material additions or replacements to this subprocessor directory will be published here with an updated effective date.
         </p>
       </section>
 
       {/* 6. Contact */}
-      <section id="contact" className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+      <section id="contact" className="space-y-4 pt-4 border-t border-border">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           6. Privacy &amp; Vendor Inquiries
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           For questions regarding our vendors or data processing addenda, contact:{' '}
-          <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+          <a href="mailto:docunexa.security@gmail.com" className="text-brand font-semibold hover:underline">
             docunexa.security@gmail.com
           </a>.
         </p>

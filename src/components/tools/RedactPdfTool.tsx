@@ -185,7 +185,7 @@ export function RedactPdfTool() {
     <div className="space-y-8">
       {resultFiles ? (
         <div className="space-y-6">
-          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
+          <div className="p-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
             <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
               <h4 className="font-bold text-sm sm:text-base">
@@ -215,16 +215,16 @@ export function RedactPdfTool() {
           ) : (
             <div className="space-y-6">
               {/* File Info */}
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                  <div className="w-12 h-12 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand flex items-center justify-center font-bold">
                     <FileText size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">
+                    <h3 className="text-sm font-bold text-ink line-clamp-1">
                       {file.name}
                     </h3>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <div className="flex items-center gap-3 text-xs text-muted mt-0.5">
                       <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
                       <span>•</span>
                       <span>{totalPages} {totalPages === 1 ? 'page' : 'pages'}</span>
@@ -235,7 +235,7 @@ export function RedactPdfTool() {
                 <button
                   type="button"
                   onClick={resetAll}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
                 >
                   <RefreshCw size={13} />
                   Change PDF
@@ -243,7 +243,7 @@ export function RedactPdfTool() {
               </div>
 
               {/* Security Limitation Notice & Mode Selector */}
-              <div className="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-3 text-xs">
+              <div className="p-5 rounded-md bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-3 text-xs">
                 <div className="flex items-start gap-3 text-amber-900 dark:text-amber-200">
                   <AlertTriangle size={18} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                   <div className="space-y-1">
@@ -265,17 +265,17 @@ export function RedactPdfTool() {
                     <button
                       type="button"
                       onClick={() => setRedactionMode('sanitize')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-3 rounded-md border text-left transition-all ${
                         redactionMode === 'sanitize'
-                          ? 'border-brand-600 bg-white dark:bg-slate-900 shadow-sm text-brand-700 dark:text-brand-300 ring-2 ring-brand-500/20'
-                          : 'border-amber-200 dark:border-amber-800/50 bg-amber-100/40 dark:bg-amber-950/20 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
+                          ? 'border-brand-600 bg-surface shadow-sm text-brand-700 dark:text-brand-300 ring-2 ring-brand-500/20'
+                          : 'border-amber-200 dark:border-amber-800/50 bg-amber-100/40 dark:bg-amber-950/20 text-ink hover:bg-white dark:hover:bg-slate-900'
                       }`}
                     >
                       <div className="font-bold text-xs flex items-center gap-1.5">
                         <CheckCircle2 size={13} className={redactionMode === 'sanitize' ? 'text-brand-600' : 'text-slate-400'} />
                         Limited Text Redaction (Experimental)
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-muted mt-0.5">
                         Strips matching font operators & text streams from page content. Images and Form XObjects may remain.
                       </p>
                     </button>
@@ -283,17 +283,17 @@ export function RedactPdfTool() {
                     <button
                       type="button"
                       onClick={() => setRedactionMode('overlay')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-3 rounded-md border text-left transition-all ${
                         redactionMode === 'overlay'
-                          ? 'border-amber-600 bg-white dark:bg-slate-900 shadow-sm text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20'
-                          : 'border-amber-200 dark:border-amber-800/50 bg-amber-100/40 dark:bg-amber-950/20 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
+                          ? 'border-amber-600 bg-surface shadow-sm text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20'
+                          : 'border-amber-200 dark:border-amber-800/50 bg-amber-100/40 dark:bg-amber-950/20 text-ink hover:bg-white dark:hover:bg-slate-900'
                       }`}
                     >
                       <div className="font-bold text-xs flex items-center gap-1.5">
                         <AlertTriangle size={13} className={redactionMode === 'overlay' ? 'text-amber-600' : 'text-slate-400'} />
                         Cover with Black Box (Visual Only)
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-muted mt-0.5">
                         Draws visual blackout rectangles. Underlying text and image streams remain completely intact.
                       </p>
                     </button>
@@ -302,17 +302,17 @@ export function RedactPdfTool() {
               </div>
 
               {/* Redaction Areas Configuration */}
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
-                    <ShieldAlert size={18} className="text-brand-600 dark:text-brand-400" />
+              <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-border">
+                  <h3 className="font-bold text-sm sm:text-base text-ink flex items-center gap-2">
+                    <ShieldAlert size={18} className="text-brand" />
                     Configure Redaction Zones ({redactions.length})
                   </h3>
 
                   <button
                     type="button"
                     onClick={addRedaction}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900 text-brand-600 dark:text-brand-400 text-xs font-bold transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900 text-brand text-xs font-bold transition-colors"
                   >
                     <Plus size={14} /> Add Redaction Zone
                   </button>
@@ -322,10 +322,10 @@ export function RedactPdfTool() {
                   {redactions.map((redaction, index) => (
                     <div
                       key={redaction.id}
-                      className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-3"
+                      className="p-4 rounded-md bg-paper border border-slate-200/70 dark:border-slate-800 space-y-3"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <span className="text-xs font-bold text-ink">
                           Zone #{index + 1}: {redaction.label}
                         </span>
                         {redactions.length > 1 && (
@@ -342,13 +342,13 @@ export function RedactPdfTool() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-medium text-muted mb-1">
                             Target Page
                           </label>
                           <select
                             value={redaction.page}
                             onChange={(e) => updateRedaction(redaction.id, { page: Number(e.target.value) })}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-surface text-xs text-ink"
                           >
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                               <option key={p} value={p}>
@@ -359,13 +359,13 @@ export function RedactPdfTool() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-medium text-muted mb-1">
                             Zone Preset
                           </label>
                           <select
                             value={redaction.preset}
                             onChange={(e) => updateRedaction(redaction.id, { preset: e.target.value as any })}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-surface text-xs text-ink"
                           >
                             <option value="top-header">Header Zone (Top)</option>
                             <option value="bottom-footer">Footer Zone (Bottom)</option>
@@ -374,14 +374,14 @@ export function RedactPdfTool() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-medium text-muted mb-1">
                             Custom Label
                           </label>
                           <input
                             type="text"
                             value={redaction.label}
                             onChange={(e) => updateRedaction(redaction.id, { label: e.target.value })}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-surface text-xs text-ink"
                           />
                         </div>
                       </div>
@@ -395,10 +395,10 @@ export function RedactPdfTool() {
                     type="button"
                     disabled={!isFormValid || isProcessing}
                     onClick={handleRedactPdf}
-                    className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
+                    className={`w-full py-4 rounded-md font-bold text-sm flex items-center justify-center gap-2 shadow-subtle transition-all ${
                       isFormValid
                         ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/25 cursor-pointer transform hover:-translate-y-0.5'
-                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
+                        : 'bg-border text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                     }`}
                   >
                     <ShieldAlert size={18} />

@@ -48,7 +48,7 @@ export const PdfWorkspaceToolbar: React.FC<PdfWorkspaceToolbarProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-900/90 text-white rounded-2xl shadow-xl backdrop-blur-md border border-slate-700/60 select-none text-xs z-20">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-900/90 text-white rounded-md shadow-subtle  border border-slate-700/60 select-none text-xs z-20">
       {/* Page Navigation */}
       <div className="flex items-center gap-1.5">
         <button

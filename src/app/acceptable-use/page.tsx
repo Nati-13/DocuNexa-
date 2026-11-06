@@ -43,13 +43,13 @@ export default function AcceptableUsePage() {
     >
       {/* 1. Purpose */}
       <section id="purpose" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           1. Purpose &amp; Global Application
         </h2>
         <p>
           This Acceptable Use Policy (&quot;AUP&quot;) outlines prohibited uses of DocuNexa (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;)
           available at{' '}
-          <a href="https://docunexa.pro.et" className="text-brand-600 dark:text-brand-400 hover:underline">
+          <a href="https://docunexa.pro.et" className="text-brand hover:underline">
             https://docunexa.pro.et
           </a>.
         </p>
@@ -62,18 +62,18 @@ export default function AcceptableUsePage() {
 
       {/* 2. Malicious Content */}
       <section id="malicious-content" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
           <FileWarning size={20} className="text-rose-500 shrink-0" />
           2. Malware, Exploits &amp; Weaponized Files
         </h2>
         <p>You may not load, convert, host, or disseminate through DocuNexa:</p>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li>PDFs containing weaponized JavaScript streams, buffer overflow payloads, or known Adobe Acrobat / PDF reader vulnerabilities (CVE exploits).</li>
           <li>Polyglot files (files disguised as legitimate PDFs that execute binary code or shell scripts in alternative contexts).</li>
           <li>Viruses, worms, spyware, trojans, ransomware, keyloggers, or other malicious payloads.</li>
           <li>Corrupted files intentionally engineered to induce browser memory exhaustion, denial-of-service, or unhandled crashes.</li>
         </ul>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-muted">
           DocuNexa tools inspect binary magic bytes (<code>%PDF-</code>) and sanitize output filenames to protect users against path traversal.
           Any intentional attempt to bypass these filters is a severe violation.
         </p>
@@ -81,12 +81,12 @@ export default function AcceptableUsePage() {
 
       {/* 3. Unlawful Content */}
       <section id="illegal-content" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
           <Ban size={20} className="text-rose-500 shrink-0" />
           3. Unlawful &amp; Harmful Content
         </h2>
         <p>You agree not to use DocuNexa to process, alter, or generate:</p>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li><strong>Child Sexual Abuse Material (CSAM):</strong> Child sexual exploitation or abuse imagery of any kind. Such activity is strictly prohibited and will be reported to international law enforcement (including NCMEC).</li>
           <li><strong>Violent Extremism &amp; Terrorism:</strong> Materials promoting terrorist groups, violent extremism, weapons of mass destruction, or instructional guides for mass harm.</li>
           <li><strong>Fraudulent &amp; Forged Credentials:</strong> Forged government identity cards, counterfeit passports, fabricated financial audits, fake academic degrees, or fraudulent medical records intended to deceive third parties.</li>
@@ -96,14 +96,14 @@ export default function AcceptableUsePage() {
 
       {/* 4. Intellectual Property */}
       <section id="intellectual-property" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           4. Copyright &amp; Intellectual Property Infringement
         </h2>
         <p>
           While you retain 100% ownership of your original materials, you must possess the necessary rights, licenses, or fair-use
           authorizations to process documents through DocuNexa:
         </p>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li>You may not use DocuNexa to strip watermarks, remove copyright notices, or unlock encrypted documents without authorization from the legitimate copyright holder.</li>
           <li>Commercial piracy or unauthorized distribution of proprietary textbooks, commercial software manuals, or copyrighted books is strictly prohibited.</li>
         </ul>
@@ -111,24 +111,24 @@ export default function AcceptableUsePage() {
 
       {/* 5. System Abuse */}
       <section id="system-abuse" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           5. Platform Integrity, Probing &amp; Automated Abuse
         </h2>
         <p>You may not interfere with the proper operation of DocuNexa or attempt to bypass security boundaries:</p>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li><strong>Denial of Service (DoS/DDoS):</strong> Flooding HTTP endpoints, launching distributed traffic attacks, or orchestrating synthetic query storms designed to degrade performance for other visitors.</li>
           <li><strong>Aggressive Scraping:</strong> Automated scraping, spiders, or crawlers that disregard <code>robots.txt</code> or exceed reasonable human browsing thresholds.</li>
-          <li><strong>Probing &amp; Exploitation:</strong> Port scanning, vulnerability fuzzing, brute-forcing login endpoints, or unauthorized security testing against production infrastructure outside of our <Link href="/security-policy" className="text-brand-600 dark:text-brand-400 hover:underline">Vulnerability Disclosure Safe Harbor</Link>.</li>
+          <li><strong>Probing &amp; Exploitation:</strong> Port scanning, vulnerability fuzzing, brute-forcing login endpoints, or unauthorized security testing against production infrastructure outside of our <Link href="/security-policy" className="text-brand hover:underline">Vulnerability Disclosure Safe Harbor</Link>.</li>
           <li><strong>Circumvention:</strong> Manipulating client-side headers, altering IP origin headers, or bypassing API rate-limit throttles.</li>
         </ul>
       </section>
 
       {/* 6. Payment Fraud */}
       <section id="payment-fraud" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           6. Payment Fraud &amp; Coupon Exploitation
         </h2>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li>Falsifying blockchain transaction hashes, broadcasting double-spend attempts, or submitting fraudulent payment claims.</li>
           <li>Automated harvesting, brute-forcing, or unauthorized exploitation of promotional coupon codes.</li>
           <li>Creating multiple throwaway accounts solely to circumvent single-use promotional coupon limits.</li>
@@ -137,7 +137,7 @@ export default function AcceptableUsePage() {
 
       {/* 7. Privacy Violations */}
       <section id="privacy-violations" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           7. Privacy Violations &amp; Harassment
         </h2>
         <p>
@@ -148,12 +148,12 @@ export default function AcceptableUsePage() {
 
       {/* 8. Enforcement */}
       <section id="enforcement" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
           <UserX size={20} className="text-rose-500 shrink-0" />
           8. Investigation &amp; Enforcement Procedures
         </h2>
         <p>DocuNexa actively protects its platform and community:</p>
-        <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-muted">
           <li>
             <strong>Automated Rate Limiting:</strong> Abuse detection algorithms automatically throttle IP addresses that exceed safe request thresholds or trigger repeated 4xx/5xx security errors.
           </li>
@@ -168,27 +168,27 @@ export default function AcceptableUsePage() {
 
       {/* 9. Reporting */}
       <section id="reporting" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           9. How to Report Abuse or Violations
         </h2>
         <p>
           If you discover content, activity, or an account on DocuNexa that violates this Acceptable Use Policy, please report it immediately:
         </p>
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-mono text-slate-700 dark:text-slate-300 space-y-1">
-          <p><strong>Abuse Email:</strong> <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 hover:underline">docunexa.security@gmail.com</a></p>
+        <div className="p-4 rounded-md bg-surface border border-border text-xs sm:text-sm font-mono text-ink space-y-1">
+          <p><strong>Abuse Email:</strong> <a href="mailto:docunexa.security@gmail.com" className="text-brand hover:underline">docunexa.security@gmail.com</a></p>
           <p><strong>Subject Line:</strong> [AUP Violation Report] &lt;Brief Description&gt;</p>
           <p><strong>Required Details:</strong> URL of the affected tool, description of the incident, timestamps, and supporting logs or screenshots.</p>
         </div>
       </section>
 
       {/* 10. Contact */}
-      <section id="contact" className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+      <section id="contact" className="space-y-4 pt-4 border-t border-border">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           10. Abuse Response Contact
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           Our abuse response team aims to investigate legitimate reports within an estimated target window of 24 to 48 business hours.
-          Contact: <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">docunexa.security@gmail.com</a>.
+          Contact: <a href="mailto:docunexa.security@gmail.com" className="text-brand font-semibold hover:underline">docunexa.security@gmail.com</a>.
         </p>
       </section>
     </LegalPageLayout>

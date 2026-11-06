@@ -61,25 +61,25 @@ export function LegalPageLayout({
   children,
 }: LegalPageLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-12 md:py-20 transition-colors">
+    <div className="min-h-screen bg-paper text-ink py-12 md:py-20 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Navigation Breadcrumb */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4 text-xs text-muted">
           <div className="flex items-center gap-2">
-            <Link href="/" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            <Link href="/" className="hover:text-brand transition-colors">
               Home
             </Link>
             <span>/</span>
-            <Link href="/legal" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            <Link href="/legal" className="hover:text-brand transition-colors">
               Legal Center
             </Link>
             <span>/</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">{title}</span>
+            <span className="font-semibold text-ink">{title}</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/legal"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 font-medium transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-slate-300 dark:hover:border-slate-700 text-ink font-medium transition-all"
             >
               <ArrowLeft size={13} />
               <span>All Policies</span>
@@ -90,23 +90,23 @@ export function LegalPageLayout({
 
         {/* Page Header */}
         <div className="space-y-4 max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand border border-brand-200 dark:border-brand-800 text-xs font-bold uppercase tracking-wider">
             <BadgeIcon size={14} />
             <span>{badge}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-ink">
             {title}
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-sm sm:text-base text-muted leading-relaxed">
             {subtitle}
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-muted pt-1">
             <span className="flex items-center gap-1.5">
               <Calendar size={14} className="text-slate-400" />
               Effective Date: {lastUpdated}
             </span>
             <span>•</span>
-            <span className="px-2 py-0.5 rounded bg-slate-200/70 dark:bg-slate-800 font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+            <span className="px-2 py-0.5 rounded bg-slate-200/70 dark:bg-slate-800 font-mono text-[11px] font-semibold text-ink">
               Version {version}
             </span>
             <span>•</span>
@@ -115,7 +115,7 @@ export function LegalPageLayout({
         </div>
 
         {/* International Scope & Document Ownership Highlight Banner */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-indigo-500/10 border border-brand-200/80 dark:border-brand-800/60 text-xs sm:text-sm text-slate-700 dark:text-slate-300 space-y-2">
+        <div className="p-5 sm:p-6 rounded-md bg-surface border border-border text-xs sm:text-sm text-ink space-y-2">
           <div className="flex items-center gap-2 text-brand-700 dark:text-brand-300 font-bold">
             <ShieldCheck size={18} className="text-emerald-500 shrink-0" />
             <span>Core International Commitment & Document Ownership Guarantee</span>
@@ -132,24 +132,24 @@ export function LegalPageLayout({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Main Body Column */}
           <main className="lg:col-span-8 space-y-8">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm leading-relaxed text-sm sm:text-base space-y-8">
+            <div className="bg-surface border border-border rounded-md p-6 sm:p-10 shadow-sm leading-relaxed text-sm sm:text-base space-y-8">
               {children}
             </div>
 
             {/* Inquiries & Legal Contact Card */}
-            <div className="p-6 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Mail size={18} className="text-brand-500" />
+            <div className="p-6 rounded-md bg-slate-100 dark:bg-ink/40 border border-border space-y-3 text-xs sm:text-sm">
+              <h3 className="text-base font-bold text-ink flex items-center gap-2">
+                <Mail size={18} className="text-brand" />
                 Legal, Privacy & Compliance Contact
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-muted leading-relaxed">
                 For formal inquiries regarding these terms, data protection requests (GDPR/CCPA/UK GDPR),
                 copyright notices, security disclosures, or enterprise agreements, please contact:
               </p>
-              <div className="pt-1 space-y-1 font-mono text-xs text-slate-800 dark:text-slate-200">
+              <div className="pt-1 space-y-1 font-mono text-xs text-ink">
                 <p>
                   <strong>Email:</strong>{' '}
-                  <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 hover:underline">
+                  <a href="mailto:docunexa.security@gmail.com" className="text-brand hover:underline">
                     docunexa.security@gmail.com
                   </a>
                 </p>
@@ -161,7 +161,7 @@ export function LegalPageLayout({
                 </p>
                 <p>
                   <strong>Website:</strong>{' '}
-                  <a href="https://docunexa.pro.et" className="text-brand-600 dark:text-brand-400 hover:underline">
+                  <a href="https://docunexa.pro.et" className="text-brand hover:underline">
                     https://docunexa.pro.et
                   </a>
                 </p>
@@ -173,8 +173,8 @@ export function LegalPageLayout({
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
             {/* Table of Contents for Current Document */}
             {toc && toc.length > 0 && (
-              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted">
                   On This Page
                 </h4>
                 <nav className="space-y-1 text-xs">
@@ -182,7 +182,7 @@ export function LegalPageLayout({
                     <a
                       key={item.id}
                       href={`#${item.id}`}
-                      className="block py-1.5 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all truncate"
+                      className="block py-1.5 px-2 rounded-lg text-muted hover:text-brand hover:bg-slate-50 dark:hover:bg-slate-800 transition-all truncate"
                     >
                       {item.title}
                     </a>
@@ -192,8 +192,8 @@ export function LegalPageLayout({
             )}
 
             {/* Directory of All Policies */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted">
                 Legal & Policy Directory
               </h4>
               <ul className="space-y-1 text-xs">
@@ -206,11 +206,11 @@ export function LegalPageLayout({
                         href={link.href}
                         className={`flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg transition-all ${
                           isCurrent
-                            ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-semibold border border-brand-200/60 dark:border-brand-800/50'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
+                            ? 'bg-brand-50 dark:bg-brand-950/60 text-brand font-semibold border border-brand-200/60 dark:border-brand-800/50'
+                            : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
                         }`}
                       >
-                        <Icon size={14} className={isCurrent ? 'text-brand-500' : 'text-slate-400'} />
+                        <Icon size={14} className={isCurrent ? 'text-brand' : 'text-slate-400'} />
                         <span className="truncate">{link.title}</span>
                       </Link>
                     </li>

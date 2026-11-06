@@ -27,7 +27,7 @@ export default function PrivacyPage() {
   const lastUpdated = 'September 30, 2026';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-16 md:py-24 transition-colors">
+    <div className="min-h-screen bg-paper text-ink py-16 md:py-24 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Page Header */}
         <div className="space-y-4">
@@ -38,21 +38,21 @@ export default function PrivacyPage() {
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
             DocuNexa Privacy Policy
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-xs sm:text-sm text-muted">
             Last updated: {lastUpdated} • Canonical Domain:{' '}
-            <a href="https://docunexa.pro.et" className="text-brand-600 dark:text-brand-400 hover:underline">
+            <a href="https://docunexa.pro.et" className="text-brand hover:underline">
               https://docunexa.pro.et
             </a>
           </p>
         </div>
 
         {/* Executive Summary Card */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <div className="p-6 sm:p-8 rounded-md bg-surface border border-border shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-ink flex items-center gap-2">
             <Lock size={18} className="text-emerald-500" />
             Privacy Summary at a Glance
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm text-ink">
             <div className="flex items-start gap-2.5">
               <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
               <span>
@@ -81,15 +81,15 @@ export default function PrivacyPage() {
         </div>
 
         {/* Detailed Sections */}
-        <div className="space-y-10 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+        <div className="space-y-10 text-sm sm:text-base text-ink leading-relaxed">
           {/* Section 1: Overview */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               1. Introduction & Scope
             </h2>
             <p>
               DocuNexa (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) operates the website{' '}
-              <a href="https://docunexa.pro.et" className="text-brand-600 dark:text-brand-400 hover:underline">
+              <a href="https://docunexa.pro.et" className="text-brand hover:underline">
                 https://docunexa.pro.et
               </a>. This Privacy Policy describes how we handle information when you access our website and use our client-side document utilities.
             </p>
@@ -100,18 +100,18 @@ export default function PrivacyPage() {
 
           {/* Section 2: Document Processing */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Cpu size={20} className="text-brand-600 dark:text-brand-400" />
+            <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
+              <Cpu size={20} className="text-brand" />
               2. How Your Documents Are Processed (Client-Side Architecture)
             </h2>
             <p>
               DocuNexa features 34 specialized tools across PDF organization, optimization, conversion, editing, security, and intelligence.
             </p>
-            <div className="p-5 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2 text-xs sm:text-sm">
-              <p className="font-semibold text-slate-900 dark:text-white">
+            <div className="p-5 rounded-md bg-slate-100 dark:bg-ink/40 border border-border space-y-2 text-xs sm:text-sm">
+              <p className="font-semibold text-ink">
                 Technical Data Flow for Supported Tools:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
+              <ul className="list-disc pl-5 space-y-1.5 text-muted">
                 <li>
                   <strong>In-Memory Loading:</strong> When you drag or select a PDF, image, or document, the file is read into your browser&apos;s volatile RAM using standard browser APIs (<code>FileReader</code>, <code>ArrayBuffer</code>, and <code>Uint8Array</code>).
                 </li>
@@ -130,27 +130,27 @@ export default function PrivacyPage() {
 
           {/* Section 3: Tool-Specific Behaviors */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               3. Tool-Specific Disclosures & Technical Limitations
             </h2>
             <div className="space-y-3 text-xs sm:text-sm">
-              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <h3 className="font-bold text-slate-900 dark:text-white mb-1">OCR PDF (Optical Character Recognition)</h3>
-                <p className="text-slate-600 dark:text-slate-400">
+              <div className="p-4 rounded-md bg-surface border border-border">
+                <h3 className="font-bold text-ink mb-1">OCR PDF (Optical Character Recognition)</h3>
+                <p className="text-muted">
                   OCR is powered by Tesseract.js running in a local WebAssembly Web Worker. To recognize characters, the engine downloads public language trained data files (such as English or Amharic <code>.traineddata.gz</code>) from standard public open-source CDN repositories (jsdelivr) on-demand into your local browser cache/IndexedDB upon first use. The actual image rendering, canvas analysis, and text recognition occur entirely on your device; your document pages and images are never uploaded or transmitted to external servers.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <h3 className="font-bold text-slate-900 dark:text-white mb-1">Document Summarizer & Translation</h3>
-                <p className="text-slate-600 dark:text-slate-400">
+              <div className="p-4 rounded-md bg-surface border border-border">
+                <h3 className="font-bold text-ink mb-1">Document Summarizer & Translation</h3>
+                <p className="text-muted">
                   Our Document Summarizer and Translation tools run local rule-based heuristic algorithms directly in your browser. They extract headings, overview paragraphs, and glossary matches locally. They do NOT transmit your document contents to cloud Large Language Models (LLMs) or external generative AI APIs.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <h3 className="font-bold text-slate-900 dark:text-white mb-1">Sign PDF & Redact PDF</h3>
-                <p className="text-slate-600 dark:text-slate-400">
+              <div className="p-4 rounded-md bg-surface border border-border">
+                <h3 className="font-bold text-ink mb-1">Sign PDF & Redact PDF</h3>
+                <p className="text-muted">
                   Sign PDF stamps a visual signature appearance onto PDF pages and does not generate cryptographic X.509 digital certificates. Redact PDF applies visual blackout vector overlays to visually obscure content; for forensic low-level binary stream removal, specialized desktop tools should be used.
                 </p>
               </div>
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
 
           {/* Section 4: Cookies & Local Storage */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
               <Cookie size={20} className="text-amber-500" />
               4. Cookies & Browser Local Storage
             </h2>
@@ -169,57 +169,57 @@ export default function PrivacyPage() {
             <p>
               <strong>Local Storage:</strong> We use your browser&apos;s <code>localStorage</code> solely for functional interface preferences:
             </p>
-            <ul className="list-disc pl-5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 space-y-1">
+            <ul className="list-disc pl-5 text-xs sm:text-sm text-muted space-y-1">
               <li>
                 <code>docunexa-theme</code>: Stores your theme preference (<code>light</code> or <code>dark</code>) so the website displays correctly when you return.
               </li>
             </ul>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-muted">
               You can clear this storage at any time through your browser settings without affecting the core functionality of the tools.
             </p>
           </section>
 
           {/* Section 5: External Services & Hosting Logs */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               5. Third-Party Services, External Resources & Server Logs
             </h2>
             <p>
               DocuNexa strictly distinguishes local document processing from external resource downloads:
             </p>
-            <div className="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">A. Document Processing (Local Only):</p>
+            <div className="space-y-2 text-xs sm:text-sm text-muted">
+              <div className="p-3.5 rounded-md bg-surface border border-border">
+                <p className="font-bold text-ink">A. Document Processing (Local Only):</p>
                 <p className="mt-0.5">
                   Document bytes, extracted text, and generated files are processed entirely in browser memory. No document content is transmitted to third parties or remote servers.
                 </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">B. On-Demand OCR Language Data Retrieval:</p>
+              <div className="p-3.5 rounded-md bg-surface border border-border">
+                <p className="font-bold text-ink">B. On-Demand OCR Language Data Retrieval:</p>
                 <p className="mt-0.5">
                   When you initiate OCR recognition, the client-side Tesseract.js engine downloads public language model weights (e.g. <code>.traineddata.gz</code>) from the public jsDelivr CDN into your browser cache. This is an incoming download of optical recognition dictionary weights; your documents are never uploaded.
                 </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">C. Typography & Fonts:</p>
+              <div className="p-3.5 rounded-md bg-surface border border-border">
+                <p className="font-bold text-ink">C. Typography & Fonts:</p>
                 <p className="mt-0.5">
                   DocuNexa loads font stylesheets and font binaries (Inter and JetBrains Mono) from Google Fonts CDN (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>).
                 </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">D. Web Hosting Infrastructure Logs:</p>
+              <div className="p-3.5 rounded-md bg-surface border border-border">
+                <p className="font-bold text-ink">D. Web Hosting Infrastructure Logs:</p>
                 <p className="mt-0.5">
                   Like virtually all web applications, our edge serverless hosting provider records standard HTTP connection metadata (IP address, browser user-agent, operating system, and request timestamps) strictly for technical network routing, DDoS mitigation, and system performance. DocuNexa does not harvest or sell personal usage telemetry.
                 </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">E. Advertising Delivery (Monetag & Plan Distinctions):</p>
+              <div className="p-3.5 rounded-md bg-surface border border-border">
+                <p className="font-bold text-ink">E. Advertising Delivery (Monetag & Plan Distinctions):</p>
                 <p className="mt-0.5">
                   DocuNexa integrates Monetag (via <code>tag.min.js</code> and service worker) to display advertisements that support operating costs for free users. For anonymous visitors and registered Free plan users, Monetag advertising technology is used to deliver, measure, and optimize advertising impressions. For authenticated Ad-Free users, DocuNexa does not intentionally initialize Monetag advertising scripts or service workers for their account. In all cases, advertising scripts run in standard web isolation and have strictly zero access to your document files or local document processing memory.
                 </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-slate-900 dark:text-white">F. Cryptocurrency Payment Processing & Bybit Verification:</p>
+              <div className="p-3.5 rounded-md bg-surface border border-border">
+                <p className="font-bold text-ink">F. Cryptocurrency Payment Processing & Bybit Verification:</p>
                 <p className="mt-0.5">
                   When you choose to upgrade to the $2 USD Ad-Free plan, payments are made directly in cryptocurrency (USDT on the Polygon PoS network) to a Bybit-hosted deposit address. DocuNexa queries Bybit&apos;s read-only deposit record API (<code>GET /v5/asset/deposit/query-record</code>) to match and verify your on-chain payment. Public blockchain transaction information (including transaction hash, recipient address, block timestamp, confirmations, and amount) is retrieved and processed to confirm payment. Our database (Supabase) stores the minimum payment/order metadata (order ID, user ID, status, transaction ID, and timestamp) necessary to activate and maintain your Ad-Free entitlement. We do not process or store private keys, fund passwords, or personal financial account credentials. We do not claim 100% anonymity, zero data processing, or zero third-party requests; network operations and payment verifications require strictly disclosed server communications.
                 </p>
@@ -228,7 +228,7 @@ export default function PrivacyPage() {
           </section>
 
           {/* Section 6: Advertising & Monetization Disclosures */}
-          <section className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white space-y-4 shadow-lg border border-slate-800">
+          <section className="p-6 sm:p-8 rounded-md bg-slate-900 text-white space-y-4 shadow-subtle border border-slate-800">
             <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
               <Megaphone size={20} className="text-brand-400" />
               6. Advertising and Monetization Disclosures
@@ -236,7 +236,7 @@ export default function PrivacyPage() {
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
               DocuNexa offers free PDF tools supported by advertisements, alongside an optional $2 USD one-time Ad-Free plan.
             </p>
-            <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2 text-xs text-slate-300">
+            <div className="p-4 rounded-md bg-slate-800/80 border border-slate-700 space-y-2 text-xs text-slate-300">
               <p className="font-semibold text-white">
                 Advertising Technologies & Plan Safeguards:
               </p>
@@ -262,14 +262,14 @@ export default function PrivacyPage() {
 
           {/* Section 7: Optional Accounts, Coupon Codes & Payment Processing */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               7. Optional Accounts, Coupon Codes & Cryptocurrency Payments
             </h2>
             <p>
               While public PDF tools remain completely anonymous and account-free, users who voluntarily register an account or upgrade to Ad-Free provide limited information necessary to deliver and verify the service:
             </p>
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm">
-              <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
+            <div className="p-5 rounded-md bg-surface border border-border space-y-3 text-xs sm:text-sm">
+              <ul className="list-disc pl-5 space-y-1.5 text-muted">
                 <li>
                   <strong>Account Identification:</strong> When creating an optional account, we store your email address and chosen plan status (Free or Ad-Free) managed securely through Supabase Authentication and PostgreSQL database.
                 </li>
@@ -288,7 +288,7 @@ export default function PrivacyPage() {
 
           {/* Section 8: User Inquiries & Communications */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               8. Inquiries, Bug Reports & Communications
             </h2>
             <p>
@@ -298,7 +298,7 @@ export default function PrivacyPage() {
 
           {/* Section 9: User Rights */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               9. User Rights & Data Retention
             </h2>
             <p>
@@ -308,7 +308,7 @@ export default function PrivacyPage() {
 
           {/* Section 10: Updates to this Policy */}
           <section className="space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               10. Changes to this Privacy Policy
             </h2>
             <p>
@@ -317,17 +317,17 @@ export default function PrivacyPage() {
           </section>
 
           {/* Section 11: Contact Information */}
-          <section className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          <section className="space-y-4 pt-4 border-t border-border">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               11. Contact Us
             </h2>
             <p>
               If you have any questions, suggestions, or concerns regarding this Privacy Policy or our client-side architecture, please contact the maintainer:
             </p>
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs sm:text-sm">
+            <div className="p-4 rounded-md bg-surface border border-border space-y-1.5 text-xs sm:text-sm">
               <p>
                 <strong>Maintainer Contact:</strong>{' '}
-                <a href="mailto:natanemyalew10@gmail.com" className="text-brand-600 dark:text-brand-400 hover:underline">
+                <a href="mailto:natanemyalew10@gmail.com" className="text-brand hover:underline">
                   natanemyalew10@gmail.com
                 </a>
               </p>
@@ -337,14 +337,14 @@ export default function PrivacyPage() {
                   href="https://github.com/Nati-13/DocuNexa-"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-brand-600 dark:text-brand-400 hover:underline"
+                  className="text-brand hover:underline"
                 >
                   https://github.com/Nati-13/DocuNexa-
                 </a>
               </p>
               <p>
                 <strong>Dedicated Contact Page:</strong>{' '}
-                <Link href="/contact" className="text-brand-600 dark:text-brand-400 hover:underline">
+                <Link href="/contact" className="text-brand hover:underline">
                   Visit /contact
                 </Link>
               </p>

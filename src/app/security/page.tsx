@@ -49,7 +49,7 @@ export default function SecurityPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-16 md:py-24 transition-colors">
+    <div className="min-h-screen bg-paper text-ink py-16 md:py-24 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
@@ -60,7 +60,7 @@ export default function SecurityPage() {
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
             Security & Privacy Architecture
           </h1>
-          <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg leading-relaxed">
+          <p className="text-ink text-base sm:text-lg leading-relaxed">
             DocuNexa replaces risky cloud-upload workflows with client-side cryptography and in-browser WebAssembly execution.
           </p>
         </div>
@@ -70,24 +70,24 @@ export default function SecurityPage() {
           {securityPillars.map((p, i) => (
             <div
               key={i}
-              className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4"
+              className="p-8 rounded-md bg-surface border border-border shadow-sm space-y-4"
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <p.icon size={24} />
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{p.title}</h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{p.desc}</p>
+              <h2 className="text-lg font-bold text-ink">{p.title}</h2>
+              <p className="text-xs sm:text-sm text-muted leading-relaxed">{p.desc}</p>
             </div>
           ))}
         </div>
 
         {/* Deep Dive: How Encryption & Decryption Work */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Lock size={22} className="text-brand-600 dark:text-brand-400" />
+        <div className="p-8 sm:p-10 rounded-md bg-surface border border-border shadow-sm space-y-6">
+          <h2 className="text-2xl font-bold text-ink flex items-center gap-2">
+            <Lock size={22} className="text-brand" />
             PDF Password Protection & Cryptography
           </h2>
-          <div className="space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          <div className="space-y-4 text-xs sm:text-sm text-ink leading-relaxed">
             <p>
               When protecting a PDF document using our <strong>Protect PDF</strong> tool, DocuNexa applies the standard PDF encryption specification (ISO 32000) using client-side WebAssembly engines compiled from audited open-source libraries (<code>@pdfsmaller/pdf-encrypt</code>).
             </p>
@@ -101,7 +101,7 @@ export default function SecurityPage() {
         </div>
 
         {/* Honest Security Boundaries & Disclosures */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-slate-900 text-white space-y-6 shadow-xl border border-slate-800">
+        <div className="p-8 sm:p-10 rounded-md bg-slate-900 text-white space-y-6 shadow-subtle border border-slate-800">
           <div className="flex items-center gap-2">
             <AlertTriangle size={22} className="text-amber-400" />
             <h2 className="text-2xl font-bold">Verifiable Technical Boundaries</h2>
@@ -111,7 +111,7 @@ export default function SecurityPage() {
           </p>
 
           <div className="space-y-4 text-xs sm:text-sm">
-            <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div className="p-5 rounded-md bg-slate-800/80 border border-slate-700 space-y-2">
               <h3 className="font-bold text-amber-300">
                 1. Sign PDF: Visual Appearance Stamping
               </h3>
@@ -120,7 +120,7 @@ export default function SecurityPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div className="p-5 rounded-md bg-slate-800/80 border border-slate-700 space-y-2">
               <h3 className="font-bold text-amber-300">
                 2. Redact PDF: Visual Blackout Rectangles
               </h3>
@@ -129,7 +129,7 @@ export default function SecurityPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div className="p-5 rounded-md bg-slate-800/80 border border-slate-700 space-y-2">
               <h3 className="font-bold text-amber-300">
                 3. PDF/A Metadata Preparation
               </h3>
@@ -138,7 +138,7 @@ export default function SecurityPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div className="p-5 rounded-md bg-slate-800/80 border border-slate-700 space-y-2">
               <h3 className="font-bold text-amber-300">
                 4. Local Document Summarization
               </h3>
@@ -147,7 +147,7 @@ export default function SecurityPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div className="p-5 rounded-md bg-slate-800/80 border border-slate-700 space-y-2">
               <h3 className="font-bold text-amber-300">
                 5. OCR Language Data Retrieval vs. Document Processing
               </h3>
@@ -159,28 +159,28 @@ export default function SecurityPage() {
         </div>
 
         {/* External Resources & Technical Boundaries */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+        <div className="p-8 sm:p-10 rounded-md bg-surface border border-border shadow-sm space-y-4">
+          <h2 className="text-xl font-bold text-ink">
             External Network Resources & Boundaries
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted leading-relaxed">
             DocuNexa strictly separates user document processing from external resource downloads:
           </p>
-          <div className="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-1">
-              <p className="font-bold text-slate-900 dark:text-white">A. Document Processing (Local Only):</p>
+          <div className="space-y-3 text-xs sm:text-sm text-muted">
+            <div className="p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+              <p className="font-bold text-ink">A. Document Processing (Local Only):</p>
               <p>
                 Document bytes remain entirely in browser memory (ArrayBuffer/Uint8Array). All operations—including parsing, unit detection, page extraction, password encryption, and optical character analysis—execute locally inside your browser or Web Worker. Your documents are never uploaded to remote servers for processing.
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-1">
-              <p className="font-bold text-slate-900 dark:text-white">B. On-Demand OCR Language Data Retrieval:</p>
+            <div className="p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+              <p className="font-bold text-ink">B. On-Demand OCR Language Data Retrieval:</p>
               <p>
                 When using OCR PDF, Tesseract.js may retrieve required public language trained data models (such as English or Amharic <code>.traineddata.gz</code>) from standard open-source CDN repositories (jsdelivr) on-demand when a language is first selected. The downloaded language file is cached locally in your browser so it is not re-downloaded repeatedly. This download is strictly a retrieval of public optical character recognition model weights; your PDF pages or images are NEVER transmitted externally.
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-1">
-              <p className="font-bold text-slate-900 dark:text-white">C. Other External Resources:</p>
+            <div className="p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+              <p className="font-bold text-ink">C. Other External Resources:</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>
                   <strong>Google Fonts:</strong> Typography stylesheets and font files (Inter and JetBrains Mono) loaded from Google&apos;s font CDN (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>).
@@ -194,11 +194,11 @@ export default function SecurityPage() {
         </div>
 
         {/* Security Best Practices */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+        <div className="p-8 sm:p-10 rounded-md bg-surface border border-border shadow-sm space-y-4">
+          <h2 className="text-xl font-bold text-ink">
             Recommended Security Practices for Users
           </h2>
-          <ul className="space-y-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          <ul className="space-y-2.5 text-xs sm:text-sm text-muted">
             <li className="flex items-start gap-2.5">
               <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
               <span>Always verify the SSL lock in your address bar: <code>https://docunexa.pro.et</code>.</span>
@@ -215,21 +215,21 @@ export default function SecurityPage() {
         </div>
 
         {/* Navigation Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-border text-xs font-semibold text-slate-500">
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-brand-600 dark:text-brand-400 hover:underline">
+            <Link href="/privacy" className="text-brand hover:underline">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-brand-600 dark:text-brand-400 hover:underline">
+            <Link href="/terms" className="text-brand hover:underline">
               Terms of Service
             </Link>
-            <Link href="/contact" className="text-brand-600 dark:text-brand-400 hover:underline">
+            <Link href="/contact" className="text-brand hover:underline">
               Contact Maintainer
             </Link>
           </div>
           <Link
             href="/tools"
-            className="inline-flex items-center gap-1.5 text-brand-600 dark:text-brand-400 hover:underline"
+            className="inline-flex items-center gap-1.5 text-brand hover:underline"
           >
             <span>Explore All 34 PDF Tools</span>
             <ArrowRight size={14} />

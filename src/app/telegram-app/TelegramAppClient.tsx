@@ -187,13 +187,13 @@ export function TelegramAppClient() {
         onLoad={handleScriptLoad}
       />
 
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors pb-16">
+      <div className="min-h-screen bg-paper text-ink font-sans transition-colors pb-16">
         {/* Top Header / Brand Bar */}
-        <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+        <header className="sticky top-0 z-30 bg-surface  border-b border-border px-4 py-3">
           <div className="max-w-xl mx-auto flex items-center justify-between">
             <DocuNexaLogo size="sm" />
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand border border-brand-200 dark:border-brand-800">
                 <Sparkles size={12} className="animate-pulse" />
                 <span>Mini App</span>
               </span>
@@ -201,7 +201,7 @@ export function TelegramAppClient() {
                 href={DOCUNEXA_SITE_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1"
+                className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 p-1.5 rounded-lg border border-border flex items-center gap-1"
                 title="Open DocuNexa Full Site"
               >
                 <ExternalLink size={13} />
@@ -212,7 +212,7 @@ export function TelegramAppClient() {
 
         <main className="max-w-xl mx-auto px-4 pt-4 space-y-6">
           {/* Welcome Greeting & Environment Card */}
-          <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-brand-500/10">
+          <div className="bg-brand rounded-md p-5 text-brand-fg shadow-subtle">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs uppercase font-bold tracking-wider text-brand-200">
@@ -240,40 +240,40 @@ export function TelegramAppClient() {
           </div>
 
           {/* Prominent PDF Unit Cutter Card (Flagship) */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-brand-500/40 p-5 shadow-sm space-y-4">
+          <section className="bg-surface rounded-md border-2 border-brand-500/40 p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                 <Scissors size={12} />
                 <span>Flagship Tool</span>
               </div>
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-medium text-muted">
                 v2.0 Structure Engine
               </span>
             </div>
 
             <div>
-              <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
+              <h2 className="text-lg font-black tracking-tight text-ink">
                 PDF Unit Cutter
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed">
                 Automatically detect textbook units, chapters, and syllabus outlines to split massive PDFs into modular study files.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-              <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <span className="font-semibold block text-slate-900 dark:text-slate-100">Automatic TOC</span>
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-muted">
+              <div className="p-2 rounded-lg bg-paper border border-border">
+                <span className="font-semibold block text-ink">Automatic TOC</span>
                 Roman & arabic detection
               </div>
-              <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <span className="font-semibold block text-slate-900 dark:text-slate-100">Zero Uploads</span>
+              <div className="p-2 rounded-lg bg-paper border border-border">
+                <span className="font-semibold block text-ink">Zero Uploads</span>
                 Sliced locally in browser
               </div>
             </div>
 
             <Link
               href="/tools/pdf-unit-cutter"
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-md bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
               <Scissors size={16} />
               <span>Launch PDF Unit Cutter</span>
@@ -284,7 +284,7 @@ export function TelegramAppClient() {
           {/* Quick Actions (Merge, Split, Compress, Convert) */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              <h3 className="text-sm font-bold tracking-tight text-ink">
                 ⚡ Quick PDF Actions
               </h3>
               <span className="text-xs text-slate-500">Popular shortcuts</span>
@@ -293,52 +293,52 @@ export function TelegramAppClient() {
             <div className="grid grid-cols-2 gap-2.5">
               <Link
                 href="/tools/merge-pdf"
-                className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
+                className="p-3.5 rounded-md bg-surface border border-border hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
               >
                 <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                   <Layers size={16} />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Merge PDF</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                <h4 className="text-xs font-bold text-ink">Merge PDF</h4>
+                <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
                   Combine multiple files
                 </p>
               </Link>
 
               <Link
                 href="/tools/split-pdf"
-                className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
+                className="p-3.5 rounded-md bg-surface border border-border hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
               >
                 <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                   <Split size={16} />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Split PDF</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                <h4 className="text-xs font-bold text-ink">Split PDF</h4>
+                <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
                   Custom page ranges
                 </p>
               </Link>
 
               <Link
                 href="/tools/compress-pdf"
-                className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
+                className="p-3.5 rounded-md bg-surface border border-border hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
               >
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                   <Minimize2 size={16} />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Compress PDF</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                <h4 className="text-xs font-bold text-ink">Compress PDF</h4>
+                <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
                   Reduce document size
                 </p>
               </Link>
 
               <Link
                 href="/tools/pdf-to-word"
-                className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
+                className="p-3.5 rounded-md bg-surface border border-border hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
               >
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                   <FileCode size={16} />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Convert PDF</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                <h4 className="text-xs font-bold text-ink">Convert PDF</h4>
+                <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
                   Export Word, Excel, JPG
                 </p>
               </Link>
@@ -348,13 +348,13 @@ export function TelegramAppClient() {
           {/* Search & Browse PDF Tools */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              <h3 className="text-sm font-bold tracking-tight text-ink">
                 🛠️ Browse All Tools ({ALL_TOOLS.length})
               </h3>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
+                  className="text-xs text-brand hover:underline"
                 >
                   Clear search
                 </button>
@@ -372,7 +372,7 @@ export function TelegramAppClient() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tools (e.g. merge, compress, word, ocr)..."
-                className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-10 pr-9 py-2.5 rounded-md bg-surface border border-border text-xs sm:text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               {searchQuery && (
                 <button
@@ -391,7 +391,7 @@ export function TelegramAppClient() {
                 className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
                   selectedCategory === 'all'
                     ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
+                    : 'bg-surface text-muted border border-border'
                 }`}
               >
                 All Tools
@@ -403,7 +403,7 @@ export function TelegramAppClient() {
                   className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
                     selectedCategory === cat.id
                       ? 'bg-brand-600 text-white'
-                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
+                      : 'bg-surface text-muted border border-border'
                   }`}
                 >
                   {cat.name}
@@ -418,31 +418,31 @@ export function TelegramAppClient() {
                   <Link
                     key={tool.id}
                     href={`/tools/${tool.slug}`}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
+                    className="flex items-center justify-between p-3 rounded-md bg-surface border border-border hover:border-brand-500 dark:hover:border-brand-500 transition-all group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <div className="w-8 h-8 rounded-lg bg-paper text-ink flex items-center justify-center group-hover:scale-105 transition-transform">
                         <DynamicIcon name={tool.iconName} size={16} />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          <h4 className="text-xs font-bold text-ink">
                             {tool.name}
                           </h4>
                           {tool.badge && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60 text-brand border border-brand-200 dark:border-brand-800">
                               {tool.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                        <p className="text-[11px] text-muted line-clamp-1">
                           {tool.description}
                         </p>
                       </div>
                     </div>
                     <ArrowRight
                       size={14}
-                      className="text-slate-400 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-2"
+                      className="text-slate-400 group-hover:text-brand group-hover:translate-x-0.5 transition-all shrink-0 ml-2"
                     />
                   </Link>
                 ))}
@@ -450,16 +450,16 @@ export function TelegramAppClient() {
                 {filteredTools.length > 8 && (
                   <Link
                     href="/tools"
-                    className="block text-center py-2.5 text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline"
+                    className="block text-center py-2.5 text-xs font-bold text-brand hover:underline"
                   >
                     View all {filteredTools.length} tools on website →
                   </Link>
                 )}
               </div>
             ) : (
-              <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+              <div className="p-6 rounded-md bg-surface border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <Search size={24} className="mx-auto text-slate-400" />
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <p className="text-xs font-semibold text-muted">
                   No tools found matching &ldquo;{searchQuery}&rdquo;
                 </p>
                 <button
@@ -476,13 +476,13 @@ export function TelegramAppClient() {
           </section>
 
           {/* Customer Support Hub */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
+          <section className="bg-surface rounded-md border border-border p-5 shadow-sm space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
                 <LifeBuoy size={18} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-sm font-bold text-ink">
                   Customer Support Hub
                 </h3>
                 <p className="text-xs text-slate-500">Fast human assistance & inquiries</p>
@@ -494,7 +494,7 @@ export function TelegramAppClient() {
                 href={TELEGRAM_BOT_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20"
+                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20"
               >
                 <MessageSquare size={14} />
                 <span>Chat @docunexa_bot</span>
@@ -503,7 +503,7 @@ export function TelegramAppClient() {
               <button
                 type="button"
                 onClick={() => setIsTicketFormOpen(!isTicketFormOpen)}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs font-bold transition-all"
+                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-md bg-paper hover:bg-slate-200 dark:hover:bg-slate-700 text-ink text-xs font-bold transition-all"
               >
                 <FileText size={14} />
                 <span>{isTicketFormOpen ? 'Close Ticket Form' : 'Submit Ticket'}</span>
@@ -512,16 +512,16 @@ export function TelegramAppClient() {
 
             {/* Embedded Support Ticket Form */}
             {isTicketFormOpen && (
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-3 border-t border-border">
                 {submitSuccessTicket ? (
-                  <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2 text-center">
+                  <div className="p-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2 text-center">
                     <CheckCircle2 size={24} className="mx-auto text-emerald-600 dark:text-emerald-400" />
                     <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
                       Ticket Submitted Successfully!
                     </h4>
                     <p className="text-xs text-emerald-700 dark:text-emerald-300">
                       Your ticket reference is{' '}
-                      <code className="font-mono font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-emerald-300">
+                      <code className="font-mono font-bold bg-surface px-1.5 py-0.5 rounded border border-emerald-300">
                         #{submitSuccessTicket}
                       </code>
                       . Our support team has received your request and will reply within 24 hours.
@@ -537,7 +537,7 @@ export function TelegramAppClient() {
                   <form onSubmit={handleSubmitTicket} className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-[11px] font-bold text-ink mb-1">
                           Your Name
                         </label>
                         <input
@@ -546,11 +546,11 @@ export function TelegramAppClient() {
                           value={formName}
                           onChange={(e) => setFormName(e.target.value)}
                           placeholder="e.g. Alex"
-                          className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-[11px] font-bold text-ink mb-1">
                           Email (Optional)
                         </label>
                         <input
@@ -558,19 +558,19 @@ export function TelegramAppClient() {
                           value={formEmail}
                           onChange={(e) => setFormEmail(e.target.value)}
                           placeholder="alex@example.com"
-                          className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-[11px] font-bold text-ink mb-1">
                         Category
                       </label>
                       <select
                         value={formCategory}
                         onChange={(e) => setFormCategory(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
                       >
                         <option value="PDF Tools">PDF Tools (Unit Cutter, Merge, Split)</option>
                         <option value="Coupon">Coupon Code &amp; Plans</option>
@@ -582,7 +582,7 @@ export function TelegramAppClient() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-[11px] font-bold text-ink mb-1">
                         Subject
                       </label>
                       <input
@@ -591,12 +591,12 @@ export function TelegramAppClient() {
                         value={formSubject}
                         onChange={(e) => setFormSubject(e.target.value)}
                         placeholder="Brief summary of your inquiry"
-                        className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-[11px] font-bold text-ink mb-1">
                         Message Details
                       </label>
                       <textarea
@@ -605,7 +605,7 @@ export function TelegramAppClient() {
                         value={formMessage}
                         onChange={(e) => setFormMessage(e.target.value)}
                         placeholder="Describe your issue or question in detail..."
-                        className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full px-3 py-2 rounded-lg bg-paper border border-border text-xs text-ink placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                     </div>
 
@@ -619,7 +619,7 @@ export function TelegramAppClient() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition-all"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-md bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition-all"
                     >
                       {isSubmitting ? (
                         <>
@@ -640,26 +640,26 @@ export function TelegramAppClient() {
           </section>
 
           {/* Help & FAQ Section */}
-          <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-3">
+          <section className="bg-surface rounded-md border border-border p-5 shadow-sm space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <HelpCircle size={18} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-sm font-bold text-ink">
                   Help & Frequently Asked Questions
                 </h3>
                 <p className="text-xs text-slate-500">Common questions about tools and coupons</p>
               </div>
             </div>
 
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-border">
               {faqs.map((faq, idx) => (
                 <div key={idx} className="py-2.5">
                   <button
                     type="button"
                     onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                    className="w-full flex items-center justify-between text-left gap-2 text-xs font-bold text-slate-800 dark:text-slate-200"
+                    className="w-full flex items-center justify-between text-left gap-2 text-xs font-bold text-ink"
                   >
                     <span>{faq.q}</span>
                     {expandedFaq === idx ? (
@@ -669,7 +669,7 @@ export function TelegramAppClient() {
                     )}
                   </button>
                   {expandedFaq === idx && (
-                    <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
+                    <p className="mt-2 text-xs text-muted leading-relaxed pl-1">
                       {faq.a}
                     </p>
                   )}
@@ -685,7 +685,7 @@ export function TelegramAppClient() {
                 href={DOCUNEXA_SITE_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 font-bold text-brand-600 dark:text-brand-400 hover:underline"
+                className="inline-flex items-center gap-1.5 font-bold text-brand hover:underline"
               >
                 <span>Open Full DocuNexa Website</span>
                 <ExternalLink size={12} />

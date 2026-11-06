@@ -84,13 +84,13 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
   return (
     <div className="w-full flex flex-col gap-4 animate-in fade-in duration-200">
       {/* Document Workspace Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-md bg-surface border border-border shadow-sm">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 shadow-inner">
+          <div className="w-10 h-10 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand flex items-center justify-center shrink-0 shadow-inner">
             <FileText size={20} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">{title}</h2>
+            <h2 className="text-base font-bold text-ink truncate">{title}</h2>
             <div className="flex items-center gap-2 text-xs text-slate-500 truncate">
               <span className="truncate">{filename}</span>
               <span>•</span>
@@ -105,7 +105,7 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-muted hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
         >
           <RotateCcw size={13} />
           <span>Change Document</span>
@@ -155,7 +155,7 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
           />
 
           {/* Canvas Viewer with Interactive Overlays */}
-          <div className="h-[620px] rounded-3xl bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-inner overflow-auto flex items-center justify-center relative scrollbar-thin">
+          <div className="h-[620px] rounded-md bg-slate-100 dark:bg-ink/40 border border-border shadow-inner overflow-auto flex items-center justify-center relative scrollbar-thin">
             <PdfPageViewer
               pdfBuffer={pdfBuffer}
               currentPage={currentPage}
@@ -180,10 +180,10 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
                     key={p}
                     type="button"
                     onClick={() => setCurrentPage(p)}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 transition-all ${
+                    className={`px-3 py-1.5 rounded-md font-bold text-xs shrink-0 transition-all ${
                       currentPage === p
                         ? 'bg-brand-600 text-white shadow-sm'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        : 'bg-surface text-ink border border-border'
                     }`}
                   >
                     Page {p}
@@ -196,10 +196,10 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
 
         {/* RIGHT COLUMN: Tool Controls & Live Parameters */}
         <div className="lg:col-span-3 xl:col-span-3 flex flex-col gap-4">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 text-left">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <Sparkles size={16} className="text-brand-600 dark:text-brand-400" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-5 text-left">
+            <div className="flex items-center gap-2 pb-3 border-b border-border">
+              <Sparkles size={16} className="text-brand" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-ink">
                 Configuration
               </h3>
             </div>
@@ -208,14 +208,14 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
             {children}
 
             {/* Apply & Export Action Button */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-3 border-t border-border">
               <button
                 type="button"
                 disabled={Boolean(disabledApplyReason) || isProcessing}
                 onClick={onApply}
-                className={`w-full py-4 rounded-2xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
+                className={`w-full py-4 rounded-md font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
                   disabledApplyReason || isProcessing
-                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                    ? 'bg-border text-slate-400 dark:text-slate-600 cursor-not-allowed'
                     : 'bg-brand-600 hover:bg-brand-700 text-white hover:scale-[1.01]'
                 }`}
               >
@@ -224,7 +224,7 @@ export const PdfWorkspace: React.FC<PdfWorkspaceProps> = ({
               </button>
 
               {disabledApplyReason && (
-                <p className="text-xs text-center text-slate-500 dark:text-slate-400 font-medium mt-2">
+                <p className="text-xs text-center text-muted font-medium mt-2">
                   {disabledApplyReason}
                 </p>
               )}

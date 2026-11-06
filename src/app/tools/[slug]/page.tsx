@@ -966,16 +966,16 @@ export default function UniversalToolPage() {
           /* Step 2: Settings & Working Workspace */
           <div className="space-y-6">
             {/* Selected File Header Card */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div className="p-4 rounded-md bg-surface border border-border shadow-sm flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand flex items-center justify-center shrink-0">
                   <FileText size={20} />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                  <h4 className="font-bold text-sm text-ink truncate">
                     {selectedFiles.length === 1 ? selectedFiles[0].name : `${selectedFiles.length} files selected`}
                   </h4>
-                  <p className="text-xs text-slate-700 dark:text-slate-200 mt-0.5">
+                  <p className="text-xs text-ink mt-0.5">
                     {totalPages > 0 ? `${totalPages} pages • ` : ''}
                     {(selectedFiles.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB total
                   </p>
@@ -984,7 +984,7 @@ export default function UniversalToolPage() {
 
               <button
                 onClick={handleReset}
-                className="text-xs font-semibold text-slate-600 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1.5 rounded-xl transition-colors"
+                className="text-xs font-semibold text-slate-600 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1.5 rounded-md transition-colors"
               >
                 Change Files
               </button>
@@ -992,7 +992,7 @@ export default function UniversalToolPage() {
 
             {/* Honest Technical Notice Banner */}
             {toolDef?.limitations && (
-              <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
+              <div className="p-4 rounded-md bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
                 <Info size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">Technical Notice: </span>
@@ -1003,9 +1003,9 @@ export default function UniversalToolPage() {
 
             {/* A. MERGE PDF, SCAN TO PDF & JPG TO PDF File Reordering List */}
             {(tool.id === 'merge-pdf' || tool.id === 'scan-to-pdf' || tool.id === 'jpg-to-pdf') && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                  <h4 className="font-bold text-sm text-ink">
                     {tool.id === 'merge-pdf' ? 'Arrange Merge Order' : 'Arrange Page Sequence'}
                   </h4>
                   <span className="text-xs text-slate-500">
@@ -1016,13 +1016,13 @@ export default function UniversalToolPage() {
                   {selectedFiles.map((file, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-xs font-medium"
+                      className="flex items-center justify-between p-3 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/80 text-xs font-medium"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                        <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-muted">
                           {idx + 1}
                         </span>
-                        <span className="truncate text-slate-800 dark:text-slate-200 font-semibold">{file.name}</span>
+                        <span className="truncate text-ink font-semibold">{file.name}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -1062,24 +1062,24 @@ export default function UniversalToolPage() {
 
             {/* B. SPLIT PDF Mode Selector */}
             {tool.id === 'split-pdf' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-4">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSplitMode('ranges')}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
                       splitMode === 'ranges'
                         ? 'bg-brand-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        : 'bg-paper text-ink'
                     }`}
                   >
                     Custom Ranges
                   </button>
                   <button
                     onClick={() => setSplitMode('every-n')}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
                       splitMode === 'every-n'
                         ? 'bg-brand-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        : 'bg-paper text-ink'
                     }`}
                   >
                     Every N Pages
@@ -1088,7 +1088,7 @@ export default function UniversalToolPage() {
 
                 {splitMode === 'ranges' ? (
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    <label className="text-xs font-semibold text-ink block mb-1.5">
                       Page Ranges (Comma-separated)
                     </label>
                     <input
@@ -1096,7 +1096,7 @@ export default function UniversalToolPage() {
                       value={rangeInput}
                       onChange={(e) => setRangeInput(e.target.value)}
                       placeholder="e.g. 1-5, 6-10, 15"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-brand-500"
+                      className="w-full px-4 py-2.5 rounded-md border border-border bg-surface text-sm font-semibold text-ink focus:ring-2 focus:ring-brand-500"
                     />
                     <span className="text-[11px] text-slate-500 mt-1 block">
                       Total pages in document: {totalPages}
@@ -1104,7 +1104,7 @@ export default function UniversalToolPage() {
                   </div>
                 ) : (
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    <label className="text-xs font-semibold text-ink block mb-1.5">
                       Chunk Size (Pages per file)
                     </label>
                     <input
@@ -1113,7 +1113,7 @@ export default function UniversalToolPage() {
                       max={totalPages || 100}
                       value={everyN}
                       onChange={(e) => setEveryN(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                      className="w-32 px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold"
+                      className="w-32 px-4 py-2 rounded-md border border-border bg-surface text-sm font-semibold"
                     />
                   </div>
                 )}
@@ -1122,9 +1122,9 @@ export default function UniversalToolPage() {
 
             {/* C. PAGE SELECTION (Remove / Extract Pages) */}
             {(tool.id === 'remove-pages' || tool.id === 'extract-pages' || tool.id === 'organize-pdf') && fileBuffers[0] && totalPages > 0 && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                  <h4 className="font-bold text-sm text-ink">
                     {tool.id === 'remove-pages'
                       ? 'Click pages to remove'
                       : tool.id === 'extract-pages'
@@ -1152,8 +1152,8 @@ export default function UniversalToolPage() {
 
             {/* D. ROTATE CONTROLS */}
             {tool.id === 'rotate-pdf' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Rotation Angle</label>
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
+                <label className="text-xs font-semibold text-ink">Rotation Angle</label>
                 <div className="flex gap-3">
                   {[
                     { angle: 90, label: '90° Clockwise' },
@@ -1163,10 +1163,10 @@ export default function UniversalToolPage() {
                     <button
                       key={btn.angle}
                       onClick={() => setRotateAngle(btn.angle)}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      className={`px-4 py-2.5 rounded-md text-xs font-bold transition-all ${
                         rotateAngle === btn.angle
                           ? 'bg-brand-600 text-white shadow-sm'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                          : 'bg-paper text-ink'
                       }`}
                     >
                       {btn.label}
@@ -1178,9 +1178,9 @@ export default function UniversalToolPage() {
 
             {/* E. WATERMARK & ANNOTATION CONTROLS */}
             {(tool.id === 'add-watermark' || tool.id === 'edit-pdf') && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-ink block mb-1.5">
                     {tool.id === 'edit-pdf' ? 'Annotation / Header Text' : 'Watermark Text'}
                   </label>
                   <input
@@ -1188,11 +1188,11 @@ export default function UniversalToolPage() {
                     value={watermarkText}
                     onChange={(e) => setWatermarkText(e.target.value)}
                     placeholder="Enter text to stamp on pages..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-2.5 rounded-md border border-border text-sm font-semibold bg-surface text-ink"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-ink block mb-1.5">
                     Opacity ({Math.round(watermarkOpacity * 100)}%)
                   </label>
                   <input
@@ -1210,12 +1210,12 @@ export default function UniversalToolPage() {
 
             {/* SCAN TO PDF Controls */}
             {tool.id === 'scan-to-pdf' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <label className="text-xs font-semibold text-ink">
                     Scanned Pages ({selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''})
                   </label>
-                  <label className="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-100 flex items-center gap-1.5">
+                  <label className="px-3 py-1.5 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand text-xs font-bold cursor-pointer hover:bg-brand-100 flex items-center gap-1.5">
                     <Camera size={14} />
                     <span>Add Scan / Photo</span>
                     <input
@@ -1241,8 +1241,8 @@ export default function UniversalToolPage() {
 
             {/* F. COMPRESS PDF Level */}
             {tool.id === 'compress-pdf' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Compression Preset</label>
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
+                <label className="text-xs font-semibold text-ink">Compression Preset</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { id: 'low', label: 'Gentle', desc: 'Preserves max DPI, compacts streams' },
@@ -1252,14 +1252,14 @@ export default function UniversalToolPage() {
                     <button
                       key={lvl.id}
                       onClick={() => setCompressLevel(lvl.id as any)}
-                      className={`p-4 rounded-xl border text-left transition-all ${
+                      className={`p-4 rounded-md border text-left transition-all ${
                         compressLevel === lvl.id
                           ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100 shadow-sm'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          : 'border-border text-ink hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
                       <span className="font-bold text-xs block">{lvl.label}</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">{lvl.desc}</span>
+                      <span className="text-[11px] text-muted mt-1 block">{lvl.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -1268,8 +1268,8 @@ export default function UniversalToolPage() {
 
             {/* G. OCR LANGUAGE PICKER & TRANSPARENCY NOTICE */}
             {tool.id === 'ocr-pdf' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">OCR Recognition Language</label>
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
+                <label className="text-xs font-semibold text-ink">OCR Recognition Language</label>
                 <div className="flex gap-3">
                   {[
                     { id: 'eng', label: 'English' },
@@ -1278,22 +1278,22 @@ export default function UniversalToolPage() {
                     <button
                       key={l.id}
                       onClick={() => setOcrLanguage(l.id as any)}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      className={`px-4 py-2.5 rounded-md text-xs font-bold transition-all ${
                         ocrLanguage === l.id
                           ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                          : 'bg-paper text-ink'
                       }`}
                     >
                       {l.label}
                     </button>
                   ))}
                 </div>
-                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
+                <div className="p-3.5 rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
                   <div className="font-semibold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
                     <ShieldCheck size={14} />
                     <span>Local WebAssembly OCR • Public Model Download Only</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-[11px] text-muted leading-relaxed">
                     Character recognition executes locally in a browser Web Worker via Tesseract.js. On first use, the engine downloads public open-source language dictionary weights (.traineddata.gz) from jsDelivr CDN. Zero document bytes, images, or extracted text leave your browser.
                   </p>
                 </div>
@@ -1305,33 +1305,33 @@ export default function UniversalToolPage() {
 
             {/* H. PDF FORMS Interactive Field List */}
             {tool.id === 'pdf-forms' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Interactive AcroForm Fields</h4>
+                  <h4 className="font-bold text-sm text-ink">Interactive AcroForm Fields</h4>
                   <span className="text-xs text-slate-500">
                     {formFields ? `${formFields.length} fields detected` : 'Scanning...'}
                   </span>
                 </div>
 
                 {xfaNotice ? (
-                  <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                  <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
                     <p className="font-bold">Unsupported Form Technology (Adobe XFA)</p>
-                    <p className="text-slate-600 dark:text-slate-400">
+                    <p className="text-muted">
                       {xfaNotice}
                     </p>
                   </div>
                 ) : hasScannedFormNotice ? (
-                  <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                  <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
                     <p className="font-bold">This document contains no interactive AcroForm fields.</p>
-                    <p className="text-slate-600 dark:text-slate-400">
+                    <p className="text-muted">
                       Standard visual form lines in scanned or flattened PDFs do not contain digital form widgets.
                     </p>
                   </div>
                 ) : formFields && formFields.length > 0 ? (
                   <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                     {formFields.map((f, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs space-y-1.5">
-                        <label className="font-bold text-slate-800 dark:text-slate-200 block truncate">
+                      <div key={idx} className="p-3 rounded-md bg-paper border border-border text-xs space-y-1.5">
+                        <label className="font-bold text-ink block truncate">
                           {f.name} <span className="font-normal text-slate-400">({f.type})</span>
                         </label>
                         {f.type === 'checkbox' ? (
@@ -1342,13 +1342,13 @@ export default function UniversalToolPage() {
                               onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.checked })}
                               className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
                             />
-                            <span className="text-xs text-slate-700 dark:text-slate-300">Checked</span>
+                            <span className="text-xs text-ink">Checked</span>
                           </label>
                         ) : f.type === 'dropdown' && f.options && f.options.length > 0 ? (
                           <select
                             value={String(formValues[f.name] || '')}
                             onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.value })}
-                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-xs font-medium text-ink"
                           >
                             {f.options.map((opt, oIdx) => (
                               <option key={oIdx} value={opt}>
@@ -1361,7 +1361,7 @@ export default function UniversalToolPage() {
                             type="text"
                             value={String(formValues[f.name] || '')}
                             onChange={(e) => setFormValues({ ...formValues, [f.name]: e.target.value })}
-                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-xs text-ink"
                           />
                         )}
                       </div>
@@ -1375,14 +1375,14 @@ export default function UniversalToolPage() {
 
             {/* I. TRANSLATE PDF: 25-Language Selector & Strict Support Indicators */}
             {tool.id === 'translate-pdf' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
+                <label className="text-xs font-semibold text-ink block">
                   Target Language (25 Languages Matrix)
                 </label>
                 <select
                   value={targetLang}
                   onChange={(e) => setTargetLang(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-4 py-2.5 rounded-md border border-border bg-surface text-sm font-semibold text-ink focus:ring-2 focus:ring-brand-500"
                 >
                   {SUPPORTED_LANGUAGES_MATRIX.map((lang) => (
                     <option key={lang.code} value={lang.code}>
@@ -1392,22 +1392,22 @@ export default function UniversalToolPage() {
                 </select>
 
                 {selectedLangObj?.isLocallySupported ? (
-                  <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
+                  <div className="p-3.5 rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
                     <div className="font-semibold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
                       <CheckCircle2 size={14} />
                       <span>Locally Supported via In-Memory Glossary</span>
                     </div>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    <p className="text-[11px] text-muted">
                       Vocabulary transformation executes 100% inside your browser RAM. Zero document text is transmitted to external translation APIs.
                     </p>
                   </div>
                 ) : (
-                  <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                  <div className="p-3.5 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-1">
                     <div className="font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                       <Info size={14} />
                       <span>Requires External Provider (Not Connected)</span>
                     </div>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    <p className="text-[11px] text-muted">
                       The local engine does not have a verified in-browser translation model for {selectedLangObj?.name}. To safeguard document confidentiality and prevent unauthorized external text transmission, this language returns an honest availability notice without sending your document data anywhere.
                     </p>
                   </div>
@@ -1417,22 +1417,22 @@ export default function UniversalToolPage() {
 
             {/* J. DOCUMENT SUMMARIZER: Client-Side Engine & Zero External AI Notice */}
             {tool.id === 'ai-summarizer' && (
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-md bg-brand/10 text-brand flex items-center justify-center shrink-0">
                     <Sparkles size={18} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">Local Heuristic Summarizer</h4>
+                    <h4 className="text-xs font-bold text-ink">Local Heuristic Summarizer</h4>
                     <span className="text-[11px] text-slate-500">In-Browser Analysis • Zero External AI Data Transmission</span>
                   </div>
                 </div>
-                <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 space-y-1.5">
-                  <p className="font-semibold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                <div className="p-3.5 rounded-md bg-brand/10 border border-brand/20 text-xs text-ink space-y-1.5">
+                  <p className="font-semibold flex items-center gap-1.5 text-brand">
                     <ShieldCheck size={14} />
                     <span>100% Client-Side In-Memory Execution</span>
                   </p>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-[11px] text-muted leading-relaxed">
                     This tool analyzes structural patterns, section headings, and key sentences directly within your browser&apos;s volatile RAM. Your document file and extracted text are NEVER sent to external AI providers (such as OpenAI, Anthropic, or Google Gemini).
                   </p>
                 </div>
@@ -1441,12 +1441,12 @@ export default function UniversalToolPage() {
 
             {/* K. ARCHIVE-READY PDF (EXPERIMENTAL): Limitations & Pre-Press Advisory */}
             {tool.id === 'pdf-to-pdfa' && (
-              <div className="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+              <div className="p-5 rounded-md bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
                 <div className="font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                   <AlertTriangle size={15} />
                   <span>Archive-Ready PDF (Experimental) — Archival Metadata Notice</span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-muted leading-relaxed">
                   This tool injects basic archival XMP metadata dictionaries for long-term storage workflows.
                   <strong> It does NOT certify formal ISO 19005 (PDF/A) conformance.</strong> Strict PDF/A validation requires pre-press checks (such as veraPDF) to verify 100% font subset embedding, ICC color profiles, and transparency elimination, which cannot be guaranteed in client-side browser processing.
                 </p>
@@ -1459,16 +1459,16 @@ export default function UniversalToolPage() {
                 <button
                   disabled={Boolean(getDisabledReason()) || isProcessing}
                   onClick={handleProcessTool}
-                  className={`w-full py-4 rounded-2xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full py-4 rounded-md font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
                     getDisabledReason() || isProcessing
-                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                      ? 'bg-border text-slate-400 dark:text-slate-600 cursor-not-allowed'
                       : 'bg-brand-600 hover:bg-brand-700 text-white hover:scale-[1.01]'
                   }`}
                 >
                   {isProcessing ? 'Processing Document...' : `${tool.name} →`}
                 </button>
                 {getDisabledReason() && (
-                  <p className="text-xs text-center text-slate-600 dark:text-slate-400 font-medium mt-2">
+                  <p className="text-xs text-center text-muted font-medium mt-2">
                     {getDisabledReason()}
                   </p>
                 )}
@@ -1487,22 +1487,22 @@ export default function UniversalToolPage() {
 
             {/* 1. PDF TO EXCEL DEDICATED RESULT CARD WITH LIVE TABLE PREVIEW */}
             {excelResult && (excelResult.isScannedOnly || !excelResult.canDownload || !excelResult.bytes) && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-6 text-left animate-in fade-in duration-200">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-amber-300 dark:border-amber-700/60 shadow-subtle space-y-6 text-left animate-in fade-in duration-200">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle size={26} />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-bold text-ink">
                       Scanned / Image-Only Document Detected
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-sm text-muted leading-relaxed">
                       {excelResult.message || 'This document contains zero selectable text across all pages. A blank spreadsheet was not generated.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
                   <div className="font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                     <span>💡 Recommendation</span>
                   </div>
@@ -1514,14 +1514,14 @@ export default function UniversalToolPage() {
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/tools/ocr-pdf"
-                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
+                    className="px-5 py-2.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
                   >
                     <span>Run OCR PDF on This File</span>
                     <ArrowRight size={14} />
                   </Link>
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                    className="px-4 py-2.5 rounded-md border border-border text-ink hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
                   >
                     ← Select another PDF
                   </button>
@@ -1530,14 +1530,14 @@ export default function UniversalToolPage() {
             )}
 
             {excelResult && excelResult.canDownload && excelResult.bytes && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 shadow-xl space-y-6 text-left animate-in fade-in duration-200">
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-emerald-200 dark:border-emerald-800 shadow-subtle space-y-6 text-left animate-in fade-in duration-200">
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                       <FileSpreadsheet size={22} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">{excelResult.filename}</h3>
+                      <h3 className="text-base font-bold text-ink">{excelResult.filename}</h3>
                       <span className="text-xs text-slate-500 font-medium">
                         {((excelResult.bytes?.byteLength || 0) / 1024).toFixed(1)} KB • Open XML Workbook (.xlsx)
                       </span>
@@ -1546,7 +1546,7 @@ export default function UniversalToolPage() {
 
                   <button
                     onClick={() => excelResult.bytes && downloadFile(excelResult.bytes, excelResult.filename, 'xlsx')}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-emerald-600/20"
+                    className="px-5 py-2.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-emerald-600/20"
                   >
                     <Download size={15} />
                     <span>Download .xlsx Workbook</span>
@@ -1555,21 +1555,21 @@ export default function UniversalToolPage() {
 
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="p-3.5 rounded-md bg-paper border border-border">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Pages Processed</span>
-                    <span className="text-base font-bold text-slate-800 dark:text-slate-100">{excelResult.pagesProcessed}</span>
+                    <span className="text-base font-bold text-ink">{excelResult.pagesProcessed}</span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="p-3.5 rounded-md bg-paper border border-border">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Worksheets</span>
-                    <span className="text-base font-bold text-slate-800 dark:text-slate-100">{excelResult.sheetCount}</span>
+                    <span className="text-base font-bold text-ink">{excelResult.sheetCount}</span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="p-3.5 rounded-md bg-paper border border-border">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Rows Detected</span>
-                    <span className="text-base font-bold text-slate-800 dark:text-slate-100">{excelResult.rowCount}</span>
+                    <span className="text-base font-bold text-ink">{excelResult.rowCount}</span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="p-3.5 rounded-md bg-paper border border-border">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Grid Confidence</span>
-                    <span className="text-base font-bold text-slate-800 dark:text-slate-100">{excelResult.confidence}%</span>
+                    <span className="text-base font-bold text-ink">{excelResult.confidence}%</span>
                   </div>
                 </div>
 
@@ -1588,7 +1588,7 @@ export default function UniversalToolPage() {
 
                 {/* Warnings if any */}
                 {excelResult.warnings && excelResult.warnings.length > 0 && (
-                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                  <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 space-y-1">
                     {excelResult.warnings.map((w, idx) => (
                       <p key={idx}>• {w}</p>
                     ))}
@@ -1601,7 +1601,7 @@ export default function UniversalToolPage() {
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Worksheet Table Preview (First {excelResult.previewRows.length} rows)
                     </h4>
-                    <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto max-h-64">
+                    <div className="border border-border rounded-md overflow-x-auto max-h-64">
                       <table className="w-full text-xs text-left border-collapse">
                         <tbody>
                           {excelResult.previewRows.map((row, rIdx) => (
@@ -1609,10 +1609,10 @@ export default function UniversalToolPage() {
                               key={rIdx}
                               className={
                                 rIdx === 0
-                                  ? 'bg-slate-100 dark:bg-slate-800 font-bold border-b border-slate-200 dark:border-slate-700'
+                                  ? 'bg-paper font-bold border-b border-border'
                                   : rIdx % 2 === 0
-                                  ? 'bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/60'
-                                  : 'bg-slate-50/60 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/60'
+                                  ? 'bg-surface border-b border-border/60'
+                                  : 'bg-slate-50/60 dark:bg-slate-800/40 border-b border-border/60'
                               }
                             >
                               {row.map((cell, cIdx) => (
@@ -1645,10 +1645,10 @@ export default function UniversalToolPage() {
 
             {/* 2. REPAIR PDF DIAGNOSTIC CARD */}
             {repairDiagnostic && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-border shadow-subtle space-y-4 text-left animate-in fade-in duration-200">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${
                       repairDiagnostic.status === 'Healthy' || repairDiagnostic.status === 'Repaired'
                         ? 'bg-emerald-50 text-emerald-600'
                         : repairDiagnostic.status === 'Partially Recovered'
@@ -1659,7 +1659,7 @@ export default function UniversalToolPage() {
                     <Wrench size={20} />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-base font-bold text-ink">
                       Diagnostic Result: {repairDiagnostic.status}
                     </h3>
                     <span className="text-xs text-slate-500">
@@ -1668,7 +1668,7 @@ export default function UniversalToolPage() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 space-y-2 text-xs font-mono text-slate-700 dark:text-slate-300">
+                <div className="p-4 rounded-md bg-paper space-y-2 text-xs font-mono text-ink">
                   <h4 className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Parser Diagnostics</h4>
                   {repairDiagnostic.diagnostics.map((d, i) => (
                     <p key={i}>• {d}</p>
@@ -1683,22 +1683,22 @@ export default function UniversalToolPage() {
 
             {/* 3. OCR RESULT CARD WITH UTF-8 TRANSCRIPT EXPORT & ZERO-CHARACTER DIAGNOSTICS */}
             {ocrResult && (!ocrResult.hasReadableText || !ocrResult.bytes) && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-5 text-left animate-in fade-in duration-200">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-amber-300 dark:border-amber-700/60 shadow-subtle space-y-5 text-left animate-in fade-in duration-200">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle size={26} />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-bold text-ink">
                       No Readable Characters Detected
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-sm text-muted leading-relaxed">
                       {ocrResult.disclaimer}
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
                   <div className="font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                     <span>💡 Scan Quality Recommendation</span>
                   </div>
@@ -1711,7 +1711,7 @@ export default function UniversalToolPage() {
                 <div className="pt-2">
                   <button
                     onClick={handleReset}
-                    className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                    className="px-5 py-2.5 rounded-md border border-border text-ink hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
                   >
                     ← Try another file or scan
                   </button>
@@ -1720,10 +1720,10 @@ export default function UniversalToolPage() {
             )}
 
             {ocrResult && ocrResult.hasReadableText && ocrResult.bytes && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-emerald-200 dark:border-emerald-800 shadow-subtle space-y-4 text-left animate-in fade-in duration-200">
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Searchable PDF & Transcript Ready</h3>
+                    <h3 className="text-base font-bold text-ink">Searchable PDF & Transcript Ready</h3>
                     <span className="text-xs text-slate-500">
                       {ocrResult.totalPages} pages processed • {ocrResult.recognizedCharCount} characters recognized
                     </span>
@@ -1737,14 +1737,14 @@ export default function UniversalToolPage() {
                           'txt'
                         )
                       }
-                      className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold text-xs inline-flex items-center gap-1.5"
+                      className="px-3.5 py-2 rounded-md bg-paper hover:bg-slate-200 text-ink font-semibold text-xs inline-flex items-center gap-1.5"
                     >
                       <Download size={14} />
                       <span>Download Transcript (.txt)</span>
                     </button>
                     <button
                       onClick={() => downloadFile(ocrResult.bytes!, sanitizeDownloadFilename(ocrResult.filename, 'pdf'), 'pdf')}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm"
+                      className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm"
                     >
                       <Download size={14} />
                       <span>Download Searchable PDF</span>
@@ -1752,7 +1752,7 @@ export default function UniversalToolPage() {
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 italic">{ocrResult.disclaimer}</p>
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 max-h-48 overflow-y-auto font-mono text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
+                <div className="p-3.5 rounded-md bg-paper max-h-48 overflow-y-auto font-mono text-xs text-ink whitespace-pre-wrap">
                   {ocrResult.transcriptText.slice(0, 1200)}...
                 </div>
               </div>
@@ -1770,22 +1770,22 @@ export default function UniversalToolPage() {
 
             {/* 5. LOCAL DOCUMENT SUMMARIZER RESULT VIEW WITH .MD AND .TXT EXPORTS */}
             {aiSummary && aiSummary.isScannedWarning && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-5 text-left animate-in fade-in duration-200">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-amber-300 dark:border-amber-700/60 shadow-subtle space-y-5 text-left animate-in fade-in duration-200">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle size={26} />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-bold text-ink">
                       Scanned / Image-Only Document Detected
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-sm text-muted leading-relaxed">
                       {aiSummary.summary.overview}
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2">
                   <div className="font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                     <span>💡 Recommendation</span>
                   </div>
@@ -1797,14 +1797,14 @@ export default function UniversalToolPage() {
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/tools/ocr-pdf"
-                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
+                    className="px-5 py-2.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
                   >
                     <span>Run OCR PDF on This File</span>
                     <ArrowRight size={14} />
                   </Link>
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                    className="px-4 py-2.5 rounded-md border border-border text-ink hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
                   >
                     ← Select another PDF
                   </button>
@@ -1813,14 +1813,14 @@ export default function UniversalToolPage() {
             )}
 
             {aiSummary && !aiSummary.isScannedWarning && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 shadow-xl space-y-6 animate-in fade-in duration-200 text-left">
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-indigo-200 dark:border-indigo-800 shadow-subtle space-y-6 animate-in fade-in duration-200 text-left">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-md bg-brand/10 text-brand flex items-center justify-center">
                       <Sparkles size={18} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Structured Document Overview</h3>
+                      <h3 className="text-base font-bold text-ink">Structured Document Overview</h3>
                       <span className="text-[11px] text-slate-500 font-medium">{aiSummary.engineLabel}</span>
                     </div>
                   </div>
@@ -1835,7 +1835,7 @@ export default function UniversalToolPage() {
                           'md'
                         );
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold text-xs inline-flex items-center gap-1 hover:bg-indigo-100"
+                      className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand font-semibold text-xs inline-flex items-center gap-1 hover:bg-brand/20"
                     >
                       <Download size={13} />
                       <span>Download .md</span>
@@ -1850,7 +1850,7 @@ export default function UniversalToolPage() {
                           'txt'
                         );
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs inline-flex items-center gap-1 hover:bg-slate-200"
+                      className="px-3 py-1.5 rounded-lg bg-paper text-ink font-semibold text-xs inline-flex items-center gap-1 hover:bg-slate-200"
                     >
                       <Download size={13} />
                       <span>Download .txt</span>
@@ -1860,7 +1860,7 @@ export default function UniversalToolPage() {
                         navigator.clipboard.writeText(JSON.stringify(aiSummary.summary, null, 2));
                         alert('Copied summary to clipboard!');
                       }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1"
                     >
                       <Copy size={13} />
                       <span>Copy</span>
@@ -1871,7 +1871,7 @@ export default function UniversalToolPage() {
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Executive Overview</h4>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{aiSummary.summary.overview}</p>
+                    <p className="text-sm text-ink leading-relaxed">{aiSummary.summary.overview}</p>
                   </div>
 
                   {aiSummary.summary.keyPoints && aiSummary.summary.keyPoints.length > 0 && (
@@ -1879,8 +1879,8 @@ export default function UniversalToolPage() {
                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Key Takeaways</h4>
                       <ul className="space-y-1.5">
                         {aiSummary.summary.keyPoints.map((pt, idx) => (
-                          <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                          <li key={idx} className="text-xs text-ink flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand text-brand-fg mt-1.5 shrink-0" />
                             <span>{pt}</span>
                           </li>
                         ))}
@@ -1889,7 +1889,7 @@ export default function UniversalToolPage() {
                   )}
                 </div>
 
-                <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-indigo-600">
+                <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-brand">
                   Analyze another document
                 </button>
               </div>
@@ -1897,16 +1897,16 @@ export default function UniversalToolPage() {
 
             {/* 6. TRANSLATION RESULT VIEW */}
             {translationResult && translationResult.isScannedWarning && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 shadow-xl space-y-5 text-left animate-in fade-in duration-200">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-amber-300 dark:border-amber-700/60 shadow-subtle space-y-5 text-left animate-in fade-in duration-200">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle size={26} />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-bold text-ink">
                       Scanned / Image-Only Document Detected
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-sm text-muted leading-relaxed">
                       {translationResult.unsupportedMessage ||
                         'This document contains zero selectable text across all analyzed pages. Please run OCR PDF first.'}
                     </p>
@@ -1916,14 +1916,14 @@ export default function UniversalToolPage() {
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/tools/ocr-pdf"
-                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
+                    className="px-5 py-2.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-brand-600/20"
                   >
                     <span>Run OCR PDF on This File</span>
                     <ArrowRight size={14} />
                   </Link>
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+                    className="px-4 py-2.5 rounded-md border border-border text-ink hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
                   >
                     ← Select another PDF
                   </button>
@@ -1932,10 +1932,10 @@ export default function UniversalToolPage() {
             )}
 
             {translationResult && !translationResult.isScannedWarning && (
-              <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 shadow-xl space-y-4 text-left animate-in fade-in duration-200">
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="p-6 md:p-8 rounded-md bg-surface border border-indigo-200 dark:border-indigo-800 shadow-subtle space-y-4 text-left animate-in fade-in duration-200">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-base font-bold text-ink">
                       Document Translation ({translationResult.targetLang})
                     </h3>
                     <span className="text-xs text-slate-500">{translationResult.engineLabel}</span>
@@ -1951,7 +1951,7 @@ export default function UniversalToolPage() {
                             'txt'
                           );
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold text-xs inline-flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand font-semibold text-xs inline-flex items-center gap-1.5"
                       >
                         <Download size={13} />
                         <span>Download .txt</span>
@@ -1961,7 +1961,7 @@ export default function UniversalToolPage() {
                           navigator.clipboard.writeText(translationResult.translatedText);
                           alert('Translation copied to clipboard!');
                         }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1"
                       >
                         <Copy size={13} />
                         <span>Copy</span>
@@ -1975,16 +1975,16 @@ export default function UniversalToolPage() {
                     readOnly
                     value={translationResult.translatedText}
                     rows={12}
-                    className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 font-mono text-xs text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 resize-y"
+                    className="w-full p-4 rounded-md bg-paper font-mono text-xs text-ink border border-border resize-y"
                   />
                 ) : (
-                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                  <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-2">
                     <p className="font-bold">Notice: Translation Unavailable Locally</p>
                     <p>{translationResult.unsupportedMessage}</p>
                   </div>
                 )}
 
-                <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-indigo-600">
+                <button onClick={handleReset} className="text-xs font-semibold text-slate-500 hover:text-brand">
                   Translate another document
                 </button>
               </div>

@@ -24,7 +24,7 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
   return (
     <section 
       aria-label={`${tool.name} Specifications and Documentation`}
-      className="mt-16 pt-12 border-t border-slate-200 dark:border-slate-800 text-left space-y-12"
+      className="mt-16 pt-12 border-t border-border text-left space-y-12"
     >
       {/* 1. What the Tool Does & Overview */}
       <div className="space-y-4 max-w-4xl">
@@ -32,10 +32,10 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
           <Layers size={14} />
           <span>Documentation & Specifications</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
           What {tool.name} Does
         </h2>
-        <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+        <p className="text-base text-ink leading-relaxed">
           {seo.whatItDoes}
         </p>
       </div>
@@ -43,14 +43,14 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
       {/* 2. Key Capabilities vs Genuine Limitations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Capabilities Card */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-4">
           <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 size={20} className="shrink-0" />
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">
+            <h3 className="font-bold text-base text-ink">
               Key Capabilities
             </h3>
           </div>
-          <ul className="space-y-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+          <ul className="space-y-2.5 text-xs sm:text-sm text-muted">
             {seo.capabilities.map((cap, idx) => (
               <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
@@ -61,14 +61,14 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
         </div>
 
         {/* Limitations Card */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-4">
           <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
             <AlertCircle size={20} className="shrink-0" />
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">
+            <h3 className="font-bold text-base text-ink">
               Technical Limitations & Considerations
             </h3>
           </div>
-          <ul className="space-y-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+          <ul className="space-y-2.5 text-xs sm:text-sm text-muted">
             {seo.limitations.map((lim, idx) => (
               <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
@@ -80,12 +80,12 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
       </div>
 
       {/* 3. How to Use Step-by-Step */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-6">
+      <div className="p-6 sm:p-8 rounded-md bg-slate-100/70 dark:bg-slate-900/50 border border-border space-y-6">
         <div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+          <h3 className="text-xl font-bold text-ink">
             How to Use {tool.name}
           </h3>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Follow these straightforward steps to process your documents locally:
           </p>
         </div>
@@ -94,12 +94,12 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
           {seo.howToSteps.map((step, idx) => (
             <li
               key={idx}
-              className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs"
+              className="p-4 rounded-md bg-surface border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs"
             >
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-brand-50 dark:bg-brand-950/80 text-brand-600 dark:text-brand-400 font-bold text-xs">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-brand-50 dark:bg-brand-950/80 text-brand font-bold text-xs">
                 {idx + 1}
               </span>
-              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              <p className="text-xs sm:text-sm text-ink leading-relaxed font-medium">
                 {step}
               </p>
             </li>
@@ -109,26 +109,26 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
 
       {/* 4. Technical Specifications & Privacy Table */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-md bg-surface border border-border space-y-1">
+          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Supported Input
           </span>
-          <p className="text-sm font-bold text-slate-900 dark:text-white">
+          <p className="text-sm font-bold text-ink">
             {seo.inputFormat}
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-md bg-surface border border-border space-y-1">
+          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Generated Output
           </span>
-          <p className="text-sm font-bold text-slate-900 dark:text-white">
+          <p className="text-sm font-bold text-ink">
             {seo.outputFormat}
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-md bg-surface border border-border space-y-1">
+          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Processing Engine
           </span>
           <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -137,8 +137,8 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <div className="p-4 rounded-md bg-surface border border-border space-y-1">
+          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Privacy Guarantee
           </span>
           <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -150,60 +150,60 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
 
       {/* 5. Frequently Asked Questions & Helpful Tips */}
       <div className="space-y-6 pt-4">
-        <div className="flex items-center gap-2.5 text-brand-600 dark:text-brand-400">
+        <div className="flex items-center gap-2.5 text-brand">
           <HelpCircle size={20} className="shrink-0" />
-          <h3 className="font-bold text-xl text-slate-900 dark:text-white">
+          <h3 className="font-bold text-xl text-ink">
             Frequently Asked Questions
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+          <div className="p-5 rounded-md bg-surface border border-border space-y-2">
+            <h4 className="font-bold text-sm text-ink">
               Are my documents uploaded to any remote server?
             </h4>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-muted leading-relaxed">
               No. DocuNexa executes all operations entirely in your web browser memory via client-side WebAssembly and JavaScript engines. No files or document contents ever leave your device.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+          <div className="p-5 rounded-md bg-surface border border-border space-y-2">
+            <h4 className="font-bold text-sm text-ink">
               Is there a file size limit or cost to use {tool.name}?
             </h4>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-muted leading-relaxed">
               {tool.name} is completely free with zero subscription paywalls, watermarks, or artificial limits. Processing capacity is determined solely by your device's available memory.
             </p>
           </div>
 
           {tool.slug === 'pdf-unit-cutter' ? (
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2">
-              <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+            <div className="p-5 rounded-md bg-surface border border-border space-y-2 md:col-span-2">
+              <h4 className="font-bold text-sm text-ink">
                 How can I split a scanned textbook or syllabus with no digital text layer?
               </h4>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted leading-relaxed">
                 If your document contains scanned pages without a text layer, first run it through our{' '}
-                <Link href="/tools/ocr-pdf" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                <Link href="/tools/ocr-pdf" className="text-brand font-semibold hover:underline">
                   OCR PDF
                 </Link>{' '}
                 tool to generate searchable text and headings. After splitting, you can reduce chapter file sizes using{' '}
-                <Link href="/tools/compress-pdf" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                <Link href="/tools/compress-pdf" className="text-brand font-semibold hover:underline">
                   Compress PDF
                 </Link>{' '}
                 or re-combine sections with{' '}
-                <Link href="/tools/merge-pdf" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                <Link href="/tools/merge-pdf" className="text-brand font-semibold hover:underline">
                   Merge PDF
                 </Link>.
               </p>
             </div>
           ) : (
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2">
-              <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+            <div className="p-5 rounded-md bg-surface border border-border space-y-2 md:col-span-2">
+              <h4 className="font-bold text-sm text-ink">
                 Need to split textbooks or long course documents into structured chapters?
               </h4>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted leading-relaxed">
                 Try DocuNexa's flagship{' '}
-                <Link href="/tools/pdf-unit-cutter" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                <Link href="/tools/pdf-unit-cutter" className="text-brand font-semibold hover:underline">
                   PDF Unit Cutter
                 </Link>{' '}
                 for automated outline detection, Table of Contents parsing with offset calibration, visual boundary preview, and one-click ZIP chapter export.

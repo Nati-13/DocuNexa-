@@ -42,9 +42,9 @@ export const TOOL_CATEGORIES: ToolCategoryInfo[] = [
     name: 'Edit PDF',
     tagline: 'Rotate, crop, watermark, number, and annotate pages',
     accentColor: 'purple',
-    accentBg: 'bg-purple-50 dark:bg-purple-950/30',
+    accentBg: 'bg-brand/10',
     accentBorder: 'border-purple-200 dark:border-purple-800/50',
-    accentText: 'text-purple-600 dark:text-purple-400',
+    accentText: 'text-brand',
   },
   {
     id: 'security',
@@ -60,9 +60,9 @@ export const TOOL_CATEGORIES: ToolCategoryInfo[] = [
     name: 'PDF Intelligence',
     tagline: 'Local document summaries, translation, and Markdown exports',
     accentColor: 'indigo',
-    accentBg: 'bg-indigo-50 dark:bg-indigo-950/30',
+    accentBg: 'bg-brand/10',
     accentBorder: 'border-indigo-200 dark:border-indigo-800/50',
-    accentText: 'text-indigo-600 dark:text-indigo-400',
+    accentText: 'text-brand',
   },
 ];
 

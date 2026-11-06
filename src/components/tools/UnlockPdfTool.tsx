@@ -129,7 +129,7 @@ export function UnlockPdfTool() {
     <div className="space-y-8">
       {resultFiles ? (
         <div className="space-y-6">
-          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
+          <div className="p-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
             <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
               <h4 className="font-bold text-sm sm:text-base">PDF Unlocked Successfully!</h4>
@@ -155,16 +155,16 @@ export function UnlockPdfTool() {
           ) : (
             <div className="space-y-6">
               {/* File Info */}
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="p-5 rounded-md bg-surface border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                  <div className="w-12 h-12 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                     <FileText size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">
+                    <h3 className="text-sm font-bold text-ink line-clamp-1">
                       {file.name}
                     </h3>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <div className="flex items-center gap-3 text-xs text-muted mt-0.5">
                       <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
                       <span>•</span>
                       <span className="text-amber-600 dark:text-amber-400 font-medium">Locked Document</span>
@@ -175,7 +175,7 @@ export function UnlockPdfTool() {
                 <button
                   type="button"
                   onClick={resetAll}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
                 >
                   <RefreshCw size={13} />
                   Change PDF
@@ -183,7 +183,7 @@ export function UnlockPdfTool() {
               </div>
 
               {/* Local Decryption Advisory */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3 text-slate-700 dark:text-slate-300 text-xs">
+              <div className="p-4 rounded-md bg-paper border border-slate-200/60 dark:border-slate-800 flex items-start gap-3 text-ink text-xs">
                 <ShieldCheck size={16} className="shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                 <p>
                   <strong>Client-Side Decryption:</strong> Password verification and decryption are executed entirely within your browser RAM. Your password is never logged, stored, or sent to any server.
@@ -191,10 +191,10 @@ export function UnlockPdfTool() {
               </div>
 
               {/* Password Input */}
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-                <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
-                  <KeyRound size={18} className="text-brand-600 dark:text-brand-400" />
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+              <div className="p-6 rounded-md bg-surface border border-border shadow-sm space-y-6">
+                <div className="flex items-center gap-2.5 pb-4 border-b border-border">
+                  <KeyRound size={18} className="text-brand" />
+                  <h3 className="font-bold text-sm sm:text-base text-ink">
                     Enter Document Password
                   </h3>
                 </div>
@@ -202,7 +202,7 @@ export function UnlockPdfTool() {
                 <div className="space-y-2 max-w-md">
                   <label
                     htmlFor="unlock-password-input"
-                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                    className="block text-xs font-bold uppercase tracking-wider text-ink"
                   >
                     PDF Password
                   </label>
@@ -216,7 +216,7 @@ export function UnlockPdfTool() {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="Enter the PDF password..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500 pr-12 transition-all placeholder:text-slate-600 dark:placeholder:text-slate-300"
+                      className="w-full px-4 py-3 rounded-md border border-border bg-paper text-ink text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500 pr-12 transition-all placeholder:text-slate-600 dark:placeholder:text-slate-300"
                     />
                     <button
                       type="button"
@@ -227,13 +227,13 @@ export function UnlockPdfTool() {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  <p className="text-[11px] text-muted">
                     Passwords are never sent to a server or recorded. Decryption is performed entirely inside your browser.
                   </p>
                 </div>
 
                 {errorMessage && (
-                  <div role="alert" className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                  <div role="alert" className="p-3.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     <span>{errorMessage}</span>
                   </div>
@@ -244,10 +244,10 @@ export function UnlockPdfTool() {
                     type="button"
                     disabled={!isFormValid || isProcessing}
                     onClick={handleUnlockPdf}
-                    className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
+                    className={`w-full py-4 rounded-md font-bold text-sm flex items-center justify-center gap-2 shadow-subtle transition-all focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-hidden ${
                       isFormValid
                         ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/25 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0'
-                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
+                        : 'bg-border text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                     }`}
                   >
                     <Unlock size={18} />
@@ -255,7 +255,7 @@ export function UnlockPdfTool() {
                   </button>
 
                   {!isFormValid && (
-                    <p className="text-center text-[11px] text-slate-600 dark:text-slate-300 mt-2">
+                    <p className="text-center text-[11px] text-muted mt-2">
                       Please enter the document password to enable unlocking
                     </p>
                   )}

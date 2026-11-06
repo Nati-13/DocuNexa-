@@ -17,7 +17,7 @@ export function CopyPageLinkButton() {
   return (
     <button
       onClick={handleCopyLink}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 font-medium transition-all cursor-pointer"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-slate-300 dark:hover:border-slate-700 text-ink font-medium transition-all cursor-pointer"
       title="Copy page link"
     >
       {copied ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} />}

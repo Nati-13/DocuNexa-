@@ -69,19 +69,19 @@ export function LockedAccountsConsole() {
   };
 
   return (
-    <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+    <div className="rounded-md bg-surface border border-border p-6 shadow-xs space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <ShieldAlert className="text-amber-500" size={20} />
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            <h2 className="text-base font-bold text-ink">
               Account Lockout &amp; Recovery Console
             </h2>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               5-Attempt Shield
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted">
             Accounts locked after 5 consecutive failed login attempts. Verify customer identity before initiating recovery.
           </p>
         </div>
@@ -90,7 +90,7 @@ export function LockedAccountsConsole() {
           type="button"
           onClick={fetchLockedAccounts}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-muted hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
         >
           <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -100,7 +100,7 @@ export function LockedAccountsConsole() {
       {feedback && (
         <div
           role={feedback.type === 'error' ? 'alert' : 'status'}
-          className={`p-3.5 rounded-2xl flex items-start gap-2.5 text-xs ${
+          className={`p-3.5 rounded-md flex items-start gap-2.5 text-xs ${
             feedback.type === 'error'
               ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300'
               : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300'
@@ -117,11 +117,11 @@ export function LockedAccountsConsole() {
 
       {loading ? (
         <div className="p-8 text-center space-y-2">
-          <Loader2 className="animate-spin text-brand-500 mx-auto" size={20} />
+          <Loader2 className="animate-spin text-brand mx-auto" size={20} />
           <p className="text-xs text-slate-400">Inspecting locked account records...</p>
         </div>
       ) : lockedAccounts.length === 0 ? (
-        <div className="p-8 text-center rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2">
+        <div className="p-8 text-center rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2">
           <ShieldCheck className="text-emerald-500 mx-auto" size={24} />
           <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
             Zero Locked Accounts
@@ -131,9 +131,9 @@ export function LockedAccountsConsole() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-paper text-muted font-semibold border-b border-border">
               <tr>
                 <th className="py-2.5 px-3">Customer Email</th>
                 <th className="py-2.5 px-3 text-center">Failed Attempts</th>
@@ -142,14 +142,14 @@ export function LockedAccountsConsole() {
                 <th className="py-2.5 px-3 text-right">Recovery Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {lockedAccounts.map((account) => {
                 const isOperating = actionLoadingEmail === account.email;
 
                 return (
                   <tr key={account.email} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td className="py-3 px-3">
-                      <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <div className="font-semibold text-ink flex items-center gap-1.5">
                         <Lock size={12} className="text-amber-500" />
                         <span>{account.email}</span>
                       </div>
@@ -160,7 +160,7 @@ export function LockedAccountsConsole() {
                         {account.failedAttempts} / 5
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-300 text-[11px]">
+                    <td className="py-3 px-3 text-muted text-[11px]">
                       {account.lockedAt ? new Date(account.lockedAt).toLocaleString() : 'Recent'}
                     </td>
                     <td className="py-3 px-3 font-mono text-[10px] text-slate-500">
@@ -182,7 +182,7 @@ export function LockedAccountsConsole() {
                         type="button"
                         onClick={() => handleAction('unlock', account.email)}
                         disabled={isOperating}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-[11px] transition-colors cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border hover:bg-slate-100 dark:hover:bg-slate-800 text-ink font-medium text-[11px] transition-colors cursor-pointer disabled:opacity-50"
                         title="Unlocks account and clears consecutive failure counter"
                       >
                         <Unlock size={10} />

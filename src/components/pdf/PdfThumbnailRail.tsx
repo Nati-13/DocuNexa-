@@ -105,12 +105,12 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
     <div
       ref={containerRef}
       onClick={onSelect}
-      className={`group relative flex flex-col items-center p-2 rounded-2xl cursor-pointer transition-all duration-150 border-2 ${
+      className={`group relative flex flex-col items-center p-2 rounded-md cursor-pointer transition-all duration-150 border-2 ${
         isActive
           ? 'bg-brand-50/90 dark:bg-brand-950/40 border-brand-500 shadow-md ring-2 ring-brand-500/20'
           : isSelected
-          ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-400'
-          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          ? 'bg-brand/10 border-brand'
+          : 'bg-surface border-border hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >
       {/* Checkbox for multi-page selection */}
@@ -140,7 +140,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
 
       {/* Canvas wrapper with visual rotation */}
       <div
-        className="w-24 h-32 flex items-center justify-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 transition-transform duration-200"
+        className="w-24 h-32 flex items-center justify-center overflow-hidden rounded-lg bg-paper transition-transform duration-200"
         style={{ transform: `rotate(${rotation}deg)` }}
       >
         <canvas ref={canvasRef} className="max-w-full max-h-full object-contain shadow-2xs" />
@@ -151,7 +151,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({
 
       {/* Page Label & Quick Actions */}
       <div className="mt-2 w-full flex items-center justify-between text-xs px-1">
-        <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+        <span className="font-semibold text-ink text-[11px]">
           Page {pageNum}
         </span>
 
@@ -227,13 +227,13 @@ export const PdfThumbnailRail: React.FC<PdfThumbnailRailProps> = ({
   }, [pdfBuffer]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl border border-slate-200 dark:border-slate-800 p-3 shadow-inner">
-      <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200 dark:border-slate-800 px-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+    <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-ink/40 rounded-md border border-border p-3 shadow-inner">
+      <div className="flex items-center justify-between pb-3 mb-2 border-b border-border px-1">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted">
           Pages ({totalPages})
         </span>
         {isMultiSelectMode && (
-          <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400">
+          <span className="text-[11px] font-semibold text-brand">
             {selectedPages.length} selected
           </span>
         )}

@@ -129,15 +129,15 @@ export default function AdminPaymentsPage() {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
             Payment Orders
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Real-time direct Bybit USDT Polygon orders, blockchain confirmations, and review cases.
           </p>
         </div>
         <div className="text-xs text-slate-500">
-          Total orders: <strong className="text-slate-900 dark:text-white">{totalCount}</strong>
+          Total orders: <strong className="text-ink">{totalCount}</strong>
         </div>
       </div>
 
@@ -153,7 +153,7 @@ export default function AdminPaymentsPage() {
               setPage(1);
             }}
             placeholder="Search by order ID or Polygon transaction hash..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
 
@@ -167,7 +167,7 @@ export default function AdminPaymentsPage() {
                 setPage(1);
               }}
               title="Filter from date"
-              className="px-2.5 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-2.5 py-1.5 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
             <span>to</span>
             <input
@@ -178,7 +178,7 @@ export default function AdminPaymentsPage() {
                 setPage(1);
               }}
               title="Filter to date"
-              className="px-2.5 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-2.5 py-1.5 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -190,7 +190,7 @@ export default function AdminPaymentsPage() {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="all">All Statuses</option>
               <option value="confirmed">Confirmed</option>
@@ -208,7 +208,7 @@ export default function AdminPaymentsPage() {
                 setNetworkFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="px-3 py-2 rounded-md text-xs bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="all">All Networks</option>
               <option value="Polygon">Polygon (PoS)</option>
@@ -218,7 +218,7 @@ export default function AdminPaymentsPage() {
 
           <button
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             title="Download safe RFC 4180 CSV export"
           >
             <Download size={13} /> Export CSV
@@ -227,10 +227,10 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Payments Table */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      <div className="rounded-md bg-surface border border-border overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-12 text-center space-y-2">
-            <Loader2 className="animate-spin text-brand-500 mx-auto" size={24} />
+            <Loader2 className="animate-spin text-brand mx-auto" size={24} />
             <p className="text-xs text-slate-400">Loading payment orders...</p>
           </div>
         ) : payments.length === 0 ? (
@@ -240,7 +240,7 @@ export default function AdminPaymentsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-semibold">
+              <thead className="border-b border-border bg-paper text-muted font-semibold">
                 <tr>
                   <th className="py-3 px-3">Date</th>
                   <th className="py-3 px-3">Order ID</th>
@@ -255,7 +255,7 @@ export default function AdminPaymentsPage() {
                   <th className="py-3 px-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+              <tbody className="divide-y divide-border text-ink">
                 {payments.map((p) => {
                   const isConfirmed = p.status === 'confirmed';
                   const isPending = p.status === 'pending';
@@ -269,10 +269,10 @@ export default function AdminPaymentsPage() {
                       <td className="py-3 px-3 text-slate-500">
                         {new Date(p.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="py-3 px-3 font-mono font-bold text-slate-900 dark:text-white">
+                      <td className="py-3 px-3 font-mono font-bold text-ink">
                         {p.orderId}
                       </td>
-                      <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
+                      <td className="py-3 px-3 text-ink">
                         {p.userEmail}
                       </td>
                       <td className="py-3 px-3 font-mono text-slate-400">
@@ -292,7 +292,7 @@ export default function AdminPaymentsPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="py-3 px-3 font-mono font-black text-brand-600 dark:text-brand-400">
+                      <td className="py-3 px-3 font-mono font-black text-brand">
                         {formatPaymentAmount(p.paymentAmountUsdt)}
                       </td>
                       <td className="py-3 px-3 font-mono">
@@ -310,7 +310,7 @@ export default function AdminPaymentsPage() {
                             Aptos
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand/10 border border-brand/20 text-brand font-semibold text-[10px]">
                             Polygon
                           </span>
                         )}
@@ -337,11 +337,11 @@ export default function AdminPaymentsPage() {
                             <AlertTriangle size={10} /> Mismatch
                           </span>
                         ) : isExpired ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-semibold text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-slate-500 font-semibold text-[10px]">
                             Expired
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-paper text-slate-500 text-[10px]">
                             {p.status}
                           </span>
                         )}
@@ -356,7 +356,7 @@ export default function AdminPaymentsPage() {
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-mono text-brand-600 dark:text-brand-400 hover:underline"
+                            className="inline-flex items-center gap-1 text-[11px] font-mono text-brand hover:underline"
                             title={p.txId}
                           >
                             {p.txId.slice(0, 8)}... <ExternalLink size={10} />
@@ -369,7 +369,7 @@ export default function AdminPaymentsPage() {
                         {(isLate || isMismatch || isPending) && (
                           <button
                             onClick={() => handleOpenReview(p)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-[11px] font-semibold hover:bg-purple-100 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-brand bg-brand/10 border border-brand/20 text-[11px] font-semibold hover:bg-brand/10 transition-colors cursor-pointer"
                           >
                             Review
                           </button>
@@ -385,11 +385,11 @@ export default function AdminPaymentsPage() {
 
         {/* Pagination Bar */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-3 border-t border-slate-200 dark:border-slate-800 text-xs">
+          <div className="flex items-center justify-between p-3 border-t border-border text-xs">
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border disabled:opacity-50 transition-colors"
             >
               <ChevronLeft size={13} /> Previous
             </button>
@@ -399,7 +399,7 @@ export default function AdminPaymentsPage() {
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border disabled:opacity-50 transition-colors"
             >
               Next <ChevronRight size={13} />
             </button>
@@ -409,8 +409,8 @@ export default function AdminPaymentsPage() {
 
       {/* Manual Payment Review Modal */}
       {reviewOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40  animate-fade-in">
+          <div className="relative w-full max-w-lg bg-surface border border-border rounded-md p-6 shadow-subtle space-y-4">
             <button
               onClick={() => setReviewOrder(null)}
               className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-full"
@@ -419,11 +419,11 @@ export default function AdminPaymentsPage() {
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600">
+              <div className="p-2 rounded-md bg-brand/10 text-brand">
                 <CreditCard size={20} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-bold text-ink">
                   Payment Order Investigation
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -433,14 +433,14 @@ export default function AdminPaymentsPage() {
             </div>
 
             {/* Diagnostic Snapshot */}
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs space-y-1">
+            <div className="p-3 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60 text-xs space-y-1">
               <div className="flex justify-between">
                 <span className="text-slate-500">Network:</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{reviewOrder.network || 'Polygon'}</span>
+                <span className="font-semibold text-ink">{reviewOrder.network || 'Polygon'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Expected USDT:</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">{formatPaymentAmount(reviewOrder.paymentAmountUsdt)}</span>
+                <span className="font-mono font-bold text-ink">{formatPaymentAmount(reviewOrder.paymentAmountUsdt)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Received USDT:</span>
@@ -448,7 +448,7 @@ export default function AdminPaymentsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Address:</span>
-                <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate max-w-[260px]">
+                <span className="font-mono text-[11px] text-muted truncate max-w-[260px]">
                   {reviewOrder.destinationAddress}
                 </span>
               </div>
@@ -461,17 +461,17 @@ export default function AdminPaymentsPage() {
 
             <form onSubmit={handleExecuteReview} className="space-y-4 pt-1 text-xs">
               <div className="space-y-1.5">
-                <label className="block font-semibold text-slate-700 dark:text-slate-300">
+                <label className="block font-semibold text-ink">
                   Decision Action
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setReviewAction('approve')}
-                    className={`py-2 px-3 rounded-xl font-bold border text-center transition-colors cursor-pointer ${
+                    className={`py-2 px-3 rounded-md font-bold border text-center transition-colors cursor-pointer ${
                       reviewAction === 'approve'
                         ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-50'
+                        : 'border-border text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     Approve & Upgrade
@@ -479,10 +479,10 @@ export default function AdminPaymentsPage() {
                   <button
                     type="button"
                     onClick={() => setReviewAction('reject')}
-                    className={`py-2 px-3 rounded-xl font-bold border text-center transition-colors cursor-pointer ${
+                    className={`py-2 px-3 rounded-md font-bold border text-center transition-colors cursor-pointer ${
                       reviewAction === 'reject'
                         ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-700 dark:text-rose-300'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-50'
+                        : 'border-border text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     Reject Order
@@ -491,7 +491,7 @@ export default function AdminPaymentsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block font-semibold text-slate-700 dark:text-slate-300">
+                <label className="block font-semibold text-ink">
                   {reviewOrder.network || 'Polygon'} Tx Hash / Verification Evidence
                 </label>
                 <input
@@ -499,12 +499,12 @@ export default function AdminPaymentsPage() {
                   value={reviewTxId}
                   onChange={(e) => setReviewTxId(e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border font-mono text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="block font-semibold text-slate-700 dark:text-slate-300">
+                <label className="block font-semibold text-ink">
                   Documented Reason (Required)
                 </label>
                 <textarea
@@ -512,7 +512,7 @@ export default function AdminPaymentsPage() {
                   value={reviewReason}
                   onChange={(e) => setReviewReason(e.target.value)}
                   placeholder="Explain why this decision is being made for the permanent audit log..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 rounded-md bg-paper border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
                   required
                 />
               </div>
@@ -527,20 +527,20 @@ export default function AdminPaymentsPage() {
                 />
                 <label
                   htmlFor="confirmReview"
-                  className="text-slate-600 dark:text-slate-300 text-[11px] leading-tight cursor-pointer"
+                  className="text-muted text-[11px] leading-tight cursor-pointer"
                 >
                   I confirm that I have verified the blockchain transfer details and authorize this decision.
                 </label>
               </div>
 
               {reviewError && (
-                <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs">
+                <div className="p-2.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs">
                   {reviewError}
                 </div>
               )}
 
               {reviewSuccess && (
-                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                <div className="p-2.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                   ✓ {reviewSuccess}
                 </div>
               )}
@@ -549,14 +549,14 @@ export default function AdminPaymentsPage() {
                 <button
                   type="button"
                   onClick={() => setReviewOrder(null)}
-                  className="px-3.5 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium"
+                  className="px-3.5 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={reviewLoading || !reviewConfirmed || reviewReason.trim().length < 5}
-                  className={`px-4 py-2 rounded-xl text-white font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-md text-white font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 ${
                     reviewAction === 'approve'
                       ? 'bg-emerald-600 hover:bg-emerald-500'
                       : 'bg-rose-600 hover:bg-rose-500'

@@ -68,13 +68,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-ink/40  animate-in fade-in duration-150">
       <div
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+        className="w-full max-w-2xl bg-surface rounded-md shadow-subtle border border-border overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input header */}
-        <div className="relative flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-slate-800">
+        <div className="relative flex items-center px-4 py-3.5 border-b border-border">
           <Search className="w-5 h-5 text-slate-500 mr-3 shrink-0" />
           <input
             ref={inputRef}
@@ -86,7 +86,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm focus:outline-none"
+            className="w-full bg-transparent text-ink placeholder-slate-500 dark:placeholder-slate-400 text-sm focus:outline-none"
           />
           <button
             onClick={onClose}
@@ -99,15 +99,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         {/* Results List */}
         <div className="max-h-96 overflow-y-auto p-2">
           {filteredTools.length === 0 ? (
-            <div className="py-12 text-center text-slate-600 dark:text-slate-400">
+            <div className="py-12 text-center text-muted">
               <p className="text-sm">No PDF tools found matching &ldquo;{query}&rdquo;</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Try searching for &ldquo;merge&rdquo;, &ldquo;cutter&rdquo;, &ldquo;ocr&rdquo;, or &ldquo;watermark&rdquo;
               </p>
             </div>
           ) : (
             <div className="space-y-1">
-              <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">
                 {query ? `Matching Tools (${filteredTools.length})` : 'Popular Tools'}
               </div>
               {filteredTools.map((tool, idx) => {
@@ -117,10 +117,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                     key={tool.id}
                     onClick={() => handleSelect(tool)}
                     onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer transition-colors ${
                       isSelected
                         ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-900 dark:text-brand-100'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-ink'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -128,7 +128,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                         className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                           isSelected
                             ? 'bg-brand-600 text-white'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                            : 'bg-paper text-muted'
                         }`}
                       >
                         <DynamicIcon name={tool.iconName} size={16} />
@@ -142,7 +142,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                        <p className="text-xs text-muted truncate">
                           {tool.description}
                         </p>
                       </div>
@@ -150,7 +150,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                     <ArrowRight
                       size={15}
                       className={`shrink-0 ml-3 transition-opacity ${
-                        isSelected ? 'opacity-100 text-brand-600 dark:text-brand-400' : 'opacity-0'
+                        isSelected ? 'opacity-100 text-brand' : 'opacity-0'
                       }`}
                     />
                   </div>
@@ -161,26 +161,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Footer shortcuts */}
-        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+        <div className="px-4 py-2.5 bg-slate-50 dark:bg-ink/40 border-t border-border flex items-center justify-between text-[11px] text-muted">
           <div className="flex items-center gap-3">
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+              <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border shadow-xs">
                 ↑
               </kbd>{' '}
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+              <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border shadow-xs">
                 ↓
               </kbd>{' '}
               to navigate
             </span>
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+              <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border shadow-xs">
                 ↵
               </kbd>{' '}
               to select
             </span>
           </div>
           <span>
-            <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+            <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border shadow-xs">
               ESC
             </kbd>{' '}
             to close

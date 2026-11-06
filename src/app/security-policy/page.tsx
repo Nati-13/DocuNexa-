@@ -43,7 +43,7 @@ export default function SecurityPolicyPage() {
     >
       {/* 1. Architecture */}
       <section id="architecture" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           1. Technical Security Architecture Overview
         </h2>
         <p>
@@ -55,11 +55,11 @@ export default function SecurityPolicyPage() {
 
       {/* 2. In-Memory */}
       <section id="in-memory" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Cpu size={20} className="text-brand-500 shrink-0" />
+        <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
+          <Cpu size={20} className="text-brand shrink-0" />
           2. In-Memory Volatile Processing &amp; Data Movement Taxonomy
         </h2>
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <div className="p-5 rounded-md bg-surface border border-border space-y-3 text-xs sm:text-sm text-muted">
           <p>
             When a document is opened in DocuNexa, file bytes are read directly into volatile device RAM using standard Web APIs
             (<code>FileReader</code> and <code>Uint8Array</code> buffers).
@@ -71,30 +71,30 @@ export default function SecurityPolicyPage() {
             <li>Allocated memory is reclaimed immediately upon closing the browser tab.</li>
           </ul>
 
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-bold text-slate-900 dark:text-white">Document Isolation &amp; Data Flow Classification</h4>
+          <div className="pt-2 border-t border-border space-y-2">
+            <h4 className="font-bold text-ink">Document Isolation &amp; Data Flow Classification</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1">
+              <div className="p-3 rounded-md bg-paper border border-border/60 space-y-1">
                 <span className="font-bold text-emerald-600 dark:text-emerald-400 block">Category A: Pure Local Tools (33 of 34)</span>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                <p className="text-muted text-[11px]">
                   PDF Unit Cutter, Merge, Split, Compress, Encrypt, Decrypt, Forms, Conversions, etc. Zero outbound network traffic. 100% in-browser RAM.
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1">
+              <div className="p-3 rounded-md bg-paper border border-border/60 space-y-1">
                 <span className="font-bold text-blue-600 dark:text-blue-400 block">Category B: Local WebAssembly + Static Model (OCR PDF)</span>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                <p className="text-muted text-[11px]">
                   Tesseract.js WebAssembly downloads static open-source dictionary weights from jsDelivr CDN on first run. Zero document bytes or images leave your browser.
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1">
-                <span className="font-bold text-indigo-600 dark:text-indigo-400 block">Category C: Local Heuristic Analysis (Summarizer &amp; Translate)</span>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+              <div className="p-3 rounded-md bg-paper border border-border/60 space-y-1">
+                <span className="font-bold text-brand block">Category C: Local Heuristic Analysis (Summarizer &amp; Translate)</span>
+                <p className="text-muted text-[11px]">
                   Deterministic structural heuristics &amp; local bilingual glossary. Zero text transmitted to third-party LLMs or cloud AI providers (OpenAI, Anthropic, Google).
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1">
-                <span className="font-bold text-slate-600 dark:text-slate-300 block">Category D: Server File Storage (Zero Tools)</span>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+              <div className="p-3 rounded-md bg-paper border border-border/60 space-y-1">
+                <span className="font-bold text-muted block">Category D: Server File Storage (Zero Tools)</span>
+                <p className="text-muted text-[11px]">
                   Zero S3 or cloud storage buckets. No server endpoint receives, inspects, or logs document file streams.
                 </p>
               </div>
@@ -105,13 +105,13 @@ export default function SecurityPolicyPage() {
 
       {/* 3. Cryptography */}
       <section id="cryptography" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink flex items-center gap-2">
           <Key size={20} className="text-emerald-500 shrink-0" />
           3. Cryptographic Standards: PDF AES Encryption vs. Decryption
         </h2>
-        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs sm:text-sm text-slate-700 dark:text-slate-300 space-y-2">
-          <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <ShieldCheck size={16} className="text-brand-500" />
+        <div className="p-4 rounded-md bg-paper border border-border/60 text-xs sm:text-sm text-ink space-y-2">
+          <p className="font-bold text-ink flex items-center gap-1.5">
+            <ShieldCheck size={16} className="text-brand" />
             Precise Cryptographic Scope &amp; Algorithm Distinctions:
           </p>
           <p>
@@ -121,7 +121,7 @@ export default function SecurityPolicyPage() {
             Furthermore, DocuNexa distinguishes <strong>PDF-standard ISO 32000 AES encryption</strong> from <strong>Web Crypto AES-GCM</strong>: DocuNexa does <em>not</em> use Web Crypto AES-GCM for document processing, as AES-GCM is an envelope authenticated cipher that is incompatible with standard PDF readers (Adobe Acrobat, Apple Preview, Google Chrome). Cryptographic operations are applied strictly and accurately according to their actual implementation:
           </p>
         </div>
-        <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-muted">
           <li>
             <strong>Protect PDF (ISO 32000-1 AES-256 Encryption):</strong> Applied exclusively when you choose the Protect PDF tool. DocuNexa invokes the <code>@pdfsmaller/pdf-encrypt</code> WebAssembly engine to compile standard ISO 32000 encryption dictionaries using <strong>AES-256 in Cipher Block Chaining (CBC) mode</strong> with SHA-256 / MD5 key derivation. Configurable user passwords (required to open) and owner permissions (restricting printing, extraction, and modification) are embedded client-side. The resulting document requires your password in all standard readers.
           </li>
@@ -136,10 +136,10 @@ export default function SecurityPolicyPage() {
 
       {/* 4. Safe Harbor */}
       <section id="safe-harbor" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           4. Vulnerability Disclosure Safe Harbor
         </h2>
-        <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm text-emerald-950 dark:text-emerald-100 space-y-2">
+        <div className="p-5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm text-emerald-950 dark:text-emerald-100 space-y-2">
           <p className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
             <CheckCircle2 size={16} />
             Safe Harbor for Ethical Security Researchers
@@ -154,15 +154,15 @@ export default function SecurityPolicyPage() {
 
       {/* 5. Scope */}
       <section id="scope" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           5. In-Scope &amp; Out-of-Scope Targets
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-5 rounded-md bg-surface border border-border space-y-2">
             <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
               <CheckCircle2 size={15} /> In-Scope Targets
             </span>
-            <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+            <ul className="list-disc pl-5 space-y-1 text-muted">
               <li>Production web application: <code>https://docunexa.pro.et</code></li>
               <li>Authentication &amp; Profile APIs (<code>/api/auth/*</code>)</li>
               <li>Payment &amp; Order verification logic (<code>/api/payments/*</code>)</li>
@@ -171,11 +171,11 @@ export default function SecurityPolicyPage() {
             </ul>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-5 rounded-md bg-surface border border-border space-y-2">
             <span className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
               <AlertTriangle size={15} /> Out-of-Scope
             </span>
-            <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+            <ul className="list-disc pl-5 space-y-1 text-muted">
               <li>Third-party networks: Vercel CDN, Supabase cloud, Bybit exchange</li>
               <li>Distributed Denial of Service (DDoS/DoS)</li>
               <li>Social engineering, phishing, or physical attacks</li>
@@ -187,10 +187,10 @@ export default function SecurityPolicyPage() {
 
       {/* 6. Prohibited Testing */}
       <section id="prohibited-testing" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           6. Prohibited Security Testing Methods
         </h2>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li>Never access, modify, or destroy another user&apos;s data or account.</li>
           <li>Never exploit a vulnerability beyond the minimal proof-of-concept necessary to demonstrate its presence.</li>
           <li>Never execute automated high-volume fuzzers or brute-force scripts against production authentication endpoints.</li>
@@ -200,17 +200,17 @@ export default function SecurityPolicyPage() {
 
       {/* 7. Reporting Format */}
       <section id="reporting-format" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           7. How to Submit a Vulnerability Report
         </h2>
         <p>
           Submit reports by emailing{' '}
-          <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+          <a href="mailto:docunexa.security@gmail.com" className="text-brand font-semibold hover:underline">
             docunexa.security@gmail.com
           </a>{' '}
           with the subject: <code>[Security Vulnerability Report] &lt;Title&gt;</code>. Include:
         </p>
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-mono text-slate-700 dark:text-slate-300 space-y-1">
+        <div className="p-5 rounded-md bg-surface border border-border text-xs sm:text-sm font-mono text-ink space-y-1">
           <p>1. Vulnerability description and impact assessment (e.g. CSRF, IDOR, Auth Bypass, XSS)</p>
           <p>2. Affected endpoint or tool URL</p>
           <p>3. Step-by-step reproduction instructions</p>
@@ -221,13 +221,13 @@ export default function SecurityPolicyPage() {
 
       {/* 8. Target Remediation Timelines */}
       <section id="remediation-sla" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           8. Target Response &amp; Remediation Timelines (Non-SLA Estimates)
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           The following timeframes represent <strong>operational target estimates</strong> on a best-efforts basis, not guaranteed commercial Service Level Agreements (SLAs):
         </p>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li><strong>Target Initial Acknowledgment:</strong> Aimed within 24 to 48 business hours of receipt.</li>
           <li><strong>Target Triage &amp; Severity Assessment:</strong> Typically conducted within 2 to 3 business days.</li>
           <li><strong>Target High/Critical Remediation:</strong> Prioritized for fix deployment within 7 to 14 business days.</li>
@@ -237,13 +237,13 @@ export default function SecurityPolicyPage() {
 
       {/* 9. User Responsibilities */}
       <section id="account-security" className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           9. User Account Security Responsibilities
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted leading-relaxed">
           Platform security is a shared responsibility. We strongly encourage all users to:
         </p>
-        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+        <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-muted">
           <li>Use unique passwords for your DocuNexa account (never reuse passwords from other services).</li>
           <li>Ensure your registered email account is secured with multi-factor authentication (2FA).</li>
           <li>Never share your credentials with third parties or click unverified links.</li>
@@ -251,12 +251,12 @@ export default function SecurityPolicyPage() {
       </section>
 
       {/* 10. Contact */}
-      <section id="contact" className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+      <section id="contact" className="space-y-4 pt-4 border-t border-border">
+        <h2 className="text-xl sm:text-2xl font-bold text-ink">
           10. Security Operations Contact
         </h2>
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-mono text-slate-700 dark:text-slate-300 space-y-1">
-          <p><strong>Security Operations:</strong> <a href="mailto:docunexa.security@gmail.com" className="text-brand-600 dark:text-brand-400 hover:underline">docunexa.security@gmail.com</a></p>
+        <div className="p-5 rounded-md bg-surface border border-border text-xs sm:text-sm font-mono text-ink space-y-1">
+          <p><strong>Security Operations:</strong> <a href="mailto:docunexa.security@gmail.com" className="text-brand hover:underline">docunexa.security@gmail.com</a></p>
           <p><strong>PGP / Encryption:</strong> Inquiries requiring PGP encryption may request our public key via email.</p>
         </div>
       </section>

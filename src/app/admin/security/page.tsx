@@ -129,16 +129,16 @@ export default function AdminSecurityPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
             Security & Zero-Trust Architecture
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Manage multi-factor authentication (MFA), active security layers, and defense configurations.
           </p>
         </div>
         <button
           onClick={fetchMfaStatus}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-ink hover:bg-slate-50 transition-colors self-start sm:self-auto cursor-pointer"
         >
           <RefreshCw size={13} /> Refresh Status
         </button>
@@ -147,7 +147,7 @@ export default function AdminSecurityPage() {
       {statusMessage && (
         <div
           role="alert"
-          className={`p-4 rounded-2xl border flex items-start gap-3 text-xs ${
+          className={`p-4 rounded-md border flex items-start gap-3 text-xs ${
             statusMessage.type === 'success'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-300'
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300'
@@ -164,15 +164,15 @@ export default function AdminSecurityPage() {
 
       {/* Security Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+        <div className="p-5 rounded-md bg-surface border border-border shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">MFA Status</span>
-            <div className={`p-2 rounded-xl ${aal === 'aal2' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
+            <div className={`p-2 rounded-md ${aal === 'aal2' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
               <Lock size={18} />
             </div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900 dark:text-white uppercase">
+            <div className="text-xl font-bold text-ink uppercase">
               {aal === 'aal2' ? 'AAL2 Verified' : 'AAL1 (Password)'}
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -183,15 +183,15 @@ export default function AdminSecurityPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+        <div className="p-5 rounded-md bg-surface border border-border shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Enrolled Factors</span>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600">
+            <div className="p-2 rounded-md bg-brand/10 text-brand">
               <Key size={18} />
             </div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900 dark:text-white">
+            <div className="text-xl font-bold text-ink">
               {factors.length} Active {factors.length === 1 ? 'Factor' : 'Factors'}
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -200,15 +200,15 @@ export default function AdminSecurityPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+        <div className="p-5 rounded-md bg-surface border border-border shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Defense Layers</span>
-            <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600">
+            <div className="p-2 rounded-md bg-brand-500/10 text-brand-600">
               <ShieldCheck size={18} />
             </div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900 dark:text-white">
+            <div className="text-xl font-bold text-ink">
               5 / 5 Layers Active
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -219,19 +219,19 @@ export default function AdminSecurityPage() {
       </div>
 
       {/* TOTP Enrollment Section */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-8 rounded-md bg-surface border border-border shadow-sm space-y-6">
         <div className="space-y-1">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Key size={18} className="text-brand-600 dark:text-brand-400" />
+          <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+            <Key size={18} className="text-brand" />
             Administrator TOTP Multi-Factor Authentication
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted">
             Use any standard authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, Bitwarden) for AAL2 security.
           </p>
         </div>
 
         {factors.length > 0 && !enrollQr && (
-          <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 flex items-center justify-between gap-4">
+          <div className="p-4 rounded-md bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
               <div>
@@ -245,7 +245,7 @@ export default function AdminSecurityPage() {
             </div>
             <button
               onClick={handleStartEnrollment}
-              className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-md border border-emerald-300 dark:border-emerald-800 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50 transition-colors cursor-pointer"
             >
               Add Another Device
             </button>
@@ -256,7 +256,7 @@ export default function AdminSecurityPage() {
           <div>
             <button
               onClick={handleStartEnrollment}
-              className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2.5 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
             >
               <QrCode size={16} /> Enroll Authenticator App (TOTP)
             </button>
@@ -264,9 +264,9 @@ export default function AdminSecurityPage() {
         )}
 
         {enrollQr && (
-          <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-6 max-w-lg">
+          <div className="p-6 rounded-md bg-paper border border-border space-y-6 max-w-lg">
             <div className="space-y-2">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-bold text-ink">
                 Scan QR Code in Authenticator App
               </h3>
               <p className="text-xs text-slate-500">
@@ -274,13 +274,13 @@ export default function AdminSecurityPage() {
               </p>
             </div>
 
-            <div className="flex justify-center p-4 bg-white rounded-2xl border border-slate-200 w-fit mx-auto shadow-xs">
+            <div className="flex justify-center p-4 bg-white rounded-md border border-slate-200 w-fit mx-auto shadow-xs">
               <img src={enrollQr} alt="MFA QR Code" className="w-48 h-48" />
             </div>
 
             {enrollSecret && (
               <div className="space-y-1.5">
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-semibold text-ink">
                   Manual Entry Key
                 </label>
                 <div className="flex items-center gap-2">
@@ -288,11 +288,11 @@ export default function AdminSecurityPage() {
                     type="text"
                     readOnly
                     value={enrollSecret}
-                    className="flex-1 font-mono text-xs px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
+                    className="flex-1 font-mono text-xs px-3 py-2 rounded-md bg-surface border border-border text-ink"
                   />
                   <button
                     onClick={copySecretToClipboard}
-                    className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                    className="p-2 rounded-md border border-border hover:bg-white dark:hover:bg-slate-900 text-muted transition-colors cursor-pointer"
                     title="Copy Secret"
                   >
                     {copiedSecret ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
@@ -302,7 +302,7 @@ export default function AdminSecurityPage() {
             )}
 
             <form onSubmit={handleVerifyTotp} className="space-y-3 pt-2">
-              <label htmlFor="verify-code" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="verify-code" className="block text-xs font-semibold text-ink">
                 Enter 6-Digit Code to Confirm
               </label>
               <div className="flex items-center gap-2">
@@ -313,12 +313,12 @@ export default function AdminSecurityPage() {
                   placeholder="123456"
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
-                  className="font-mono text-center tracking-widest text-base px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-36"
+                  className="font-mono text-center tracking-widest text-base px-4 py-2 rounded-md bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 w-36"
                 />
                 <button
                   type="submit"
                   disabled={verifyCode.length !== 6 || verifying}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 py-2.5 px-4 rounded-md bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-semibold text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {verifying ? <Loader2 size={14} className="animate-spin" /> : 'Verify & Enable MFA'}
                 </button>
@@ -332,22 +332,22 @@ export default function AdminSecurityPage() {
       <LockedAccountsConsole />
 
       {/* 5 Security Layers Technical Audit */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-8 rounded-md bg-surface border border-border shadow-sm space-y-6">
         <div className="space-y-1">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldAlert size={18} className="text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+            <ShieldAlert size={18} className="text-brand" />
             The Five High-Security Layers Implementation
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted">
             Automated verification of active infrastructure safeguards and cryptographic protections.
           </p>
         </div>
 
-        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="divide-y divide-border">
           <div className="py-3 flex items-start gap-3">
             <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              <p className="text-xs font-semibold text-ink">
                 Layer 1: Authentication + PKCE Session Hardening
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
@@ -359,7 +359,7 @@ export default function AdminSecurityPage() {
           <div className="py-3 flex items-start gap-3">
             <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              <p className="text-xs font-semibold text-ink">
                 Layer 2: Zero-Trust Admin & TOTP MFA
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
@@ -371,7 +371,7 @@ export default function AdminSecurityPage() {
           <div className="py-3 flex items-start gap-3">
             <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              <p className="text-xs font-semibold text-ink">
                 Layer 3: API Abuse & Privacy-Preserving Rate Limiting
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
@@ -383,7 +383,7 @@ export default function AdminSecurityPage() {
           <div className="py-3 flex items-start gap-3">
             <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              <p className="text-xs font-semibold text-ink">
                 Layer 4: Database RLS & Privileged Function Hardening
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
@@ -395,7 +395,7 @@ export default function AdminSecurityPage() {
           <div className="py-3 flex items-start gap-3">
             <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              <p className="text-xs font-semibold text-ink">
                 Layer 5: Payment Isolation & Browser Security Headers
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">

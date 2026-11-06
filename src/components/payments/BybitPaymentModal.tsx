@@ -199,20 +199,20 @@ export function BybitPaymentModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-ink/40  animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="payment-modal-title"
     >
       <div
-        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-hidden my-auto"
+        className="relative w-full max-w-2xl bg-surface border border-border rounded-md sm:rounded-md shadow-subtle flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Pinned Top Bar with Close Control */}
-        <div className="sticky top-0 z-20 px-3.5 sm:px-6 pt-3.5 pb-2.5 sm:pt-4 sm:pb-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="sticky top-0 z-20 px-3.5 sm:px-6 pt-3.5 pb-2.5 sm:pt-4 sm:pb-3 bg-white/95 dark:bg-slate-900/95  border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold tracking-wider shrink-0">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand text-xs font-bold tracking-wider shrink-0">
               <div className="flex items-center gap-1 shrink-0">
                 <img
                   src={order.currency === 'USDC' ? '/images/crypto/usdc.png' : '/images/crypto/usdt.png'}
@@ -237,7 +237,7 @@ export function BybitPaymentModal({
               </div>
               <span>{order.currency || 'USDT'} ({order.network})</span>
             </div>
-            <span className="text-xs text-slate-400 dark:text-slate-500 font-mono hidden sm:inline">
+            <span className="text-xs text-muted font-mono hidden sm:inline">
               #{order.orderId.slice(0, 8)}
             </span>
           </div>
@@ -255,17 +255,17 @@ export function BybitPaymentModal({
         <div className="p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-5 overflow-y-auto overscroll-contain">
           {/* Header Title */}
           <div className="text-center space-y-1">
-            <h2 id="payment-modal-title" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <h2 id="payment-modal-title" className="text-xl sm:text-2xl font-black text-ink">
               Remove DocuNexa Ads
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Order <span className="font-mono text-slate-700 dark:text-slate-300 font-semibold">{order.orderId}</span>
+            <p className="text-xs text-muted">
+              Order <span className="font-mono text-ink font-semibold">{order.orderId}</span>
             </p>
           </div>
 
           {/* Confirmed State */}
           {status === 'confirmed' ? (
-            <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center space-y-3">
+            <div className="p-6 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center space-y-3">
               <CheckCircle2 size={44} className="mx-auto text-emerald-500 animate-bounce" />
               <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-200">
                 Payment Confirmed!
@@ -293,7 +293,7 @@ export function BybitPaymentModal({
               {/* Payment Method / Network Selection Control (4 Options) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="font-semibold text-ink">
                     Payment Method ({CRYPTO_SELECTOR_OPTIONS.length} Options)
                   </span>
                   <span className="text-[11px] text-slate-400">
@@ -301,7 +301,7 @@ export function BybitPaymentModal({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 sm:p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 sm:p-1.5 rounded-md bg-paper border border-border/80">
                   {CRYPTO_SELECTOR_OPTIONS.map((method) => {
                     const isSelected =
                       (method.id === 'polygon_usdt' && order.network === 'Polygon' && (order.currency === 'USDT' || !order.currency)) ||
@@ -321,10 +321,10 @@ export function BybitPaymentModal({
                             await onNewOrder(order.couponCode || undefined, method.id);
                             setNetworkSwitching(false);
                           }}
-                          className={`py-2.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 min-w-0 ${
+                          className={`py-2.5 px-2.5 sm:px-3 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 min-w-0 ${
                             isSelected
-                              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-purple-300 dark:border-purple-700 ring-1 ring-purple-400/30'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-850'
+                              ? 'bg-surface text-ink shadow-sm border border-purple-300 dark:border-purple-700 ring-1 ring-purple-400/30'
+                              : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-850'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
@@ -348,10 +348,10 @@ export function BybitPaymentModal({
                               />
                             </div>
                             <div className="flex flex-col text-left min-w-0">
-                              <span className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
+                              <span className="text-xs font-bold text-ink truncate leading-tight">
                                 {method.shortLabel}
                               </span>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate leading-tight">
+                              <span className="text-[10px] text-muted font-medium truncate leading-tight">
                                 {method.networkName}
                               </span>
                             </div>
@@ -371,7 +371,7 @@ export function BybitPaymentModal({
                         disabled={true}
                         aria-disabled="true"
                         title={method.tooltip}
-                        className="py-2.5 px-2.5 sm:px-3 rounded-xl text-xs font-semibold bg-slate-100/50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2 cursor-not-allowed opacity-75 select-none min-w-0"
+                        className="py-2.5 px-2.5 sm:px-3 rounded-md text-xs font-semibold bg-slate-100/50 dark:bg-slate-800/30 text-muted border border-dashed border-border/60 flex items-center justify-between gap-2 cursor-not-allowed opacity-75 select-none min-w-0"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {/* Dual Official Brand Logos: Token + Network */}
@@ -394,10 +394,10 @@ export function BybitPaymentModal({
                             />
                           </div>
                           <div className="flex flex-col text-left min-w-0">
-                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate leading-tight">
+                            <span className="text-xs font-semibold text-muted truncate leading-tight">
                               {method.shortLabel}
                             </span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate leading-tight">
+                            <span className="text-[10px] text-muted font-mono truncate leading-tight">
                               {method.id === 'polygon_usdc' ? 'Native (0x3c49...)' : method.networkName}
                             </span>
                           </div>
@@ -409,13 +409,13 @@ export function BybitPaymentModal({
                     );
                   })}
                 </div>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal px-0.5">
+                <p className="text-[11px] text-muted leading-normal px-0.5">
                   All four payment methods are active. Select your preferred network and token to proceed.
                 </p>
               </div>
 
               {/* Pricing Breakdown & Coupon Entry */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="p-4 rounded-md bg-paper border border-border space-y-3">
                 {order.couponCode ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -431,7 +431,7 @@ export function BybitPaymentModal({
                       </button>
                     </div>
 
-                    <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <div className="space-y-1 text-xs text-muted pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                       <div className="flex justify-between">
                         <span>Original Price</span>
                         <span className="line-through text-slate-400">${formatPaymentAmount(order.originalPriceUsd || order.basePriceUsd || '2.00')}</span>
@@ -440,7 +440,7 @@ export function BybitPaymentModal({
                         <span>Coupon Discount</span>
                         <span>-{formatPaymentAmount(order.discountAmountUsdt || '0.0000')} {order.currency || 'USDT'}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-sm">
+                      <div className="flex justify-between font-bold text-ink pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-sm">
                         <span>You Pay</span>
                         <span className="text-emerald-600 dark:text-emerald-400 font-mono">${formatPaymentAmount(order.finalPriceUsdt || order.amount)} USD</span>
                       </div>
@@ -449,8 +449,8 @@ export function BybitPaymentModal({
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">Have a coupon code?</span>
-                      <span className="font-bold text-slate-900 dark:text-white">Normal Price: $2.00</span>
+                      <span className="text-muted font-medium">Have a coupon code?</span>
+                      <span className="font-bold text-ink">Normal Price: $2.00</span>
                     </div>
                     <form
                       onSubmit={async (e) => {
@@ -484,12 +484,12 @@ export function BybitPaymentModal({
                           setCouponError(null);
                         }}
                         placeholder="e.g. SAVE25"
-                        className="flex-1 px-3 py-1.5 rounded-xl text-xs font-mono font-medium uppercase tracking-wider bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className="flex-1 px-3 py-1.5 rounded-md text-xs font-mono font-medium uppercase tracking-wider bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
                       <button
                         type="submit"
                         disabled={couponLoading || !couponInput.trim()}
-                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center min-w-[60px]"
+                        className="px-3.5 py-1.5 rounded-md text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center min-w-[60px]"
                       >
                         {couponLoading ? <Loader2 size={12} className="animate-spin" /> : 'Apply'}
                       </button>
@@ -502,23 +502,23 @@ export function BybitPaymentModal({
               </div>
 
               {/* Amount & Timer Highlight Box */}
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-md bg-paper border border-slate-200/80 dark:border-slate-700/60">
                 {/* Pay Amount */}
                 <div className="space-y-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Exact Amount to Pay
                   </span>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl sm:text-2xl font-black text-brand-600 dark:text-brand-400 font-mono">
+                    <span className="text-xl sm:text-2xl font-black text-brand font-mono">
                       {displayAmount}
                     </span>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
+                    <span className="text-xs font-bold text-ink font-mono">
                       {order.currency || 'USDT'}
                     </span>
                   </div>
                   <button
                     onClick={handleCopyAmount}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:underline cursor-pointer"
                   >
                     {copiedAmount ? (
                       <>
@@ -534,7 +534,7 @@ export function BybitPaymentModal({
 
                 {/* Countdown Timer */}
                 <div className="space-y-1 text-right">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-end gap-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted flex items-center justify-end gap-1">
                     <Clock size={12} /> Time remaining
                   </span>
                   <div
@@ -543,12 +543,12 @@ export function BybitPaymentModal({
                         ? 'text-rose-500 animate-pulse'
                         : secondsRemaining < 300
                         ? 'text-amber-500'
-                        : 'text-slate-900 dark:text-white'
+                        : 'text-ink'
                     }`}
                   >
                     {timeFormatted}
                   </div>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
+                  <span className="text-[10px] text-muted block">
                     20-minute validity
                   </span>
                 </div>
@@ -559,7 +559,7 @@ export function BybitPaymentModal({
                 <button
                   type="button"
                   onClick={handleCopyAmount}
-                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
+                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-md border border-border bg-paper text-[10px] sm:text-xs font-semibold text-ink hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
                 >
                   {copiedAmount ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Copy size={14} className="shrink-0" />}
                   <span className="truncate">{copiedAmount ? 'Copied!' : 'Copy Amount'}</span>
@@ -568,7 +568,7 @@ export function BybitPaymentModal({
                 <button
                   type="button"
                   onClick={handleCopyAddress}
-                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
+                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-md border border-border bg-paper text-[10px] sm:text-xs font-semibold text-ink hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
                 >
                   {copiedAddress ? <Check size={14} className="text-emerald-500 shrink-0" /> : <Copy size={14} className="shrink-0" />}
                   <span className="truncate">{copiedAddress ? 'Copied!' : 'Copy Address'}</span>
@@ -577,7 +577,7 @@ export function BybitPaymentModal({
                 <button
                   type="button"
                   onClick={() => setShowQr(!showQr)}
-                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
+                  className="min-w-0 py-2 sm:py-2.5 px-1 sm:px-3 rounded-md border border-border bg-paper text-[10px] sm:text-xs font-semibold text-ink hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer"
                 >
                   <QrIcon size={14} className="shrink-0" />
                   <span className="truncate">{showQr ? 'Hide QR' : 'Show QR'}</span>
@@ -585,7 +585,7 @@ export function BybitPaymentModal({
               </div>
 
               {/* Prominent Network Warning Banner */}
-              <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
+              <div className={`p-4 rounded-md border text-xs space-y-1.5 ${
                 order.network === 'Aptos'
                   ? 'bg-teal-50/70 dark:bg-teal-950/40 border-teal-300 dark:border-teal-800/70 text-teal-950 dark:text-teal-200'
                   : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
@@ -646,7 +646,7 @@ export function BybitPaymentModal({
                       height={16}
                       className="w-4 h-4 rounded-full object-contain shrink-0"
                     />
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span className="text-xs font-bold text-ink">
                       {order.network === 'Aptos'
                         ? 'Aptos Receiving Address'
                         : order.network === 'TRON'
@@ -656,7 +656,7 @@ export function BybitPaymentModal({
                         : 'Bybit Deposit Address (Polygon PoS)'}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-paper text-muted">
                     Network: {order.network}
                   </span>
                 </div>
@@ -664,7 +664,7 @@ export function BybitPaymentModal({
                 {/* Address Display Bar */}
                 <div
                   onClick={handleCopyAddress}
-                  className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs sm:text-sm text-slate-900 dark:text-slate-100 break-all select-all cursor-pointer hover:border-brand-500 transition-colors"
+                  className="p-3 rounded-md bg-paper border border-border font-mono text-xs sm:text-sm text-ink break-all select-all cursor-pointer hover:border-brand-500 transition-colors"
                   title="Click to copy address"
                 >
                   {order.destinationAddress}
@@ -679,9 +679,9 @@ export function BybitPaymentModal({
               </div>
 
               {/* Live Status Tracker */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <div className="p-3.5 rounded-md bg-paper border border-border space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className="font-semibold text-muted flex items-center gap-1.5">
                     {status === 'detected' ? (
                       <>
                         <RefreshCw size={13} className="animate-spin text-amber-500" /> Detection Status:
@@ -692,7 +692,7 @@ export function BybitPaymentModal({
                       </>
                     ) : (
                       <>
-                        <Loader2 size={13} className="animate-spin text-brand-500" /> Status:
+                        <Loader2 size={13} className="animate-spin text-brand" /> Status:
                       </>
                     )}
                   </span>
@@ -700,7 +700,7 @@ export function BybitPaymentModal({
                     Auto-checking every 6s
                   </span>
                 </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                <p className="text-xs text-ink font-medium leading-relaxed">
                   {statusMessage}
                 </p>
                 {confirmations && (
@@ -715,7 +715,7 @@ export function BybitPaymentModal({
                 <div className="pt-2">
                   <button
                     onClick={() => onNewOrder(order.couponCode || undefined, order.network)}
-                    className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 px-4 rounded-md bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <RefreshCw size={16} /> Generate New Payment Order
                   </button>
@@ -723,7 +723,7 @@ export function BybitPaymentModal({
               )}
 
               {/* Honest Disclosure Caveat */}
-              <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 leading-relaxed">
+              <p className="text-[11px] text-center text-muted leading-relaxed">
                 Waiting for {order.network} blockchain confirmation. Deposits are credited automatically once verified by the server.
               </p>
             </>

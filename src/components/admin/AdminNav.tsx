@@ -33,13 +33,13 @@ export const AdminNav: React.FC = () => {
           <Link
             key={item.href}
             href={item.href}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${
               isActive
-                ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold border border-brand-200/60 dark:border-brand-800/60 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                ? 'bg-brand-50 dark:bg-brand-950/60 text-brand font-bold border border-brand-200/60 dark:border-brand-800/60 shadow-xs'
+                : 'text-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
-            <Icon size={14} className={isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'} />
+            <Icon size={14} className={isActive ? 'text-brand' : 'text-slate-400'} />
             <span>{item.label}</span>
           </Link>
         );

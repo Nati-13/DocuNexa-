@@ -108,20 +108,20 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 md:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
+    <div className="w-full max-w-2xl mx-auto p-6 md:p-8 rounded-md bg-surface border border-border shadow-subtle space-y-6 text-center animate-in zoom-in-95 duration-200">
       {/* Success Badge */}
-      <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+      <div className="w-16 h-16 mx-auto rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-subtle shadow-emerald-500/20">
         <CheckCircle2 size={36} />
       </div>
 
       <div>
-        <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{title}</h3>
-        <p className="text-xs md:text-sm text-slate-700 dark:text-slate-200 mt-1">{subtitle}</p>
+        <h3 className="text-xl md:text-2xl font-bold text-ink">{title}</h3>
+        <p className="text-xs md:text-sm text-ink mt-1">{subtitle}</p>
       </div>
 
       {/* Compression stats if provided */}
       {originalSize !== undefined && newSize !== undefined && (
-        <div className="inline-flex items-center gap-4 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+        <div className="inline-flex items-center gap-4 px-4 py-2 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
           <span>Original: {(originalSize / (1024 * 1024)).toFixed(2)} MB</span>
           <span>→</span>
           <span>New: {(newSize / (1024 * 1024)).toFixed(2)} MB</span>
@@ -132,16 +132,16 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
       )}
 
       {/* Output Files Summary Box */}
-      <div className="max-h-56 overflow-y-auto p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-left divide-y divide-slate-200 dark:divide-slate-700/50">
+      <div className="max-h-56 overflow-y-auto p-3 rounded-md bg-paper border border-border/60 text-left divide-y divide-slate-200 dark:divide-slate-700/50">
         {files.map((file, idx) => (
           <div key={idx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 min-w-0">
-              <FileText size={16} className="text-brand-600 dark:text-brand-400 shrink-0" />
+              <FileText size={16} className="text-brand shrink-0" />
               <div className="min-w-0">
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
+                <span className="font-semibold text-ink truncate block">
                   {file.name}
                 </span>
-                <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium block">
+                <span className="text-[10px] text-muted font-medium block">
                   {CANONICAL_FORMATS[resolveFormat(file.name)]?.label || 'File'}
                 </span>
               </div>
@@ -149,7 +149,7 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
             <button
               type="button"
               onClick={() => handleDownloadSingle(file)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-brand-500 text-slate-700 dark:text-slate-200 text-xs font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-brand-500 text-ink text-xs font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Download size={13} />
               <span>Download</span>
@@ -166,7 +166,7 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
               type="button"
               onClick={handleDownloadZip}
               disabled={isZipping}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Archive size={17} />
               <span>{isZipping ? 'Generating ZIP...' : 'Download All as ZIP'}</span>
@@ -175,7 +175,7 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
             <button
               type="button"
               onClick={handleDownloadAll}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-all active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-paper hover:bg-slate-200 dark:hover:bg-slate-700 text-ink text-sm font-bold transition-all active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
             >
               <Download size={17} />
               <span>Download Files Individually</span>
@@ -185,7 +185,7 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
           <button
             type="button"
             onClick={() => handleDownloadSingle(files[0])}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden"
           >
             <Download size={18} />
             <span>
@@ -201,7 +201,7 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
         {typeof window !== 'undefined' && 'showDirectoryPicker' in window && (
           <button
             onClick={handleSaveToFolder}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-all"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-paper hover:bg-slate-200 dark:hover:bg-slate-700 text-ink text-sm font-bold transition-all"
           >
             <FolderDown size={17} />
             <span>{folderSaved || 'Save Directly to Folder'}</span>
@@ -210,10 +210,10 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
       </div>
 
       {/* Reset & Start Over */}
-      <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+      <div className="pt-2 border-t border-border">
         <button
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-brand transition-colors"
         >
           <RotateCcw size={13} />
           <span>Process another document</span>
