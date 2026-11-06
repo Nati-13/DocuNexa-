@@ -326,6 +326,77 @@ async function runLargePdfTests() {
   assert('Cancellation cleanly triggered midway through multi-part cut', cancelCalled);
   assert('Remaining parts stay in waiting status after cancellation', cancelledResults.some((r) => r.status === 'waiting'));
 
+  // --- 7. 750-PAGE REAL PDF GENERATION & EXTRACTION ---
+  console.log('\n--- 7. 750-PAGE REAL PDF EXTRACTION & VERIFICATION ---');
+
+  const memBefore750 = process.memoryUsage().heapUsed;
+  const timeStart750 = Date.now();
+  console.log('  Generating 750-page PDF document...');
+  const doc750 = await PDFDocument.create();
+  const font750 = await doc750.embedFont(StandardFonts.Helvetica);
+
+  for (let i = 1; i <= 750; i++) {
+    const page = doc750.addPage([300, 400]);
+    page.drawText(`Page ${i} of 750`, { x: 30, y: 360, size: 10, font: font750 });
+  }
+
+  const bytes750 = await doc750.save();
+  const elapsedGen750 = Date.now() - timeStart750;
+  assert('750-page PDF successfully created', bytes750.byteLength > 0, `size: ${(bytes750.byteLength / 1024).toFixed(1)} KB, time: ${elapsedGen750}ms`);
+
+  console.log('  Extracting ranges from 750-page PDF...');
+  const slice750_1 = await extractPdfRange(bytes750, 1, 250);
+  const vDoc750_1 = await PDFDocument.load(slice750_1);
+  assert('750-page Range [1..250] produces exactly 250 pages', vDoc750_1.getPageCount() === 250);
+
+  const slice750_2 = await extractPdfRange(bytes750, 251, 500);
+  const vDoc750_2 = await PDFDocument.load(slice750_2);
+  assert('750-page Range [251..500] produces exactly 250 pages', vDoc750_2.getPageCount() === 250);
+
+  const slice750_3 = await extractPdfRange(bytes750, 501, 750);
+  const vDoc750_3 = await PDFDocument.load(slice750_3);
+  assert('750-page Range [501..750] produces exactly 250 pages', vDoc750_3.getPageCount() === 250);
+
+  const totalExtracted750 = vDoc750_1.getPageCount() + vDoc750_2.getPageCount() + vDoc750_3.getPageCount();
+  assert('Sum of 750-page slices equals exact 750 total pages', totalExtracted750 === 750);
+
+  // --- 8. 1,500-PAGE REAL PDF GENERATION & EXTRACTION ---
+  console.log('\n--- 8. 1,500-PAGE REAL PDF EXTRACTION & MEMORY BENCHMARK ---');
+
+  const memBefore1500 = process.memoryUsage().heapUsed;
+  const timeStart1500 = Date.now();
+  console.log('  Generating 1,500-page PDF document...');
+  const doc1500 = await PDFDocument.create();
+  const font1500 = await doc1500.embedFont(StandardFonts.Helvetica);
+
+  for (let i = 1; i <= 1500; i++) {
+    const page = doc1500.addPage([300, 400]);
+    page.drawText(`Page ${i} of 1500`, { x: 30, y: 360, size: 10, font: font1500 });
+  }
+
+  const bytes1500 = await doc1500.save();
+  const elapsedGen1500 = Date.now() - timeStart1500;
+  const memAfter1500 = process.memoryUsage().heapUsed;
+  const memDelta1500Mb = ((memAfter1500 - memBefore1500) / (1024 * 1024)).toFixed(1);
+
+  assert('1,500-page PDF successfully created', bytes1500.byteLength > 0, `size: ${(bytes1500.byteLength / 1024).toFixed(1)} KB, time: ${elapsedGen1500}ms, heap delta: ${memDelta1500Mb} MB`);
+
+  console.log('  Extracting ranges from 1,500-page PDF...');
+  const slice1500_1 = await extractPdfRange(bytes1500, 1, 500);
+  const vDoc1500_1 = await PDFDocument.load(slice1500_1);
+  assert('1,500-page Range [1..500] produces exactly 500 pages', vDoc1500_1.getPageCount() === 500);
+
+  const slice1500_2 = await extractPdfRange(bytes1500, 501, 1000);
+  const vDoc1500_2 = await PDFDocument.load(slice1500_2);
+  assert('1,500-page Range [501..1000] produces exactly 500 pages', vDoc1500_2.getPageCount() === 500);
+
+  const slice1500_3 = await extractPdfRange(bytes1500, 1001, 1500);
+  const vDoc1500_3 = await PDFDocument.load(slice1500_3);
+  assert('1,500-page Range [1001..1500] produces exactly 500 pages', vDoc1500_3.getPageCount() === 500);
+
+  const totalExtracted1500 = vDoc1500_1.getPageCount() + vDoc1500_2.getPageCount() + vDoc1500_3.getPageCount();
+  assert('Sum of 1,500-page slices equals exact 1,500 total pages (zero lost pages)', totalExtracted1500 === 1500);
+
   console.log('\n================================================================');
   console.log(` PDF UNIT CUTTER LARGE DOCUMENT TESTS: ${passed} of ${total} passed (${Math.round((passed / total) * 100)}%)`);
   if (passed === total) {
