@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { validateEmail } from '@/lib/auth';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
@@ -173,13 +174,19 @@ export async function POST(req: Request) {
 
       // Sign out the newly authenticated user to prevent session establishment on security failure
       try {
-        await supabase.auth.signOut();
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) {
+          console.error(
+            `[SECURITY ALERT] [Request ID: ${requestId}]: signOut returned error during security abort:`,
+            signOutError.message
+          );
+        }
       } catch (signOutErr) {
         console.error(`[SECURITY ALERT] [Request ID: ${requestId}]: signOut failed during security abort:`, signOutErr);
       }
 
       // Return HTTP 503 with generic error message (never expose internal database or RPC details)
-      return secureJsonResponse(
+      const errorResponse = secureJsonResponse(
         {
           error: 'Authentication security service is temporarily unavailable. Please try again shortly.',
           code: 'SECURITY_CHECK_UNAVAILABLE',
@@ -187,6 +194,26 @@ export async function POST(req: Request) {
         { status: 503 },
         requestId
       );
+
+      // Invariant: explicitly delete any auth session cookies to guarantee no session remains active
+      try {
+        const cookieStore = await cookies();
+        const allCookies = cookieStore.getAll();
+        for (const c of allCookies) {
+          if (
+            c.name.includes('sb-') ||
+            c.name.includes('auth') ||
+            c.name.includes('token') ||
+            c.name.includes('session')
+          ) {
+            errorResponse.cookies.delete(c.name);
+          }
+        }
+      } catch {
+        // Outside Next.js request scope fallback
+      }
+
+      return errorResponse;
     }
 
     // Retrieve profile to confirm plan

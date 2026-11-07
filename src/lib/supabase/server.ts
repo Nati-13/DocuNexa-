@@ -3,7 +3,26 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { Database, Profile } from './types';
 
+let mockServerClient: any = null;
+
+/**
+ * Injects a mock server Supabase client for testing environments.
+ */
+export function setMockServerSupabaseClient(client: any) {
+  if (
+    (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') &&
+    process.env.DOCUNEXA_TEST_ENV !== 'true'
+  ) {
+    return;
+  }
+  mockServerClient = client;
+}
+
 export async function createServerSupabaseClient() {
+  if (mockServerClient) {
+    return mockServerClient;
+  }
+
   let cookieStore: any = null;
   try {
     cookieStore = await cookies();
