@@ -7,13 +7,17 @@
  * 3. admin_audit_logs table columns & structure
  * 4. admin_users authorization registry
  * 5. Atomic lockout and unlock functions:
- *    - Exact argument signatures
- *    - Return types (table, boolean)
+ *    - Exact argument count, order, and types (no substring matching)
+ *    - Exact return types and total function count (exactly 3)
  *    - SECURITY DEFINER status
  *    - Fixed search_path = public
- *    - Effective execution privileges (service_role only; public/anon/authenticated revoked)
+ *    - Effective execution privileges:
+ *      * PUBLIC privileges checked via pg_proc.proacl & aclexplode() grantee 0
+ *      * anon and authenticated execution confirmed revoked
+ *      * service_role execution confirmed granted
  *
- * STRICTLY READ-ONLY:
+ * STRICT PRODUCTION SAFETY:
+ * - Starts a BEGIN READ ONLY transaction immediately upon connection
  * - ZERO .env.local parsing (credentials must be provided via environment)
  * - ZERO service-role Supabase client usage
  * - ZERO write probes, inserts, updates, deletes, or simulated lockouts
@@ -69,6 +73,9 @@ async function main() {
   try {
     await client.connect();
 
+    // Start a strict READ ONLY transaction to guarantee zero modifications even on write-capable connections
+    await client.query('BEGIN READ ONLY;');
+
     // --- 1. PAYMENT ORDERS TABLE & CHECK CONSTRAINT READ-ONLY AUDIT ---
     console.log('--- 1. PAYMENT ORDERS SCHEMA & CONSTRAINT AUDIT ---');
     const paymentColsRes = await client.query(`
@@ -86,7 +93,7 @@ async function main() {
 
     const missingPaymentCols = requiredPaymentCols.filter((col) => !paymentCols.includes(col));
     if (missingPaymentCols.length > 0) {
-      console.log(`❌ payment_orders missing required columns: ${missingPaymentCols.join(', ')}`);
+      console.log(`❌ [FAIL] payment_orders missing required columns: ${missingPaymentCols.join(', ')}`);
       allPassed = false;
     } else {
       console.log('✓ [PASS] payment_orders table verified with all required payment tracking columns.');
@@ -112,11 +119,12 @@ async function main() {
       if (hasPolygon && hasAptos && hasTron) {
         console.log('✓ [PASS] payment_orders_network_check constraint verified (Polygon, Aptos, TRON).');
       } else {
-        console.log(`❌ [FAIL] payment_orders_network_check missing network support. Clause: ${checkClause}`);
+        console.log(`❌ [FAIL] payment_orders_network_check missing required network support. Clause: ${checkClause}`);
         allPassed = false;
       }
     } else {
-      console.log('ℹ [INFO] payment_orders_network_check constraint not found in information_schema.');
+      console.log('❌ [FAIL] Required constraint payment_orders_network_check not found in information_schema.');
+      allPassed = false;
     }
 
     // --- 2. ACCOUNT LOGIN ATTEMPTS (5-ATTEMPT LOCKOUT) AUDIT ---
@@ -136,7 +144,7 @@ async function main() {
 
     const missingLockoutCols = requiredLockoutCols.filter((col) => !lockoutCols.includes(col));
     if (missingLockoutCols.length > 0) {
-      console.log(`❌ account_login_attempts missing required columns: ${missingLockoutCols.join(', ')}`);
+      console.log(`❌ [FAIL] account_login_attempts missing required columns: ${missingLockoutCols.join(', ')}`);
       allPassed = false;
     } else {
       console.log('✓ [PASS] account_login_attempts table exists with all durable lockout tracking columns.');
@@ -158,7 +166,7 @@ async function main() {
 
     const missingAuditCols = requiredAuditCols.filter((col) => !auditCols.includes(col));
     if (missingAuditCols.length > 0) {
-      console.log(`❌ admin_audit_logs missing required columns: ${missingAuditCols.join(', ')}`);
+      console.log(`❌ [FAIL] admin_audit_logs missing required columns: ${missingAuditCols.join(', ')}`);
       allPassed = false;
     } else {
       console.log('✓ [PASS] admin_audit_logs table exists and append-only schema structure is verified.');
@@ -175,26 +183,44 @@ async function main() {
     if (adminUsersRes.rows && adminUsersRes.rows.length > 0) {
       console.log('✓ [PASS] admin_users table exists in public schema.');
     } else {
-      console.log('❌ admin_users table not found in public schema.');
+      console.log('❌ [FAIL] admin_users table not found in public schema.');
       allPassed = false;
     }
 
     // --- 5. ATOMIC POSTGRESQL FUNCTION CATALOG AUDIT ---
     console.log('\n--- 5. ATOMIC POSTGRESQL FUNCTIONS CATALOG AUDIT ---');
 
+    // Query pg_proc using aclexplode() for grantee 0 (PUBLIC) and exact signatures
     const funcQuery = `
       SELECT
         p.proname,
-        pg_get_function_identity_arguments(p.oid) AS identity_args,
+        p.pronargs AS arg_count,
+        COALESCE(
+          (SELECT array_agg(t.typname ORDER BY ord) 
+           FROM unnest(p.proargtypes) WITH ORDINALITY AS a(oid, ord) 
+           JOIN pg_type t ON t.oid = a.oid), 
+          ARRAY[]::text[]
+        ) AS arg_types,
+        t_ret.typname AS return_type_name,
         pg_get_function_result(p.oid) AS result_type,
         p.prosecdef AS is_security_definer,
         p.proconfig AS config,
-        has_function_privilege('public', p.oid, 'execute') AS public_exec,
-        has_function_privilege('anon', p.oid, 'execute') AS anon_exec,
-        has_function_privilege('authenticated', p.oid, 'execute') AS authenticated_exec,
-        has_function_privilege('service_role', p.oid, 'execute') AS service_role_exec
+        (p.proacl IS NULL OR EXISTS (
+          SELECT 1 FROM aclexplode(p.proacl) a 
+          WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE'
+        )) AS public_exec,
+        CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') 
+             THEN has_function_privilege('anon', p.oid, 'execute') 
+             ELSE false END AS anon_exec,
+        CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') 
+             THEN has_function_privilege('authenticated', p.oid, 'execute') 
+             ELSE false END AS authenticated_exec,
+        CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') 
+             THEN has_function_privilege('service_role', p.oid, 'execute') 
+             ELSE false END AS service_role_exec
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
+      JOIN pg_type t_ret ON t_ret.oid = p.prorettype
       WHERE n.nspname = 'public'
         AND p.proname IN ('record_failed_login_attempt', 'record_successful_login', 'admin_unlock_account');
     `;
@@ -202,46 +228,71 @@ async function main() {
     const funcsRes = await client.query(funcQuery);
     const rows = funcsRes.rows || [];
 
+    if (rows.length !== 3) {
+      console.log(`❌ [FAIL] Expected exactly 3 security functions in catalog, found ${rows.length}.`);
+      allPassed = false;
+    }
+
     const expectedFunctions = [
       {
         name: 'record_failed_login_attempt',
-        expectedArgTypes: ['text', 'text', 'integer'],
-        expectedResultIncludes: ['table', 'record', 'setof'],
+        expectedArgCount: 3,
+        expectedArgTypes: ['text', 'text', 'int4'],
+        expectedReturnType: 'record',
+        expectedResultType: 'TABLE(email text, failed_attempts integer, is_locked boolean, locked_at timestamp with time zone, locked_reason text)',
       },
       {
         name: 'record_successful_login',
+        expectedArgCount: 1,
         expectedArgTypes: ['text'],
-        expectedResultIncludes: ['boolean'],
+        expectedReturnType: 'bool',
+        expectedResultType: 'boolean',
       },
       {
         name: 'admin_unlock_account',
+        expectedArgCount: 3,
         expectedArgTypes: ['text', 'text', 'text'],
-        expectedResultIncludes: ['boolean'],
+        expectedReturnType: 'bool',
+        expectedResultType: 'boolean',
       },
     ];
 
     for (const spec of expectedFunctions) {
       const fnRow = rows.find((r: any) => r.proname === spec.name);
       if (!fnRow) {
-        console.log(`⚠️ [NOT VERIFIED] Function ${spec.name} not found in pg_proc catalog.`);
+        console.log(`❌ [FAIL] Function ${spec.name} not found in pg_proc catalog.`);
         allPassed = false;
         continue;
       }
 
-      // Check arguments
-      const argsStr = (fnRow.identity_args || '').toLowerCase();
-      const argsMatch = spec.expectedArgTypes.every((t) => argsStr.includes(t));
-      if (!argsMatch) {
-        console.log(`❌ [FAIL] Function ${spec.name} arguments mismatch. Found: (${fnRow.identity_args})`);
+      // Check exact argument count
+      if (fnRow.arg_count !== spec.expectedArgCount) {
+        console.log(
+          `❌ [FAIL] Function ${spec.name} arg count mismatch: expected ${spec.expectedArgCount}, found ${fnRow.arg_count}.`
+        );
         allPassed = false;
         continue;
       }
 
-      // Check return type
-      const resStr = (fnRow.result_type || '').toLowerCase();
-      const resMatch = spec.expectedResultIncludes.some((t) => resStr.includes(t));
-      if (!resMatch) {
-        console.log(`❌ [FAIL] Function ${spec.name} return type mismatch. Found: ${fnRow.result_type}`);
+      // Check exact argument types in exact order (no substring matching)
+      const actualArgTypes = fnRow.arg_types || [];
+      const typesMatch =
+        actualArgTypes.length === spec.expectedArgTypes.length &&
+        spec.expectedArgTypes.every((t, i) => actualArgTypes[i] === t);
+
+      if (!typesMatch) {
+        console.log(
+          `❌ [FAIL] Function ${spec.name} argument types mismatch: expected [${spec.expectedArgTypes.join(', ')}], found [${actualArgTypes.join(', ')}].`
+        );
+        allPassed = false;
+        continue;
+      }
+
+      // Check exact return type
+      if (fnRow.return_type_name !== spec.expectedReturnType) {
+        console.log(
+          `❌ [FAIL] Function ${spec.name} return type mismatch: expected ${spec.expectedReturnType}, found ${fnRow.return_type_name}.`
+        );
         allPassed = false;
         continue;
       }
@@ -255,21 +306,35 @@ async function main() {
 
       // Check fixed search_path = public
       const configs = fnRow.config || [];
-      const hasSearchPath = configs.some((c: string) => c.toLowerCase().includes('search_path=public'));
+      const hasSearchPath = configs.some((c: string) => c.toLowerCase().trim() === 'search_path=public');
       if (!hasSearchPath) {
         console.log(`❌ [FAIL] Function ${spec.name} lacks fixed search_path = public.`);
         allPassed = false;
         continue;
       }
 
-      // Check privilege revocation from public, anon, authenticated
-      if (fnRow.public_exec || fnRow.anon_exec || fnRow.authenticated_exec) {
-        console.log(`❌ [FAIL] Function ${spec.name} is executable by unprivileged roles (public/anon/authenticated).`);
+      // Check PUBLIC privilege revoked (grantee 0 in aclexplode)
+      if (fnRow.public_exec) {
+        console.log(`❌ [FAIL] Function ${spec.name} has EXECUTE granted to PUBLIC (grantee 0).`);
         allPassed = false;
         continue;
       }
 
-      // Check privilege granted to service_role
+      // Check anon role privilege revoked
+      if (fnRow.anon_exec) {
+        console.log(`❌ [FAIL] Function ${spec.name} is executable by anon role.`);
+        allPassed = false;
+        continue;
+      }
+
+      // Check authenticated role privilege revoked
+      if (fnRow.authenticated_exec) {
+        console.log(`❌ [FAIL] Function ${spec.name} is executable by authenticated role.`);
+        allPassed = false;
+        continue;
+      }
+
+      // Check service_role privilege granted
       if (!fnRow.service_role_exec) {
         console.log(`❌ [FAIL] Function ${spec.name} is NOT executable by service_role.`);
         allPassed = false;
@@ -277,17 +342,15 @@ async function main() {
       }
 
       console.log(
-        `✓ [PASS] Function ${spec.name}(${fnRow.identity_args}) -> ${fnRow.result_type}: SECURITY DEFINER, search_path=public, service_role execution only.`
+        `✓ [PASS] Function ${spec.name}(${actualArgTypes.join(', ')}) -> ${fnRow.return_type_name}: exact signature verified, SECURITY DEFINER, search_path=public, service_role execution only.`
       );
-    }
-
-    if (rows.length < 3) {
-      allPassed = false;
     }
   } catch (err: any) {
     console.log('❌ Read-only database catalog inspection exception:', err.message);
     allPassed = false;
   } finally {
+    // End transaction and close connection safely
+    await client.query('ROLLBACK;').catch(() => {});
     await client.end().catch(() => {});
   }
 

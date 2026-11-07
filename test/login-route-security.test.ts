@@ -1,19 +1,20 @@
 /**
- * DOCUNEXA — LOGIN ROUTE-LEVEL SECURITY TEST SUITE
+ * DOCUNEXA — LOGIN ROUTE-LEVEL SECURITY & COOKIE CLEARING TEST SUITE
  *
  * Verifies route-level enforcement for POST /api/auth/login:
  * 1. Mandatory counter reset: When password succeeds but counter reset database operation fails:
  *    - Route returns HTTP 503 (Service Unavailable)
  *    - Route code is SECURITY_CHECK_UNAVAILABLE
  *    - Error message is generic (never leaks DB or RPC exception details)
- * 2. Session Invalidation:
- *    - supabase.auth.signOut() is immediately invoked on the server client
- *    - Auth session cookies are deleted on the response
+ * 2. Session Invalidation & Cookie Expiration:
+ *    - Simulated Supabase authentication cookies are present in request
+ *    - supabase.auth.signOut() is invoked on the server client
+ *    - Actual response contains cookie-expiration headers (Max-Age=0 / Expires=1970) for auth cookies
  *    - No active user session remains established
  * 3. Absence of Successful-Login Analytics:
  *    - Analytics event for login is NOT recorded when the request is aborted
  * 4. Zero Data Leakage:
- *    - User profile and authentication tokens are NOT returned
+ *    - User profile and authentication tokens are NOT returned in response body
  */
 
 import { POST } from '../src/app/api/auth/login/route';
@@ -120,7 +121,7 @@ async function runRouteTests() {
     }),
     rpc: async (fn: string) => {
       if (fn === 'record_successful_login') {
-        // Simulate mandatory counter reset database failure in PostgreSQL
+        // Force mandatory counter reset database failure in PostgreSQL
         return {
           data: null,
           error: { message: 'Database connection failed during atomic reset' },
@@ -134,11 +135,15 @@ async function runRouteTests() {
     setMockServerSupabaseClient(mockServerClient);
     setMockAdminSupabaseClient(mockAdminClient);
 
-    // Build login request
+    // Build login request with SIMULATED SUPABASE AUTHENTICATION COOKIES PRESENT
+    const simulatedAuthCookies =
+      'sb-docunexa-auth-token=simulated-jwt-token-12345; sb-refresh-token=simulated-refresh-token-67890; unrelated-cookie=preference';
+
     const req = new Request('http://localhost:3000/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': simulatedAuthCookies,
         'x-request-id': 'test-req-sec-reset',
       },
       body: JSON.stringify({
@@ -158,12 +163,46 @@ async function runRouteTests() {
       body.error === 'Authentication security service is temporarily unavailable. Please try again shortly.'
     );
 
-    console.log('\n--- 2. SESSION INVALIDATION & COOKIE CLEARING ---');
-    assert('supabase.auth.signOut() is invoked on server client to clear session', Boolean(signOutCalled) === true);
+    console.log('\n--- 2. SIGN-OUT & ACTUAL COOKIE EXPIRATION VERIFICATION ---');
+    assert('supabase.auth.signOut() is invoked on server client to invalidate session', Boolean(signOutCalled) === true);
+
+    // Inspect actual response cookies and Set-Cookie headers
+    const resCookies = res.cookies ? res.cookies.getAll() : [];
+    const rawSetCookieHeader = res.headers.get('set-cookie') || '';
+    const getSetCookieHeaders = (res.headers as any).getSetCookie ? (res.headers as any).getSetCookie() : [rawSetCookieHeader];
+    const combinedSetCookieStr = getSetCookieHeaders.join('; ');
+
+    // Verify deletion of the primary auth token cookie
+    const authTokenCookie = resCookies.find((c) => c.name === 'sb-docunexa-auth-token');
+    const authTokenDeleted =
+      Boolean(authTokenCookie && (authTokenCookie.value === '' || authTokenCookie.maxAge === 0)) ||
+      combinedSetCookieStr.includes('sb-docunexa-auth-token=;');
+
+    assert(
+      'Response contains cookie-expiration header for primary auth token (sb-docunexa-auth-token)',
+      authTokenDeleted,
+      `cookie=${JSON.stringify(authTokenCookie)}`
+    );
+
+    // Verify deletion of the refresh token cookie
+    const refreshTokenCookie = resCookies.find((c) => c.name === 'sb-refresh-token');
+    const refreshTokenDeleted =
+      Boolean(refreshTokenCookie && (refreshTokenCookie.value === '' || refreshTokenCookie.maxAge === 0)) ||
+      combinedSetCookieStr.includes('sb-refresh-token=;');
+
+    assert(
+      'Response contains cookie-expiration header for refresh token (sb-refresh-token)',
+      refreshTokenDeleted,
+      `cookie=${JSON.stringify(refreshTokenCookie)}`
+    );
+
+    // Confirm that unrelated cookie was NOT deleted
+    const unrelatedCookieDeleted = resCookies.some((c) => c.name === 'unrelated-cookie');
+    assert('Unrelated cookies are preserved without accidental deletion', !unrelatedCookieDeleted);
+
+    console.log('\n--- 3. ZERO DATA LEAKAGE & ABSENCE OF ANALYTICS ---');
     assert('No user object returned in response body', body.user === undefined);
     assert('No session/token object returned in response body', body.session === undefined);
-
-    console.log('\n--- 3. ABSENCE OF SUCCESSFUL-LOGIN ANALYTICS ---');
     assert('Successful-login analytics event was NOT dispatched for aborted request', Boolean(analyticsDispatched) === false);
 
     console.log('\n================================================================');
@@ -185,4 +224,3 @@ runRouteTests().catch((err) => {
   console.error('Fatal error in login route security tests:', err);
   process.exit(1);
 });
-

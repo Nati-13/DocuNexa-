@@ -196,6 +196,26 @@ export async function POST(req: Request) {
       );
 
       // Invariant: explicitly delete any auth session cookies to guarantee no session remains active
+      const cookiesToDelete = new Set<string>();
+
+      // 1. Inspect incoming request Cookie header
+      const rawCookieHeader = req.headers.get('cookie') || '';
+      if (rawCookieHeader) {
+        for (const cookieStr of rawCookieHeader.split(';')) {
+          const cookieName = cookieStr.split('=')[0]?.trim();
+          if (
+            cookieName &&
+            (cookieName.includes('sb-') ||
+              cookieName.includes('auth') ||
+              cookieName.includes('token') ||
+              cookieName.includes('session'))
+          ) {
+            cookiesToDelete.add(cookieName);
+          }
+        }
+      }
+
+      // 2. Inspect next/headers cookieStore if available in request context
       try {
         const cookieStore = await cookies();
         const allCookies = cookieStore.getAll();
@@ -206,11 +226,20 @@ export async function POST(req: Request) {
             c.name.includes('token') ||
             c.name.includes('session')
           ) {
-            errorResponse.cookies.delete(c.name);
+            cookiesToDelete.add(c.name);
           }
         }
       } catch {
         // Outside Next.js request scope fallback
+      }
+
+      // 3. Known default Supabase cookie keys
+      cookiesToDelete.add('sb-access-token');
+      cookiesToDelete.add('sb-refresh-token');
+
+      // Set cookie-expiration headers on the response for each authentication cookie
+      for (const name of cookiesToDelete) {
+        errorResponse.cookies.delete(name);
       }
 
       return errorResponse;

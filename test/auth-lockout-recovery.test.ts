@@ -467,15 +467,55 @@ async function runLockoutTests() {
 
     const testDbUrl = process.env.TEST_DATABASE_URL || process.env.DISPOSABLE_TEST_DATABASE_URL;
 
-    // Strict Production Isolation Check for Integration Tests
-    if (testDbUrl && (testDbUrl.includes('supabase.co') || testDbUrl.includes('docunexa.pro.et'))) {
-      throw new Error('SECURITY VIOLATION: Production database host detected in TEST_DATABASE_URL!');
+    // Strict local database host allowlist check
+    function isPermittedLocalDatabaseHost(urlString?: string): { allowed: boolean; reason?: string } {
+      if (!urlString) {
+        return { allowed: false, reason: 'No test database URL provided' };
+      }
+
+      let hostname: string;
+      try {
+        const parsed = new URL(urlString);
+        hostname = (parsed.hostname || '').toLowerCase();
+
+        // Reject Supabase pooler default port 6543
+        if (parsed.port === '6543') {
+          return { allowed: false, reason: 'Port 6543 matches Supabase pooler' };
+        }
+      } catch {
+        return { allowed: false, reason: 'Invalid URL format' };
+      }
+
+      // Strict allowlist: ONLY localhost, 127.0.0.1, and ::1
+      const ALLOWED_LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+
+      if (!ALLOWED_LOCAL_HOSTS.has(hostname)) {
+        return {
+          allowed: false,
+          reason: `Host "${hostname}" is not in strict local allowlist (localhost, 127.0.0.1, ::1 only)`,
+        };
+      }
+
+      // Explicit rejection of any Supabase or DocuNexa production hostnames
+      if (
+        hostname.includes('supabase.com') ||
+        hostname.includes('supabase.co') ||
+        hostname.includes('docunexa.pro.et') ||
+        hostname.includes('pooler.supabase')
+      ) {
+        return { allowed: false, reason: `Host "${hostname}" matches prohibited production/cloud patterns` };
+      }
+
+      return { allowed: true };
     }
 
-    if (!testDbUrl) {
-      console.log('  ℹ [NOT RUN] Multi-Connection Concurrency Integration Test: requires disposable local TEST_DATABASE_URL.');
-      console.log('  ℹ [NOT RUN] Admin Unlock & Audit Rollback Integration Test: requires disposable local TEST_DATABASE_URL.');
-      console.log('  (Disposable local test database is not configured in this environment; tests marked NOT RUN, not PASS)');
+    const hostCheck = isPermittedLocalDatabaseHost(testDbUrl);
+
+    if (!hostCheck.allowed) {
+      console.log('  ℹ [NOT RUN] Multi-Connection Concurrency Integration Test: requires strict local disposable PostgreSQL database.');
+      console.log('  ℹ [NOT RUN] Admin Unlock & Audit Rollback Integration Test: requires strict local disposable PostgreSQL database.');
+      console.log(`  Reason: ${hostCheck.reason}. Allowlist: localhost, 127.0.0.1, ::1 only.`);
+      console.log('  (Strict safety: Zero connections or cleanup statements executed against remote/unverified databases)');
       integrationNotRun = 2;
     } else {
       // @ts-ignore
