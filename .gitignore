@@ -35,6 +35,7 @@ Thumbs.db
 test-output/
 *.zip
 *.pdf
+*.traineddata
 scratch/
 tmp/
 temp/

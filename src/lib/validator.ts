@@ -59,6 +59,37 @@ export function generateAutoFilename(
 }
 
 /**
+ * Enforces integer boundaries and safe physical page range ordering:
+ * 1. Enforces integer start and end values.
+ * 2. Clamps startPage within [1, totalPages].
+ * 3. Clamps endPage within [startPage, totalPages].
+ * 4. Never allows endPage < startPage or endPage > totalPages.
+ */
+export function sanitizePageRange(
+  start: any,
+  end: any,
+  totalPages: number
+): { startPage: number; endPage: number } {
+  const safeTotal = Math.max(1, Math.floor(Number(totalPages)) || 1);
+  let parsedStart = Math.floor(Number(start));
+  if (isNaN(parsedStart) || parsedStart < 1) {
+    parsedStart = 1;
+  }
+  const clampedStart = Math.min(parsedStart, safeTotal);
+
+  let parsedEnd = Math.floor(Number(end));
+  if (isNaN(parsedEnd)) {
+    parsedEnd = clampedStart;
+  }
+  const clampedEnd = Math.min(Math.max(clampedStart, parsedEnd), safeTotal);
+
+  return {
+    startPage: clampedStart,
+    endPage: clampedEnd,
+  };
+}
+
+/**
  * Comprehensive validation of parts against total pages
  */
 export function validateParts(parts: DetectedPart[], totalPages: number): ValidationResult {
@@ -121,7 +152,9 @@ export function validateParts(parts: DetectedPart[], totalPages: number): Valida
   filenameMap.forEach((count, name) => {
     if (count > 1) {
       duplicateFilenames.push(name);
-      warnings.push(`Duplicate filename: "${name}" is used by ${count} parts.`);
+      warnings.push(
+        `Duplicate filename conflict: "${name}" is assigned to ${count} parts. Renaming is recommended; distinct numbering will be applied automatically on ZIP archive generation.`
+      );
     }
   });
 

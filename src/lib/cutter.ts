@@ -86,15 +86,31 @@ export function downloadFile(
 }
 
 /**
- * Generates a ZIP archive containing all generated files
+ * Generates a ZIP archive containing all generated files.
+ * Deduplicates filenames case-insensitively so duplicate names never silently overwrite entries.
  */
 export async function createZipBundle(
   items: Array<{ filename: string; bytes: Uint8Array }>
 ): Promise<Blob> {
   const zip = new JSZip();
+  const usedLowerNames = new Set<string>();
 
   items.forEach((item) => {
-    zip.file(sanitizeDownloadFilename(item.filename), item.bytes);
+    const baseName = sanitizeDownloadFilename(item.filename, 'pdf');
+    let finalName = baseName;
+    let counter = 1;
+
+    // Deduplicate case-insensitively: "Unit 1.pdf" vs "unit 1.PDF"
+    while (usedLowerNames.has(finalName.toLowerCase())) {
+      const extMatch = baseName.match(/\.[^.]+$/);
+      const ext = extMatch ? extMatch[0] : '.pdf';
+      const root = baseName.substring(0, baseName.length - ext.length);
+      finalName = `${root} (${counter})${ext}`;
+      counter++;
+    }
+
+    usedLowerNames.add(finalName.toLowerCase());
+    zip.file(finalName, item.bytes);
   });
 
   return await zip.generateAsync({
@@ -112,27 +128,59 @@ export function isFileSystemAccessSupported(): boolean {
 }
 
 /**
- * Saves generated files directly to a folder chosen by the user via File System Access API
+ * Saves generated files directly to a folder chosen by the user via File System Access API.
+ * Retains and reuses existing directory handles to prevent multiple prompts.
  */
 export async function saveFilesToDirectory(
   items: Array<{ filename: string; bytes: Uint8Array }>,
-  promptConflictAction: (filename: string) => Promise<'replace' | 'rename' | 'cancel'>
-): Promise<{ savedCount: number; errors: string[] }> {
+  promptConflictAction?: (filename: string) => Promise<'replace' | 'rename' | 'cancel'>,
+  existingDirHandle?: any
+): Promise<{ savedCount: number; errors: string[]; dirHandle?: any }> {
   if (!isFileSystemAccessSupported()) {
     throw new Error('File System Access API is not supported in this browser.');
   }
 
-  const dirHandle = await (window as any).showDirectoryPicker({
-    mode: 'readwrite',
-  });
+  let dirHandle = existingDirHandle;
+  if (!dirHandle) {
+    dirHandle = await (window as any).showDirectoryPicker({
+      mode: 'readwrite',
+    });
+  } else {
+    // Verify existing permission
+    try {
+      if (typeof dirHandle.queryPermission === 'function') {
+        let perm = await dirHandle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted' && typeof dirHandle.requestPermission === 'function') {
+          perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+        }
+        if (perm !== 'granted') {
+          dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+        }
+      }
+    } catch {
+      dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+    }
+  }
 
   let savedCount = 0;
   const errors: string[] = [];
+  const batchLowerNames = new Set<string>();
 
   for (const item of items) {
-    let targetName = sanitizeDownloadFilename(item.filename);
+    let targetName = sanitizeDownloadFilename(item.filename, 'pdf');
 
-    // Check if file already exists
+    // Prevent in-batch collisions
+    const baseTarget = targetName;
+    let batchCounter = 1;
+    while (batchLowerNames.has(targetName.toLowerCase())) {
+      const ext = baseTarget.match(/\.[^.]+$/)?.[0] || '.pdf';
+      const root = baseTarget.substring(0, baseTarget.length - ext.length);
+      targetName = `${root} (${batchCounter})${ext}`;
+      batchCounter++;
+    }
+    batchLowerNames.add(targetName.toLowerCase());
+
+    // Check if file already exists in target directory
     let fileExists = false;
     try {
       await dirHandle.getFileHandle(targetName);
@@ -141,12 +189,11 @@ export async function saveFilesToDirectory(
       fileExists = false;
     }
 
-    if (fileExists) {
+    if (fileExists && promptConflictAction) {
       const action = await promptConflictAction(targetName);
       if (action === 'cancel') {
         continue; // Skip this file
       } else if (action === 'rename') {
-        // Find an unused name e.g. "Document (1).docx"
         let counter = 1;
         const ext = targetName.match(/\.[^.]+$/)?.[0] || '.pdf';
         const nameWithoutExt = targetName.replace(new RegExp(`\\${ext}$`, 'i'), '');
@@ -160,7 +207,6 @@ export async function saveFilesToDirectory(
           }
         }
       }
-      // If 'replace', we proceed to overwrite with create: true
     }
 
     try {
@@ -170,11 +216,11 @@ export async function saveFilesToDirectory(
       await writable.close();
       savedCount++;
     } catch (err: any) {
-      errors.push(`Failed to save ${targetName}: ${err.message || err}`);
+      errors.push(`Failed to save "${targetName}": ${err.message || err}`);
     }
   }
 
-  return { savedCount, errors };
+  return { savedCount, errors, dirHandle };
 }
 
 export interface CutExecutionOptions {
@@ -304,11 +350,21 @@ export async function executeCutPlan(
 
   const cancelCheck = shouldCancel || (() => false);
 
+  const abortRemaining = (fromIndex: number) => {
+    state.isCancelled = true;
+    state.isCutting = false;
+    for (let j = fromIndex; j < items.length; j++) {
+      if (items[j].status === 'waiting' || items[j].status === 'processing') {
+        items[j].status = 'error';
+        items[j].error = 'Cancelled by user';
+      }
+    }
+    onProgress({ ...state, items: [...items] });
+  };
+
   for (let i = 0; i < parts.length; i++) {
     if (cancelCheck()) {
-      state.isCancelled = true;
-      state.isCutting = false;
-      onProgress({ ...state });
+      abortRemaining(i);
       break;
     }
 
@@ -319,6 +375,11 @@ export async function executeCutPlan(
 
     // Yield control to UI thread
     await new Promise((r) => setTimeout(r, 15));
+
+    if (cancelCheck()) {
+      abortRemaining(i);
+      break;
+    }
 
     try {
       const part = parts[i];
@@ -343,6 +404,11 @@ export async function executeCutPlan(
       onProgress({ ...state, items: [...items] });
       await new Promise((r) => setTimeout(r, 10));
 
+      if (cancelCheck()) {
+        abortRemaining(i);
+        break;
+      }
+
       const subDoc = await PDFDocument.create();
       const copiedPages = await subDoc.copyPages(srcDoc, pageIndices);
       copiedPages.forEach((page) => subDoc.addPage(page));
@@ -350,6 +416,11 @@ export async function executeCutPlan(
       items[i].progress = 85;
       onProgress({ ...state, items: [...items] });
       await new Promise((r) => setTimeout(r, 10));
+
+      if (cancelCheck()) {
+        abortRemaining(i);
+        break;
+      }
 
       const pdfBytes = await subDoc.save();
 
@@ -378,6 +449,9 @@ export async function executeCutPlan(
   }
 
   state.isCutting = false;
+  if (cancelCheck()) {
+    state.isCancelled = true;
+  }
   onProgress({ ...state, items: [...items] });
 
   return items;

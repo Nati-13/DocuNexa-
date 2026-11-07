@@ -58,6 +58,86 @@ export function getPdfJsDocumentParams(
 }
 
 /**
+ * Safely inspects a PDF document to verify its format, encryption status,
+ * and page count. Ensures PDF.js loading tasks and document instances are
+ * completely destroyed to prevent memory leaks and orphaned worker processes.
+ */
+export async function inspectPdfDocument(
+  data: ArrayBuffer | Uint8Array
+): Promise<{ totalPages: number }> {
+  if (!data || data.byteLength === 0) {
+    throw new Error('The selected file is empty (0 bytes). Please upload a valid PDF document.');
+  }
+
+  // Quick signature check: First 1024 bytes must contain %PDF-
+  const sliceLen = Math.min(data.byteLength, 1024);
+  const headBytes =
+    data instanceof Uint8Array
+      ? data.subarray(0, sliceLen)
+      : new Uint8Array(data.slice(0, sliceLen));
+  let headString = '';
+  for (let i = 0; i < headBytes.length; i++) {
+    headString += String.fromCharCode(headBytes[i]);
+  }
+  if (!headString.includes('%PDF-')) {
+    throw new Error(
+      'The selected file does not appear to be a valid PDF document (missing %PDF- header signature).'
+    );
+  }
+
+  const pdfjs = await getPdfJs();
+  let loadingTask: any = null;
+  let pdfDoc: any = null;
+
+  try {
+    loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(data));
+    pdfDoc = await loadingTask.promise;
+    const totalPages = pdfDoc.numPages;
+
+    if (typeof totalPages !== 'number' || totalPages < 1) {
+      throw new Error('The PDF document contains no readable pages.');
+    }
+
+    return { totalPages };
+  } catch (err: any) {
+    const errorMsg = String(err?.message || err || '');
+    const errorName = String(err?.name || '');
+
+    if (
+      errorName === 'PasswordException' ||
+      /password/i.test(errorMsg) ||
+      /encrypt/i.test(errorMsg)
+    ) {
+      throw new Error(
+        'This PDF document is password-protected or encrypted. Please unlock the PDF or remove the password before uploading.'
+      );
+    }
+
+    if (/invalid pdf/i.test(errorMsg) || /corrupt/i.test(errorMsg) || /format/i.test(errorMsg)) {
+      throw new Error('The PDF document is corrupted, damaged, or cannot be parsed.');
+    }
+
+    // Default sanitized error message preventing internal stack trace exposure
+    throw new Error(
+      errorMsg.length > 0 && !errorMsg.includes('at ')
+        ? errorMsg
+        : 'Could not open PDF: The file format is unsupported or the file is damaged.'
+    );
+  } finally {
+    if (pdfDoc && typeof pdfDoc.destroy === 'function') {
+      try {
+        await pdfDoc.destroy();
+      } catch {}
+    }
+    if (loadingTask && typeof loadingTask.destroy === 'function') {
+      try {
+        await loadingTask.destroy();
+      } catch {}
+    }
+  }
+}
+
+/**
  * Loads a PDF document and extracts text page by page, checking for scanned status
  */
 export async function extractPdfTextPages(
@@ -80,14 +160,16 @@ export async function extractPdfTextPages(
     })
   );
 
-  const pdfDoc = await loadingTask.promise;
-  const totalPages = pdfDoc.numPages;
-
+  let pdfDoc: any = null;
   const pages: PageTextData[] = [];
   let totalChars = 0;
   let pagesWithNoText = 0;
+  let totalPages = 0;
 
   try {
+    pdfDoc = await loadingTask.promise;
+    totalPages = pdfDoc.numPages;
+
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
       if (shouldCancel && shouldCancel()) {
         throw new Error('PDF extraction cancelled by user.');
@@ -219,9 +301,16 @@ export async function extractPdfTextPages(
     }
   } finally {
     // Release PDF.js worker resources
-    if (typeof pdfDoc.destroy === 'function') {
+    if (pdfDoc && typeof pdfDoc.destroy === 'function') {
       try {
         await pdfDoc.destroy();
+      } catch {
+        // ignore cleanup error
+      }
+    }
+    if (loadingTask && typeof loadingTask.destroy === 'function') {
+      try {
+        await loadingTask.destroy();
       } catch {
         // ignore cleanup error
       }
@@ -253,9 +342,10 @@ export async function renderPdfPageToCanvas(
 ): Promise<void> {
   const pdfjs = await getPdfJs();
   const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(arrayBuffer));
+  let pdfDoc: any = null;
 
-  const pdfDoc = await loadingTask.promise;
   try {
+    pdfDoc = await loadingTask.promise;
     const page = await pdfDoc.getPage(pageNumber);
     try {
       const viewport = page.getViewport({ scale });
@@ -277,9 +367,16 @@ export async function renderPdfPageToCanvas(
       }
     }
   } finally {
-    if (typeof pdfDoc.destroy === 'function') {
+    if (pdfDoc && typeof pdfDoc.destroy === 'function') {
       try {
         await pdfDoc.destroy();
+      } catch {
+        // ignore cleanup error
+      }
+    }
+    if (loadingTask && typeof loadingTask.destroy === 'function') {
+      try {
+        await loadingTask.destroy();
       } catch {
         // ignore cleanup error
       }

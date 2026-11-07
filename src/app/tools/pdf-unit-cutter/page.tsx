@@ -27,14 +27,14 @@ import {
   ConfidenceLevel,
   PageTextData
 } from '@/types';
-import { extractPdfTextPages, getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
+import { extractPdfTextPages, getPdfJs, getPdfJsDocumentParams, inspectPdfDocument } from '@/lib/pdfReader';
 import { detectDocumentUnits } from '@/lib/detector';
 import {
   SUPPORTED_LANGUAGES,
   SupportedLanguageCode,
   detectDocumentLanguage
 } from '@/lib/multilingual';
-import { validateParts, sanitizeFilename } from '@/lib/validator';
+import { validateParts, sanitizeFilename, sanitizePageRange } from '@/lib/validator';
 import {
   extractPdfRange,
   downloadFile,
@@ -97,10 +97,12 @@ export default function PdfUnitCutterPage() {
   const [previewInitialPage, setPreviewInitialPage] = useState<number | undefined>(undefined);
   const [completionItems, setCompletionItems] = useState<CutProgressItem[] | null>(null);
   const [isCuttingCancelled, setIsCuttingCancelled] = useState<boolean>(false);
+  const isCuttingCancelledRef = useRef<boolean>(false);
 
   // Folder Access state
   const [isFolderSupported, setIsFolderSupported] = useState<boolean>(false);
   const [selectedFolderText, setSelectedFolderText] = useState<string>('');
+  const selectedDirHandleRef = useRef<any>(null);
 
   // Project file hidden input
   const projectInputRef = useRef<HTMLInputElement>(null);
@@ -154,15 +156,21 @@ export default function PdfUnitCutterPage() {
 
   // Handle PDF file selection
   const handleFileSelect = async (file: File) => {
+    if (!file) return;
+
+    if (file.size === 0) {
+      alert('The selected file is empty (0 bytes). Please upload a valid PDF document.');
+      return;
+    }
+
     try {
       const buffer = await file.arrayBuffer();
+
+      // Inspect PDF validity, encryption, and page count while properly destroying PDF.js instances
+      const { totalPages } = await inspectPdfDocument(buffer);
+
+      // Only commit new buffer and file info once inspection succeeds to prevent stale/corrupt state
       setFileBuffer(buffer);
-
-      const pdfjs = await getPdfJs();
-      const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(buffer));
-      const pdfDoc = await loadingTask.promise;
-      const totalPages = pdfDoc.numPages;
-
       setFileInfo({
         file,
         name: file.name,
@@ -181,7 +189,7 @@ export default function PdfUnitCutterPage() {
       setCompletionItems(null);
     } catch (err: any) {
       console.error('Error reading PDF file:', err);
-      alert(`Could not open PDF: ${err.message || 'Invalid or encrypted PDF document.'}`);
+      alert(err.message || 'Could not open PDF: Invalid or encrypted PDF document.');
     }
   };
 
@@ -348,12 +356,15 @@ export default function PdfUnitCutterPage() {
   const handleApplyAll = () => {
     if (!fileInfo) return;
     setIsBoundariesConfirmed(false);
-    const sanitized = parts.map((part) => ({
-      ...part,
-      filename: sanitizeFilename(part.filename),
-      startPage: Math.max(1, Math.min(part.startPage, fileInfo.totalPages)),
-      endPage: Math.max(part.startPage, Math.min(part.endPage, fileInfo.totalPages)),
-    }));
+    const sanitized = parts.map((part) => {
+      const range = sanitizePageRange(part.startPage, part.endPage, fileInfo.totalPages);
+      return {
+        ...part,
+        filename: sanitizeFilename(part.filename),
+        startPage: range.startPage,
+        endPage: range.endPage,
+      };
+    });
     setParts(sanitized);
   };
 
@@ -565,9 +576,15 @@ export default function PdfUnitCutterPage() {
 
   // Choose Local Output Folder
   const handleChooseFolder = async () => {
-    if (!isFolderSupported) return;
+    if (!isFolderSupported) {
+      alert(
+        'Direct folder saving requires the File System Access API (supported in desktop Chrome and Edge). You can still download all cut chapters individually or as a ZIP archive.'
+      );
+      return;
+    }
     try {
       const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+      selectedDirHandleRef.current = dirHandle;
       setSelectedFolderText(`Selected: ${dirHandle.name}`);
     } catch (err: any) {
       if (err.name !== 'AbortError') {
@@ -604,6 +621,7 @@ export default function PdfUnitCutterPage() {
     }
 
     setIsCuttingCancelled(false);
+    isCuttingCancelledRef.current = false;
 
     try {
       const items = await dispatchCutExecution({
@@ -613,15 +631,17 @@ export default function PdfUnitCutterPage() {
         isUncertain: effectiveUncertain,
         isBoundariesConfirmed: Boolean(isBoundariesConfirmed),
         onProgress: (progress) => setProgressState(progress),
-        shouldCancel: () => isCuttingCancelled,
+        shouldCancel: () => isCuttingCancelledRef.current,
       });
 
-      if (!isCuttingCancelled) {
+      if (!isCuttingCancelledRef.current) {
         setCompletionItems(items);
       }
     } catch (err: any) {
-      console.error('Cutting execution error:', err);
-      alert(`Splitting failed: ${err.message || err}`);
+      if (!isCuttingCancelledRef.current) {
+        console.error('Cutting execution error:', err);
+        alert(`Splitting failed: ${err.message || err}`);
+      }
     }
   };
 
@@ -660,20 +680,48 @@ export default function PdfUnitCutterPage() {
     const completed = completionItems.filter((i) => i.status === 'done' && i.bytes);
     if (completed.length === 0) return;
 
+    if (!isFolderSupported) {
+      const proceedZip = window.confirm(
+        'Direct folder saving requires the File System Access API (supported in desktop Chrome and Edge).\n\nWould you like to download all units as a ZIP archive instead?'
+      );
+      if (proceedZip) {
+        await handleDownloadZip();
+      }
+      return;
+    }
+
     try {
       const items = completed.map((i) => ({
         filename: i.filename,
         bytes: i.bytes!,
       }));
 
-      const result = await saveFilesToDirectory(items, async (conflictFile) => {
-        const replace = window.confirm(
-          `A file named "${conflictFile}" already exists in the selected folder.\nClick OK to replace it, or Cancel to rename it.`
-        );
-        return replace ? 'replace' : 'rename';
-      });
+      const result = await saveFilesToDirectory(
+        items,
+        async (conflictFile) => {
+          const replace = window.confirm(
+            `A file named "${conflictFile}" already exists in the selected folder.\nClick OK to replace it, or Cancel to rename it.`
+          );
+          return replace ? 'replace' : 'rename';
+        },
+        selectedDirHandleRef.current
+      );
 
-      alert(`Successfully saved ${result.savedCount} unit PDF(s) directly to your folder!`);
+      if (result.dirHandle) {
+        selectedDirHandleRef.current = result.dirHandle;
+        if (result.dirHandle.name) {
+          setSelectedFolderText(`Selected: ${result.dirHandle.name}`);
+        }
+      }
+
+      if (result.errors.length === 0) {
+        alert(`Successfully saved ${result.savedCount} unit PDF(s) directly to your folder!`);
+      } else {
+        const errorDetails = result.errors.map((e) => `• ${e}`).join('\n');
+        alert(
+          `Saved ${result.savedCount} of ${items.length} file(s).\n\nThe following error(s) occurred:\n${errorDetails}`
+        );
+      }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         alert(`Folder save error: ${err.message || err}`);
@@ -992,6 +1040,7 @@ export default function PdfUnitCutterPage() {
         <ProgressModal
           progressState={progressState}
           onCancel={() => {
+            isCuttingCancelledRef.current = true;
             setIsCuttingCancelled(true);
             setProgressState((prev) => ({ ...prev, isCutting: false, isCancelled: true }));
           }}
