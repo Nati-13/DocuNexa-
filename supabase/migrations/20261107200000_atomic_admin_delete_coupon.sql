@@ -1,7 +1,9 @@
 -- DocuNexa — Atomic Admin Coupon Deletion Migration
 -- Ensures atomic row locking (FOR UPDATE), checks for zero redemptions,
 -- ensures zero records in coupon_redemptions AND payment_orders,
--- logs the audit entry, and rolls back atomically on any error.
+-- logs the audit entry BEFORE deletion to satisfy foreign-key constraints,
+-- restricts execution privileges to service_role only,
+-- and rolls back atomically on any error.
 
 CREATE OR REPLACE FUNCTION public.admin_delete_coupon_atomic(
   p_admin_user_id uuid,
@@ -16,13 +18,21 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 DECLARE
   v_coupon RECORD;
   v_redemption_count integer;
   v_order_count integer;
 BEGIN
+  -- 0. Authorization check: Verify administrator identity in public.admin_users
+  IF NOT EXISTS (
+    SELECT 1 FROM public.admin_users WHERE user_id = p_admin_user_id
+  ) THEN
+    RETURN QUERY SELECT false, NULL::text, 'Unauthorized: caller is not an administrator.'::text, 'UNAUTHORIZED_ADMIN'::text;
+    RETURN;
+  END IF;
+
   -- 1. Lock the coupon row FOR UPDATE to prevent race conditions during deletion
   SELECT * INTO v_coupon
   FROM public.coupons
@@ -66,11 +76,9 @@ BEGIN
     RETURN;
   END IF;
 
-  -- 5. Delete the coupon row
-  DELETE FROM public.coupons
-  WHERE id = p_coupon_id;
-
-  -- 6. Insert audit trail atomically in the same PostgreSQL transaction
+  -- 5. Insert audit trail BEFORE deletion while coupon foreign key is valid
+  -- When the coupon is subsequently deleted, target_coupon_id is set to NULL
+  -- by the ON DELETE SET NULL foreign key constraint, while metadata preserves the full identity.
   INSERT INTO public.admin_audit_logs (
     admin_user_id,
     action,
@@ -83,6 +91,7 @@ BEGIN
     'coupon_deleted',
     p_coupon_id,
     jsonb_build_object(
+      'coupon_id', p_coupon_id,
       'code', v_coupon.code,
       'discountType', v_coupon.discount_type,
       'discountValue', v_coupon.discount_value,
@@ -92,6 +101,18 @@ BEGIN
     now()
   );
 
+  -- 6. Delete the coupon row (FK triggers ON DELETE SET NULL on admin_audit_logs)
+  DELETE FROM public.coupons
+  WHERE id = p_coupon_id;
+
   RETURN QUERY SELECT true, v_coupon.code, NULL::text, NULL::text;
 END;
 $$;
+
+-- Restrict execution: Revoke execution from PUBLIC, anon, and authenticated roles
+REVOKE ALL ON FUNCTION public.admin_delete_coupon_atomic(uuid, uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.admin_delete_coupon_atomic(uuid, uuid, text) FROM anon;
+REVOKE ALL ON FUNCTION public.admin_delete_coupon_atomic(uuid, uuid, text) FROM authenticated;
+
+-- Grant execution to service_role only
+GRANT EXECUTE ON FUNCTION public.admin_delete_coupon_atomic(uuid, uuid, text) TO service_role;

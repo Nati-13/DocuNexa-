@@ -31,7 +31,9 @@ export interface LanguageSpec {
   name: string;
   nativeName: string;
   script: 'latin' | 'ethiopic' | 'arabic' | 'devanagari' | 'han';
-  tesseractCode: string; // Tesseract OCR language code
+  tesseractCode: string | null; // Tesseract OCR language code (null if no official model exists)
+  ocrSupported: boolean;
+  ocrNotes?: string;
   rtl: boolean;
   headingPrefixes: string[];
   tocKeywords: string[];
@@ -45,6 +47,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'English',
     script: 'latin',
     tesseractCode: 'eng',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['UNIT', 'CHAPTER', 'MODULE', 'LESSON', 'PART', 'SECTION'],
     tocKeywords: ['TABLE OF CONTENTS', 'CONTENTS', 'INDEX'],
@@ -56,6 +59,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'አማርኛ',
     script: 'ethiopic',
     tesseractCode: 'amh',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['ምዕራፍ', 'ክፍል', 'አሃድ', 'ትምህርት', 'ርዕስ'],
     tocKeywords: ['ማውጫ', 'የርዕስ ማውጫ', 'የይዘት ማውጫ', 'የቀጠለ'],
@@ -66,7 +70,10 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     name: 'Afaan Oromo',
     nativeName: 'Afaan Oromoo',
     script: 'latin',
-    tesseractCode: 'orm',
+    tesseractCode: null,
+    ocrSupported: false,
+    ocrNotes:
+      'Official Tesseract OCR traineddata model does not exist for Afaan Oromo. Searchable PDF text detection and manual splitting are fully supported.',
     rtl: false,
     headingPrefixes: ['BOQONNAA', 'KUTAA', 'BARNOOTA', 'MATA DUREE'],
     tocKeywords: ['BAAFATA', 'QABIYYEE', 'BAAFATA QABIYYEE'],
@@ -78,6 +85,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'ትግርኛ',
     script: 'ethiopic',
     tesseractCode: 'tir',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['ምዕራፍ', 'ክፍሊ', 'ትምህርቲ', 'ኣርእስቲ'],
     tocKeywords: ['ትሕዝቶ', 'መውጫ', 'መርአዪ ትሕዝቶ'],
@@ -89,6 +97,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'العربية',
     script: 'arabic',
     tesseractCode: 'ara',
+    ocrSupported: true,
     rtl: true,
     headingPrefixes: ['الوحدة', 'وحدة', 'الفصل', 'فصل', 'الباب', 'باب', 'الدرس', 'درس', 'الجزء', 'جزء'],
     tocKeywords: ['الفهرس', 'المحتويات', 'جدول المحتويات', 'فهرس المحتويات', 'المحتوى'],
@@ -100,6 +109,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'Français',
     script: 'latin',
     tesseractCode: 'fra',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['CHAPITRE', 'UNITÉ', 'MODULE', 'LEÇON', 'PARTIE'],
     tocKeywords: ['TABLE DES MATIÈRES', 'SOMMAIRE', 'CONTENU'],
@@ -111,6 +121,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'Español',
     script: 'latin',
     tesseractCode: 'spa',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['CAPÍTULO', 'UNIDAD', 'MÓDULO', 'LECCIÓN', 'PARTE'],
     tocKeywords: ['ÍNDICE', 'CONTENIDO', 'TABLA DE CONTENIDO', 'ÍNDICE GENERAL'],
@@ -122,6 +133,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'Kiswahili',
     script: 'latin',
     tesseractCode: 'swa',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['SURA', 'SEHEMU', 'KITENGO', 'SOMO'],
     tocKeywords: ['YALIYOMO', 'JEDWALI LA YALIYOMO'],
@@ -133,6 +145,7 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: 'हिन्दी',
     script: 'devanagari',
     tesseractCode: 'hin',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['इकाई', 'अध्याय', 'पाठ', 'भाग', 'खण्ड'],
     tocKeywords: ['विषय सूची', 'अनुक्रमणिका', 'सामग्री'],
@@ -144,12 +157,28 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguageCode, LanguageSpec> = 
     nativeName: '简体中文',
     script: 'han',
     tesseractCode: 'chi_sim',
+    ocrSupported: true,
     rtl: false,
     headingPrefixes: ['单元', '章', '课', '部分', '章节'],
     tocKeywords: ['目录', '目次', '内容'],
     sampleTitle: '第一单元 - 导论',
   },
 };
+
+/**
+ * Verified languages that have official, available Tesseract OCR models
+ */
+export const SUPPORTED_OCR_LANGUAGES: SupportedLanguageCode[] = [
+  'en',
+  'am',
+  'ti',
+  'ar',
+  'fr',
+  'es',
+  'sw',
+  'hi',
+  'zh',
+];
 
 // ==============================================================================
 // NUMERAL MAPPINGS FOR ALL 10 LANGUAGES
@@ -394,15 +423,17 @@ export function parseMultilingualNumber(raw: string): number | null {
 // ==============================================================================
 
 export interface LanguageDetectionResult {
-  detectedLanguage: SupportedLanguageCode;
-  confidence: 'High' | 'Medium' | 'Low';
-  script: 'latin' | 'ethiopic' | 'arabic' | 'devanagari' | 'han';
+  detectedLanguage: SupportedLanguageCode | null;
+  confidence: 'High' | 'Medium' | 'Low' | 'None';
+  script: 'latin' | 'ethiopic' | 'arabic' | 'devanagari' | 'han' | 'unknown';
   scores: Record<SupportedLanguageCode, number>;
+  insufficientText?: boolean;
 }
 
 /**
  * Accurately detects document language from sample text using script inspection
  * and distinctive lexical tokens across all 10 supported languages.
+ * An empty or near-empty text sample is NEVER treated as English.
  */
 export function detectDocumentLanguage(sampleText: string): LanguageDetectionResult {
   const scores: Record<SupportedLanguageCode, number> = {
@@ -418,12 +449,14 @@ export function detectDocumentLanguage(sampleText: string): LanguageDetectionRes
     zh: 0,
   };
 
-  if (!sampleText || sampleText.trim().length === 0) {
+  const cleanChars = sampleText ? sampleText.trim().replace(/\s/g, '').length : 0;
+  if (!sampleText || cleanChars < 15) {
     return {
-      detectedLanguage: 'en',
-      confidence: 'Low',
-      script: 'latin',
+      detectedLanguage: null,
+      confidence: 'None',
+      script: 'unknown',
       scores,
+      insufficientText: true,
     };
   }
 
@@ -528,12 +561,24 @@ export function detectDocumentLanguage(sampleText: string): LanguageDetectionRes
     }
   }
 
-  const confidence: 'High' | 'Medium' | 'Low' = bestScore >= 12 ? 'High' : bestScore >= 4 ? 'Medium' : 'Low';
+  // If score is too low, we do not guess or falsely claim language confidence
+  if (bestScore < 4) {
+    return {
+      detectedLanguage: null,
+      confidence: 'None',
+      script: 'latin',
+      scores,
+      insufficientText: false,
+    };
+  }
+
+  const confidence: 'High' | 'Medium' | 'Low' = bestScore >= 12 ? 'High' : 'Medium';
 
   return {
     detectedLanguage: bestLang,
     confidence,
     script: 'latin',
     scores,
+    insufficientText: false,
   };
 }

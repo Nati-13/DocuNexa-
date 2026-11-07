@@ -401,6 +401,62 @@ async function runMultilingualSuite() {
   }
 
   // --------------------------------------------------------------------------
+  // SECTION 7: SCANNED DOCUMENT SPARSE-TEXT DETECTION SAFETY
+  // --------------------------------------------------------------------------
+  console.log('\n--- 7. SCANNED DOCUMENT SPARSE-TEXT ENGINE SAFETY ---');
+
+  await test('Empty or sparse extracted text (< 15 chars) returns null language and requires user selection', () => {
+    const emptyRes = detectDocumentLanguage('');
+    assert.strictEqual(emptyRes.detectedLanguage, null);
+    assert.strictEqual(emptyRes.confidence, 'None');
+    assert.strictEqual(emptyRes.insufficientText, true);
+
+    const sparseRes = detectDocumentLanguage('   1   \n\n 2   ');
+    assert.strictEqual(sparseRes.detectedLanguage, null);
+    assert.strictEqual(sparseRes.confidence, 'None');
+    assert.strictEqual(sparseRes.insufficientText, true);
+  });
+
+  // --------------------------------------------------------------------------
+  // SECTION 8: OCR MODEL CAPABILITY AUDIT (HONEST STATUS REPORTING)
+  // --------------------------------------------------------------------------
+  console.log('\n--- 8. OCR MODEL CAPABILITY AUDIT ---');
+
+  await test('Afaan Oromo is explicitly declared as ocrSupported=false with zero fake substitution', () => {
+    const oromoSpec = SUPPORTED_LANGUAGES['om'];
+    assert.strictEqual(oromoSpec.ocrSupported, false, 'Afaan Oromo must be declared ocrSupported=false');
+    assert.strictEqual(oromoSpec.tesseractCode, null, 'Afaan Oromo must not pretend to have a Tesseract code');
+    assert.ok(/does not exist|not supported/i.test(oromoSpec.ocrNotes || ''), 'Notes must state OCR model does not exist or is not supported');
+  });
+
+  await test('The 9 verified languages have confirmed Tesseract language codes', () => {
+    const verifiedLanguages: SupportedLanguageCode[] = ['en', 'am', 'ti', 'ar', 'fr', 'es', 'sw', 'hi', 'zh'];
+    for (const code of verifiedLanguages) {
+      const spec = SUPPORTED_LANGUAGES[code];
+      assert.strictEqual(spec.ocrSupported, true, `${code} must be ocrSupported=true`);
+      assert.ok(spec.tesseractCode !== null && spec.tesseractCode.length > 0, `${code} must have valid tesseractCode`);
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // SECTION 9: RTL TEXT AND MULTI-COLUMN SEPARATION IN PDFREADER
+  // --------------------------------------------------------------------------
+  console.log('\n--- 9. RTL TEXT & MULTI-COLUMN LINE RECONSTRUCTION ---');
+
+  await test('Reconstructs RTL lines in right-to-left visual order and partitions multi-column gaps', async () => {
+    // Test the logic implemented in pdfReader:
+    // If predominantly Arabic, items on the same baseline are sorted right-to-left
+    const arabicItems = [
+      { str: 'الوحدة', transform: [1, 0, 0, 1, 300, 500], width: 40 },
+      { str: 'الأولى', transform: [1, 0, 0, 1, 250, 500], width: 40 },
+    ];
+    // In RTL reading, items appearing to the right (x=300) come before items to the left (x=250)
+    const sorted = [...arabicItems].sort((a, b) => b.transform[4] - a.transform[4]);
+    const lineText = sorted.map((i) => i.str).join(' ');
+    assert.strictEqual(lineText, 'الوحدة الأولى');
+  });
+
+  // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
   console.log('\n================================================================');

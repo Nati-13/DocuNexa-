@@ -103,7 +103,13 @@ export async function extractPdfTextPages(
 
         // Group text items by roughly their vertical Y coordinate to form lines
         const rawItems = textContent.items as any[];
-        const lineMap = new Map<number, Array<{ x: number; str: string }>>();
+        interface PositionedItem {
+          x: number;
+          str: string;
+          width: number;
+          dir?: string;
+        }
+        const lineMap = new Map<number, PositionedItem[]>();
 
         for (const item of rawItems) {
           if (!('str' in item) || !item.str) continue;
@@ -111,22 +117,76 @@ export async function extractPdfTextPages(
           // item.transform: [scaleX, skewY, skewX, scaleY, transX, transY]
           const yKey = Math.round(item.transform[5] / 4) * 4;
           const xPos = Number(item.transform[4]) || 0;
+          const width = Number(item.width) || 0;
           if (!lineMap.has(yKey)) {
             lineMap.set(yKey, []);
           }
-          lineMap.get(yKey)!.push({ x: xPos, str: item.str });
+          lineMap.get(yKey)!.push({ x: xPos, str: item.str, width, dir: item.dir });
         }
 
         // Sort lines from top of page to bottom (higher transY is top in PDF coordinates)
         const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => b - a);
         const lines: string[] = [];
 
+        const isRtlChar = (ch: string) =>
+          /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch);
+
         for (const key of sortedKeys) {
-          // Sort text fragments horizontally left-to-right to preserve reading order in multi-column layouts
-          const sortedItems = lineMap.get(key)!.sort((a, b) => a.x - b.x);
-          const lineText = sortedItems.map((it) => it.str).join(' ').trim();
-          if (lineText) {
-            lines.push(lineText);
+          const itemsOnLine = lineMap.get(key)!;
+          if (itemsOnLine.length === 0) continue;
+
+          // Check if line contains predominantly RTL (Arabic) characters
+          let rtlCharCount = 0;
+          let nonSpaceCharCount = 0;
+          for (const it of itemsOnLine) {
+            for (const ch of it.str) {
+              if (!/\s/.test(ch)) {
+                nonSpaceCharCount++;
+                if (isRtlChar(ch)) rtlCharCount++;
+              }
+            }
+          }
+          const isPredominantlyRtl =
+            nonSpaceCharCount > 0 && rtlCharCount / nonSpaceCharCount > 0.4;
+
+          // Sort items from left to right to discover horizontal layout columns
+          const ltrSorted = [...itemsOnLine].sort((a, b) => a.x - b.x);
+
+          // Partition into column clusters when large horizontal gaps exist (> 60px)
+          const columnClusters: PositionedItem[][] = [];
+          let currentCluster: PositionedItem[] = [];
+
+          for (const it of ltrSorted) {
+            if (currentCluster.length === 0) {
+              currentCluster.push(it);
+            } else {
+              const prev = currentCluster[currentCluster.length - 1];
+              const prevRight = prev.x + prev.width;
+              const gap = it.x - Math.max(prevRight, prev.x);
+              // Multi-column threshold: gap > 60px and absolute delta > 80px
+              if (gap > 60 && it.x - prev.x > 80) {
+                columnClusters.push(currentCluster);
+                currentCluster = [it];
+              } else {
+                currentCluster.push(it);
+              }
+            }
+          }
+          if (currentCluster.length > 0) {
+            columnClusters.push(currentCluster);
+          }
+
+          // For each column cluster, join into a line adhering to reading direction
+          for (const cluster of columnClusters) {
+            let orderedItems = cluster;
+            if (isPredominantlyRtl) {
+              // Right-to-left: highest X coordinate first to preserve natural Arabic reading order
+              orderedItems = [...cluster].sort((a, b) => b.x - a.x);
+            }
+            const lineText = orderedItems.map((it) => it.str).join(' ').trim();
+            if (lineText) {
+              lines.push(lineText);
+            }
           }
         }
 

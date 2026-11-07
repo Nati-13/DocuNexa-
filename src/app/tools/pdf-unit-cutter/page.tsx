@@ -89,6 +89,8 @@ export default function PdfUnitCutterPage() {
     confidence: ConfidenceLevel;
   } | null>(null);
   const [isOcrProcessing, setIsOcrProcessing] = useState<boolean>(false);
+  const [includeBilingualEnglish, setIncludeBilingualEnglish] = useState<boolean>(true);
+  const isOcrCancelledRef = useRef<boolean>(false);
 
   // Modals & Interactivity
   const [previewPart, setPreviewPart] = useState<DetectedPart | null>(null);
@@ -237,10 +239,14 @@ export default function PdfUnitCutterPage() {
       // Detect document language from extracted pages
       const sampleText = pages.slice(0, 15).map((p) => p.rawText).join('\n');
       const langResult = detectDocumentLanguage(sampleText);
-      setDetectedLanguage({
-        code: langResult.detectedLanguage,
-        confidence: langResult.confidence,
-      });
+      if (langResult.detectedLanguage && langResult.confidence !== 'None') {
+        setDetectedLanguage({
+          code: langResult.detectedLanguage,
+          confidence: langResult.confidence as ConfidenceLevel,
+        });
+      } else {
+        setDetectedLanguage(null);
+      }
 
       const result = detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name);
 
@@ -387,60 +393,107 @@ export default function PdfUnitCutterPage() {
       return;
     }
 
+    // Determine target OCR language
+    let targetLang: SupportedLanguageCode;
+    if (selectedLanguage !== 'auto') {
+      targetLang = selectedLanguage;
+    } else if (detectedLanguage?.code) {
+      targetLang = detectedLanguage.code;
+    } else {
+      alert(
+        'Automatic language detection cannot determine the language of this scanned/image document because no selectable text exists. Please select your document language from the "Document Language" dropdown before starting OCR recognition.'
+      );
+      return;
+    }
+
+    // Check if OCR is supported for this language
+    const spec = SUPPORTED_LANGUAGES[targetLang];
+    if (!spec.ocrSupported || !spec.tesseractCode) {
+      alert(
+        `OCR text recognition is NOT SUPPORTED for ${spec.name} because an official Tesseract traineddata model does not exist. However, searchable text PDFs and manual physical page-range splitting are fully supported.`
+      );
+      return;
+    }
+
+    // Build verified OCR language configuration
+    const activeCodes: string[] = [spec.tesseractCode];
+    if (includeBilingualEnglish && targetLang !== 'en') {
+      activeCodes.push('eng');
+    }
+
     setIsOcrProcessing(true);
     setIsAnalyzing(true);
     setAnalysisProgress({ current: 0, total: fileInfo.totalPages });
+    isOcrCancelledRef.current = false;
+
+    let worker: any = null;
+    let pdfDoc: any = null;
 
     try {
-      const targetLang =
-        selectedLanguage !== 'auto'
-          ? selectedLanguage
-          : detectedLanguage?.code || 'en';
-      const tesseractCode =
-        SUPPORTED_LANGUAGES[targetLang]?.tesseractCode || 'eng';
-
       const { createWorker } = await import('tesseract.js');
-      const worker = await createWorker(tesseractCode, 1, {
+      // Pass verified language list for bilingual / mixed-language support
+      worker = await createWorker(activeCodes, 1, {
         logger: () => {},
       });
 
       const pdfjs = await getPdfJs();
       const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(activeBuf));
-      const pdfDoc = await loadingTask.promise;
+      pdfDoc = await loadingTask.promise;
 
       const ocrPages: PageTextData[] = [];
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
+      let recognizedTotalChars = 0;
+
       for (let p = 1; p <= fileInfo.totalPages; p++) {
+        if (isOcrCancelledRef.current) {
+          alert('OCR recognition was cancelled by user.');
+          return;
+        }
+
         setAnalysisProgress({ current: p, total: fileInfo.totalPages });
         const page = await pdfDoc.getPage(p);
-        const viewport = page.getViewport({ scale: 1.5 });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        await page.render({ canvasContext: ctx!, viewport }).promise;
+        try {
+          const viewport = page.getViewport({ scale: 1.5 });
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: ctx!, viewport }).promise;
 
-        const {
-          data: { text },
-        } = await worker.recognize(canvas);
-        const lines = text
-          .split('\n')
-          .map((l: string) => l.trim())
-          .filter(Boolean);
+          const {
+            data: { text },
+          } = await worker.recognize(canvas);
 
-        ocrPages.push({
-          pageNumber: p,
-          rawText: text,
-          lines,
-          hasSubstantialText: lines.length > 0,
-        });
+          const lines = text
+            .split('\n')
+            .map((l: string) => l.trim())
+            .filter(Boolean);
 
-        if (typeof page.cleanup === 'function') {
-          page.cleanup();
+          const charCount = text.replace(/\s/g, '').length;
+          recognizedTotalChars += charCount;
+
+          ocrPages.push({
+            pageNumber: p,
+            rawText: text,
+            lines,
+            hasSubstantialText: lines.length > 0,
+          });
+        } finally {
+          if (typeof page.cleanup === 'function') {
+            page.cleanup();
+          }
         }
       }
 
-      await worker.terminate();
+      // Memory cleanup
+      canvas.width = 0;
+      canvas.height = 0;
+
+      if (ocrPages.length < fileInfo.totalPages) {
+        throw new Error(
+          `OCR was incomplete: only processed ${ocrPages.length} of ${fileInfo.totalPages} pages.`
+        );
+      }
 
       const result = detectDocumentUnits(ocrPages, fileInfo.totalPages, fileInfo.name);
       setParts(result.parts);
@@ -454,12 +507,30 @@ export default function PdfUnitCutterPage() {
       });
       setIsBoundariesConfirmed(false);
       setFileInfo((prev) =>
-        prev ? { ...prev, isScanned: false, avgCharsPerPage: 100 } : null
+        prev
+          ? {
+              ...prev,
+              isScanned: false,
+              avgCharsPerPage: Math.round(
+                recognizedTotalChars / Math.max(1, fileInfo.totalPages)
+              ),
+            }
+          : null
       );
     } catch (err: any) {
       console.error('OCR processing error:', err);
       alert(`OCR processing failed: ${err.message || err}`);
     } finally {
+      if (worker) {
+        try {
+          await worker.terminate();
+        } catch {}
+      }
+      if (pdfDoc) {
+        try {
+          await pdfDoc.destroy();
+        } catch {}
+      }
       setIsOcrProcessing(false);
       setIsAnalyzing(false);
     }
@@ -791,24 +862,52 @@ export default function PdfUnitCutterPage() {
 
             {/* Scanned Document Alert & OCR Trigger */}
             {fileInfo.isScanned && parts.length === 0 && (
-              <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-200">
+              <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs text-amber-800 dark:text-amber-200">
                 <div className="flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <div>
+                  <div className="space-y-1">
                     <span className="font-bold block">Scanned / Image-Based PDF Detected</span>
-                    <p className="text-muted mt-0.5">
-                      This PDF has very few selectable text characters. You can run client-side OCR text recognition to detect units automatically, or use Manual Split.
+                    <p className="text-muted">
+                      {selectedLanguage === 'om'
+                        ? 'Tesseract OCR does not have an official model for Afaan Oromo. Scanned OCR is not supported, but searchable PDFs and Manual Split are fully functional.'
+                        : 'This PDF has very few selectable text characters. Select your document language above to run client-side OCR text recognition, or use Manual Split.'}
                     </p>
+                    {selectedLanguage !== 'en' && selectedLanguage !== 'om' && (
+                      <label className="flex items-center gap-1.5 pt-1 cursor-pointer text-ink font-medium">
+                        <input
+                          type="checkbox"
+                          checked={includeBilingualEnglish}
+                          onChange={(e) => setIncludeBilingualEnglish(e.target.checked)}
+                          className="rounded border-border text-brand focus:ring-brand"
+                        />
+                        <span>Enable bilingual mixed-language OCR (+ English)</span>
+                      </label>
+                    )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleRunOcr}
-                  disabled={isOcrProcessing}
-                  className="px-3.5 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold shrink-0 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {isOcrProcessing ? 'Running OCR...' : 'Run OCR Recognition'}
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {selectedLanguage !== 'om' && (
+                    <button
+                      type="button"
+                      onClick={handleRunOcr}
+                      disabled={isOcrProcessing}
+                      className="px-3.5 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {isOcrProcessing ? 'Running OCR...' : 'Run OCR Recognition'}
+                    </button>
+                  )}
+                  {isOcrProcessing && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        isOcrCancelledRef.current = true;
+                      }}
+                      className="px-3 py-2 rounded-md bg-surface border border-border text-accent hover:bg-paper font-semibold transition-colors cursor-pointer"
+                    >
+                      Cancel OCR
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 

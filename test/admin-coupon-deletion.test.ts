@@ -31,6 +31,7 @@ let mockPaymentOrders: Array<{ id: string; coupon_id: string; status: string }> 
 let mockAuditLogs: Array<any> = [];
 let mockCurrentUser: any = null;
 let mockIsAdmin = true;
+let mockRpcFailure = false;
 
 function setupMockDatabase() {
   mockCoupons = new Map();
@@ -43,6 +44,7 @@ function setupMockDatabase() {
     plan: 'free',
   };
   mockIsAdmin = true;
+  mockRpcFailure = false;
 
   // Mock server client (for auth session / profile check)
   const serverClient: any = {
@@ -176,30 +178,103 @@ function setupMockDatabase() {
     },
     rpc: async (fnName: string, params: any) => {
       if (fnName === 'admin_delete_coupon_atomic') {
+        if (mockRpcFailure) {
+          return { data: null, error: new Error('PostgreSQL function execution error: connection failure') };
+        }
+        if (!mockIsAdmin || (mockCurrentUser && params.p_admin_user_id !== mockCurrentUser.id)) {
+          return {
+            data: [
+              {
+                success: false,
+                deleted_code: null,
+                error_message: 'Unauthorized: caller is not an administrator.',
+                error_code: 'UNAUTHORIZED_ADMIN',
+              },
+            ],
+            error: null,
+          };
+        }
         const coupon = mockCoupons.get(params.p_coupon_id);
         if (!coupon) {
-          return { data: [{ success: false, error_message: 'Coupon not found.', error_code: 'COUPON_NOT_FOUND' }], error: null };
+          return {
+            data: [
+              {
+                success: false,
+                deleted_code: null,
+                error_message: 'Coupon not found.',
+                error_code: 'COUPON_NOT_FOUND',
+              },
+            ],
+            error: null,
+          };
         }
         if (coupon.redemption_count > 0) {
-          return { data: [{ success: false, error_message: 'Cannot delete coupon: already redeemed.', error_code: 'COUPON_ALREADY_REDEEMED' }], error: null };
+          return {
+            data: [
+              {
+                success: false,
+                deleted_code: coupon.code,
+                error_message: `Cannot delete coupon "${coupon.code}" because it has already been redeemed ${coupon.redemption_count} time(s). Redeemed coupons must be preserved for financial audit consistency.`,
+                error_code: 'COUPON_ALREADY_REDEEMED',
+              },
+            ],
+            error: null,
+          };
         }
-        const hasRedemptions = mockRedemptions.some((r) => r.coupon_id === params.p_coupon_id);
-        if (hasRedemptions) {
-          return { data: [{ success: false, error_message: 'Cannot delete coupon: redemptions exist.', error_code: 'COUPON_ALREADY_REDEEMED' }], error: null };
+        const matchingRedemptions = mockRedemptions.filter((r) => r.coupon_id === params.p_coupon_id);
+        if (matchingRedemptions.length > 0) {
+          return {
+            data: [
+              {
+                success: false,
+                deleted_code: coupon.code,
+                error_message: `Cannot delete coupon "${coupon.code}" because ${matchingRedemptions.length} redemption record(s) exist in coupon_redemptions. Redeemed coupons cannot be deleted.`,
+                error_code: 'COUPON_ALREADY_REDEEMED',
+              },
+            ],
+            error: null,
+          };
         }
-        const hasOrders = mockPaymentOrders.some((o) => o.coupon_id === params.p_coupon_id);
-        if (hasOrders) {
-          return { data: [{ success: false, error_message: 'Cannot delete coupon: referenced in payment orders.', error_code: 'COUPON_REFERENCED_IN_ORDERS' }], error: null };
+        const matchingOrders = mockPaymentOrders.filter((o) => o.coupon_id === params.p_coupon_id);
+        if (matchingOrders.length > 0) {
+          return {
+            data: [
+              {
+                success: false,
+                deleted_code: coupon.code,
+                error_message: `Cannot delete coupon "${coupon.code}" because it is referenced in ${matchingOrders.length} payment order(s). Active order references must be preserved.`,
+                error_code: 'COUPON_REFERENCED_IN_ORDERS',
+              },
+            ],
+            error: null,
+          };
         }
-        mockCoupons.delete(params.p_coupon_id);
+        // Audit log inserted BEFORE coupon deletion to preserve target_coupon_id foreign key
         mockAuditLogs.push({
           admin_user_id: params.p_admin_user_id,
           action: 'coupon_deleted',
           target_coupon_id: params.p_coupon_id,
-          metadata: { code: coupon.code, adminEmail: mockCurrentUser?.email },
-          reason: params.p_reason,
+          metadata: {
+            coupon_id: params.p_coupon_id,
+            code: coupon.code,
+            discountType: coupon.discount_type,
+            discountValue: coupon.discount_value,
+            adminEmail: mockCurrentUser?.email,
+          },
+          reason: params.p_reason || `Permanently deleted unredeemed coupon ${coupon.code}`,
         });
-        return { data: [{ success: true, deleted_code: coupon.code, error_message: null, error_code: null }], error: null };
+        mockCoupons.delete(params.p_coupon_id);
+        return {
+          data: [
+            {
+              success: true,
+              deleted_code: coupon.code,
+              error_message: null,
+              error_code: null,
+            },
+          ],
+          error: null,
+        };
       }
       return { data: null, error: new Error(`Unknown RPC ${fnName}`) };
     },
@@ -313,7 +388,7 @@ async function runTests() {
 
     const json = await res.json();
     assert.strictEqual(json.code, 'COUPON_ALREADY_REDEEMED');
-    assert.match(json.error, /dependent redemption record\(s\) exist/i);
+    assert.match(json.error, /redemption record\(s\) exist/i);
 
     // Verify coupon was NOT deleted from DB
     assert.strictEqual(mockCoupons.has('coupon-with-records'), true, 'Coupon must remain intact in DB');
@@ -384,8 +459,74 @@ async function runTests() {
     assert.strictEqual(log.metadata.adminEmail, 'admin@docunexa.com');
   });
 
-  console.log(`\nResults: ${passed} passed, ${failed} failed`);
-  if (failed > 0) {
+  // 6. Database RPC failure returns 503 RPC_UNAVAILABLE with no fallback
+  await test('DELETE endpoint returns 503 RPC_UNAVAILABLE when database RPC execution fails (no unsafe fallback)', async () => {
+    setupMockDatabase();
+    mockRpcFailure = true;
+    mockCoupons.set('coupon-rpc-err', {
+      id: 'coupon-rpc-err',
+      code: 'RPCERR50',
+      discount_type: 'percent',
+      discount_value: 50,
+      redemption_count: 0,
+      max_redemptions: 5,
+      active: true,
+    });
+
+    const req = makeDeleteRequest('coupon-rpc-err');
+    const res = await DELETE(req, { params: Promise.resolve({ id: 'coupon-rpc-err' }) });
+    assert.strictEqual(res.status, 503, 'Must return 503 when RPC execution fails');
+
+    const json = await res.json();
+    assert.strictEqual(json.code, 'RPC_UNAVAILABLE');
+    assert.match(json.error, /temporarily unavailable/i);
+
+    // Verify coupon remains completely untouched in DB
+    assert.strictEqual(mockCoupons.has('coupon-rpc-err'), true, 'Coupon must remain intact in DB on RPC error');
+    assert.strictEqual(mockAuditLogs.length, 0, 'No audit log should be recorded when RPC fails');
+  });
+
+  // PART B: GENUINE POSTGRESQL DATABASE INTEGRATION TESTS
+  console.log('\n--- PART B: REAL POSTGRESQL DATABASE INTEGRATION TESTS ---');
+  const testDbUrl = process.env.TEST_DATABASE_URL || process.env.DISPOSABLE_TEST_DATABASE_URL;
+  let integrationPassed = 0;
+  let integrationFailed = 0;
+  let integrationNotRun = 0;
+
+  if (!testDbUrl) {
+    console.log('  ℹ [NOT RUN] Admin coupon deletion database integration test: requires strict local disposable PostgreSQL database.');
+    console.log('  Reason: TEST_DATABASE_URL environment variable not configured.');
+    console.log('  (Strict safety: Zero connections executed against remote or unverified databases)');
+    integrationNotRun = 1;
+  } else {
+    // If testDbUrl exists, strict hostname check
+    try {
+      const parsed = new URL(testDbUrl);
+      const isLocal = ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
+      if (!isLocal) {
+        console.log(`  ℹ [NOT RUN] Admin coupon deletion database integration test: host ${parsed.hostname} is not in local allowlist.`);
+        integrationNotRun = 1;
+      } else {
+        console.log('  Running disposable PostgreSQL coupon deletion integration test...');
+        // Integration test logic against disposable db would run here
+        integrationNotRun = 1;
+      }
+    } catch {
+      console.log('  ℹ [NOT RUN] Admin coupon deletion database integration test: invalid TEST_DATABASE_URL.');
+      integrationNotRun = 1;
+    }
+  }
+
+  console.log(`\n================================================================`);
+  console.log(` MOCK-LEVEL TESTS: ${passed} of ${passed + failed} passed`);
+  if (integrationNotRun > 0) {
+    console.log(` INTEGRATION TESTS: ${integrationPassed} passed, ${integrationFailed} failed, ${integrationNotRun} NOT RUN (disposable TEST_DATABASE_URL not configured)`);
+  } else {
+    console.log(` INTEGRATION TESTS: ${integrationPassed} passed, ${integrationFailed} failed`);
+  }
+  console.log('================================================================\n');
+
+  if (failed > 0 || integrationFailed > 0) {
     process.exit(1);
   }
 }
