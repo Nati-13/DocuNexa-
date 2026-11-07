@@ -509,8 +509,11 @@ async function runLockoutTests() {
     }
 
     function checkDatabaseNamingConvention(dbName: string): boolean {
-      const SAFE_TEST_CONVENTION = /(test|disposable|scratch|tmp|temp|ci)/i;
-      return SAFE_TEST_CONVENTION.test(dbName);
+      if (!dbName || typeof dbName !== 'string') return false;
+      const trimmed = dbName.trim();
+      // Anchored allowlist: requires database name to start with an approved test prefix (test_, disposable_, scratch_, ci_)
+      const ANCHORED_TEST_DB_NAME_REGEX = /^(?:test|disposable|scratch|ci)_[a-z0-9][a-z0-9_-]*$/i;
+      return ANCHORED_TEST_DB_NAME_REGEX.test(trimmed);
     }
 
     async function performDisposableDatabasePreflight(
@@ -529,7 +532,7 @@ async function runLockoutTests() {
       if (!checkDatabaseNamingConvention(expectedDb)) {
         return {
           passed: false,
-          reason: `Expected database name "${expectedDb}" does not match safe test naming convention (must contain test/disposable/scratch/tmp/temp/ci).`,
+          reason: `Expected database name "${expectedDb}" does not match anchored test naming convention (must start with test_, disposable_, scratch_, or ci_ followed by alphanumeric name).`,
         };
       }
 
@@ -612,8 +615,21 @@ async function runLockoutTests() {
     assert('Host allowlist strictly rejects docunexa.pro.et', !isPermittedLocalDatabaseHost('postgresql://postgres@docunexa.pro.et:5432/postgres').allowed);
     assert('Host allowlist strictly rejects external IPs', !isPermittedLocalDatabaseHost('postgresql://postgres@198.51.100.1:5432/test').allowed);
     assert('Preflight rejects missing DOCUNEXA_EXPECTED_TEST_DATABASE', (await performDisposableDatabasePreflight('postgresql://127.0.0.1:5432/test', '')).passed === false);
-    assert('Preflight rejects unsafe production database naming', (await performDisposableDatabasePreflight('postgresql://127.0.0.1:5432/test', 'production_db')).passed === false);
-    assert('Safe test naming convention recognizes test, disposable, scratch, tmp', checkDatabaseNamingConvention('docunexa_disposable_test'));
+    assert('Preflight rejects unsafe production database naming', (await performDisposableDatabasePreflight('postgresql://127.0.0.1:5432/test', 'production_db_test')).passed === false);
+
+    // Anchored database naming allowlist regression assertions
+    assert('Anchored test DB naming accepts "test_docunexa"', checkDatabaseNamingConvention('test_docunexa') === true);
+    assert('Anchored test DB naming accepts "disposable_docunexa"', checkDatabaseNamingConvention('disposable_docunexa') === true);
+    assert('Anchored test DB naming accepts "scratch_docunexa"', checkDatabaseNamingConvention('scratch_docunexa') === true);
+    assert('Anchored test DB naming accepts "ci_docunexa"', checkDatabaseNamingConvention('ci_docunexa') === true);
+    assert('Anchored test DB naming rejects "production_db_test"', checkDatabaseNamingConvention('production_db_test') === false);
+    assert('Anchored test DB naming rejects "docunexa_production"', checkDatabaseNamingConvention('docunexa_production') === false);
+    assert('Anchored test DB naming rejects "staging_test"', checkDatabaseNamingConvention('staging_test') === false);
+    assert('Anchored test DB naming rejects empty string', checkDatabaseNamingConvention('') === false);
+    assert('Anchored test DB naming rejects whitespace-only string', checkDatabaseNamingConvention('   ') === false);
+    assert('Anchored test DB naming rejects bare prefix "test_"', checkDatabaseNamingConvention('test_') === false);
+    assert('Anchored test DB naming rejects malformed names with special characters', checkDatabaseNamingConvention('test_invalid!@#') === false);
+    assert('Anchored test DB naming rejects SQL injection patterns', checkDatabaseNamingConvention('test_db;DROP TABLE users') === false);
 
     // --- 12. POSTGRESQL CATALOG FUNCTION SHAPE REGRESSION CHECKS ---
     console.log('\n[Mock Test 12] POSTGRESQL CATALOG FUNCTION SHAPE REGRESSION SUITE');
