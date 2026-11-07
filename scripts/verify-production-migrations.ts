@@ -8,7 +8,10 @@
  * 4. admin_users authorization registry
  * 5. Atomic lockout and unlock functions:
  *    - Exact argument count, order, and types (no substring matching)
- *    - Exact return types and total function count (exactly 3)
+ *    - Exact return types, result shapes, and total function count (exactly 3)
+ *    - Strict TABLE return shape and proretset=true for record_failed_login_attempt
+ *    - Strict boolean return shape and proretset=false for scalar functions
+ *    - Rejection of duplicate function overloads
  *    - SECURITY DEFINER status
  *    - Fixed search_path = public
  *    - Effective execution privileges:
@@ -25,9 +28,425 @@
  *
  * Usage:
  *   READONLY_DATABASE_URL="..." npx tsx scripts/verify-production-migrations.ts
+ *   npx tsx scripts/verify-production-migrations.ts --regression
  */
 
+export interface FunctionVerificationSpec {
+  name: string;
+  expectedArgCount: number;
+  expectedArgTypes: string[];
+  expectedReturnType: string; // Underlying type from pg_type (e.g., 'record', 'bool')
+  expectedProRetSet: boolean; // proretset flag: true for TABLE(), false for scalar
+  expectedResultType: string; // Normalized string from pg_get_function_result(p.oid)
+}
+
+export const EXPECTED_SECURITY_FUNCTIONS: FunctionVerificationSpec[] = [
+  {
+    name: 'record_failed_login_attempt',
+    expectedArgCount: 3,
+    expectedArgTypes: ['text', 'text', 'int4'],
+    expectedReturnType: 'record',
+    expectedProRetSet: true,
+    expectedResultType:
+      'TABLE(email text, failed_attempts integer, is_locked boolean, locked_at timestamp with time zone, locked_reason text)',
+  },
+  {
+    name: 'record_successful_login',
+    expectedArgCount: 1,
+    expectedArgTypes: ['text'],
+    expectedReturnType: 'bool',
+    expectedProRetSet: false,
+    expectedResultType: 'boolean',
+  },
+  {
+    name: 'admin_unlock_account',
+    expectedArgCount: 3,
+    expectedArgTypes: ['text', 'text', 'text'],
+    expectedReturnType: 'bool',
+    expectedProRetSet: false,
+    expectedResultType: 'boolean',
+  },
+];
+
+/**
+ * Safely normalizes whitespace and punctuation spacing in SQL type representations
+ * for accurate, resilient catalog signature comparisons.
+ */
+export function normalizeTypeSignature(sig: string): string {
+  return (sig || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/\s*\(\s*/g, '(')
+    .replace(/\s*\)\s*/g, ')')
+    .trim();
+}
+
+export interface CatalogValidationResult {
+  passed: boolean;
+  errors: string[];
+}
+
+/**
+ * Validates a single function catalog row against the strict security specification.
+ */
+export function validateFunctionRow(
+  fnRow: any,
+  spec: FunctionVerificationSpec
+): CatalogValidationResult {
+  const errors: string[] = [];
+
+  // 1. Exact argument count
+  if (fnRow.arg_count !== spec.expectedArgCount) {
+    errors.push(
+      `Function ${spec.name} arg count mismatch: expected ${spec.expectedArgCount}, found ${fnRow.arg_count}.`
+    );
+  }
+
+  // 2. Exact argument types in exact order (no substring matching)
+  const actualArgTypes = fnRow.arg_types || [];
+  const typesMatch =
+    actualArgTypes.length === spec.expectedArgTypes.length &&
+    spec.expectedArgTypes.every((t, i) => actualArgTypes[i] === t);
+
+  if (!typesMatch) {
+    errors.push(
+      `Function ${spec.name} argument types mismatch: expected [${spec.expectedArgTypes.join(', ')}], found [${actualArgTypes.join(', ')}].`
+    );
+  }
+
+  // 3. Exact underlying return type
+  if (fnRow.return_type_name !== spec.expectedReturnType) {
+    errors.push(
+      `Function ${spec.name} underlying return type mismatch: expected ${spec.expectedReturnType}, found ${fnRow.return_type_name}.`
+    );
+  }
+
+  // 4. Exact set-returning flag (proretset)
+  if (Boolean(fnRow.proretset) !== spec.expectedProRetSet) {
+    errors.push(
+      `Function ${spec.name} set-returning flag (proretset) mismatch: expected ${spec.expectedProRetSet}, found ${Boolean(fnRow.proretset)}.`
+    );
+  }
+
+  // 5. Exact full result shape from pg_get_function_result with normalized whitespace
+  const normalizedActualResult = normalizeTypeSignature(fnRow.result_type);
+  const normalizedExpectedResult = normalizeTypeSignature(spec.expectedResultType);
+  if (normalizedActualResult !== normalizedExpectedResult) {
+    errors.push(
+      `Function ${spec.name} result shape mismatch:\n       Expected: "${normalizedExpectedResult}"\n       Found:    "${normalizedActualResult}"`
+    );
+  }
+
+  // 6. SECURITY DEFINER status
+  if (!fnRow.is_security_definer) {
+    errors.push(`Function ${spec.name} is NOT marked SECURITY DEFINER.`);
+  }
+
+  // 7. Fixed search_path = public
+  const configs = fnRow.config || [];
+  const hasSearchPath = configs.some((c: string) => c.toLowerCase().trim() === 'search_path=public');
+  if (!hasSearchPath) {
+    errors.push(`Function ${spec.name} lacks fixed search_path = public.`);
+  }
+
+  // 8. PUBLIC privilege revoked (grantee 0 in aclexplode)
+  if (fnRow.public_exec) {
+    errors.push(`Function ${spec.name} has EXECUTE granted to PUBLIC (grantee 0).`);
+  }
+
+  // 9. anon role privilege revoked
+  if (fnRow.anon_exec) {
+    errors.push(`Function ${spec.name} is executable by anon role.`);
+  }
+
+  // 10. authenticated role privilege revoked
+  if (fnRow.authenticated_exec) {
+    errors.push(`Function ${spec.name} is executable by authenticated role.`);
+  }
+
+  // 11. service_role privilege granted
+  if (!fnRow.service_role_exec) {
+    errors.push(`Function ${spec.name} is NOT executable by service_role.`);
+  }
+
+  return {
+    passed: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Validates the full set of catalog rows against expected functions, strictly
+ * rejecting missing functions, duplicates, and unexpected overloads.
+ */
+export function validateCatalogFunctions(
+  rows: any[],
+  expectedSpecs: FunctionVerificationSpec[]
+): CatalogValidationResult {
+  const errors: string[] = [];
+
+  // Reject unexpected total count
+  if (rows.length !== expectedSpecs.length) {
+    errors.push(
+      `Expected exactly ${expectedSpecs.length} security functions in public schema catalog, found ${rows.length}.`
+    );
+  }
+
+  // Reject unexpected overloads and duplicate function names
+  const nameCounts = new Map<string, number>();
+  for (const r of rows) {
+    const name = r.proname;
+    nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+  }
+
+  for (const [name, count] of nameCounts.entries()) {
+    if (count > 1) {
+      errors.push(
+        `Function "${name}" has ${count} distinct definitions (overloading detected). Overloading security functions is strictly prohibited.`
+      );
+    }
+    if (!expectedSpecs.some((s) => s.name === name)) {
+      errors.push(`Unexpected function "${name}" found in public schema catalog query.`);
+    }
+  }
+
+  // Validate each required specification
+  for (const spec of expectedSpecs) {
+    const matchingRows = rows.filter((r) => r.proname === spec.name);
+    if (matchingRows.length === 0) {
+      errors.push(`Required function "${spec.name}" not found in catalog.`);
+      continue;
+    }
+    if (matchingRows.length > 1) {
+      // Overload error already recorded above
+      continue;
+    }
+
+    const rowRes = validateFunctionRow(matchingRows[0], spec);
+    if (!rowRes.passed) {
+      errors.push(...rowRes.errors);
+    }
+  }
+
+  return {
+    passed: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Self-contained regression test suite proving that invalid table return shapes,
+ * extra/missing output columns, wrong types, incorrect proretset flags, and duplicate
+ * function overloads are strictly detected and fail verification.
+ */
+export function runFunctionCatalogRegressionChecks(): { passed: boolean; testCount: number; failureCount: number } {
+  console.log('\n--- FUNCTION CATALOG VALIDATOR REGRESSION CHECKS ---');
+  let tests = 0;
+  let failures = 0;
+
+  function assertReg(desc: string, cond: boolean, details?: string) {
+    tests++;
+    if (cond) {
+      console.log(`  ✓ [PASS] Regression test: ${desc}`);
+    } else {
+      console.error(`  ✗ [FAIL] Regression test: ${desc}${details ? ` (${details})` : ''}`);
+      failures++;
+    }
+  }
+
+  const validBaselineRowRecordFailed = {
+    proname: 'record_failed_login_attempt',
+    arg_count: 3,
+    arg_types: ['text', 'text', 'int4'],
+    return_type_name: 'record',
+    proretset: true,
+    result_type:
+      'TABLE(email text, failed_attempts integer, is_locked boolean, locked_at timestamp with time zone, locked_reason text)',
+    is_security_definer: true,
+    config: ['search_path=public'],
+    public_exec: false,
+    anon_exec: false,
+    authenticated_exec: false,
+    service_role_exec: true,
+  };
+
+  const validBaselineRowRecordSuccess = {
+    proname: 'record_successful_login',
+    arg_count: 1,
+    arg_types: ['text'],
+    return_type_name: 'bool',
+    proretset: false,
+    result_type: 'boolean',
+    is_security_definer: true,
+    config: ['search_path=public'],
+    public_exec: false,
+    anon_exec: false,
+    authenticated_exec: false,
+    service_role_exec: true,
+  };
+
+  const validBaselineRowAdminUnlock = {
+    proname: 'admin_unlock_account',
+    arg_count: 3,
+    arg_types: ['text', 'text', 'text'],
+    return_type_name: 'bool',
+    proretset: false,
+    result_type: 'boolean',
+    is_security_definer: true,
+    config: ['search_path=public'],
+    public_exec: false,
+    anon_exec: false,
+    authenticated_exec: false,
+    service_role_exec: true,
+  };
+
+  const validCatalog = [
+    validBaselineRowRecordFailed,
+    validBaselineRowRecordSuccess,
+    validBaselineRowAdminUnlock,
+  ];
+
+  // 1. Valid baseline passes completely
+  const baselineRes = validateCatalogFunctions(validCatalog, EXPECTED_SECURITY_FUNCTIONS);
+  assertReg('Valid baseline catalog passes verification', baselineRes.passed && baselineRes.errors.length === 0);
+
+  // 2. Safe whitespace normalization
+  assertReg(
+    'Whitespace and case normalization handles varying PostgreSQL spacing',
+    normalizeTypeSignature('TABLE( email  text,   failed_attempts INTEGER )') ===
+      'table(email text, failed_attempts integer)'
+  );
+
+  // 3. Incorrect table shape (wrong data type in column: text instead of integer)
+  const wrongColTypeRow = {
+    ...validBaselineRowRecordFailed,
+    result_type:
+      'TABLE(email text, failed_attempts text, is_locked boolean, locked_at timestamp with time zone, locked_reason text)',
+  };
+  const wrongColTypeRes = validateCatalogFunctions(
+    [wrongColTypeRow, validBaselineRowRecordSuccess, validBaselineRowAdminUnlock],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Incorrect table shape (wrong column data type) fails verification',
+    !wrongColTypeRes.passed && wrongColTypeRes.errors.some((e) => e.includes('result shape mismatch'))
+  );
+
+  // 4. Extra output column in TABLE
+  const extraColRow = {
+    ...validBaselineRowRecordFailed,
+    result_type:
+      'TABLE(email text, failed_attempts integer, is_locked boolean, locked_at timestamp with time zone, locked_reason text, extra_col text)',
+  };
+  const extraColRes = validateCatalogFunctions(
+    [extraColRow, validBaselineRowRecordSuccess, validBaselineRowAdminUnlock],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Extra output column in TABLE fails verification',
+    !extraColRes.passed && extraColRes.errors.some((e) => e.includes('result shape mismatch'))
+  );
+
+  // 5. Missing output column in TABLE
+  const missingColRow = {
+    ...validBaselineRowRecordFailed,
+    result_type:
+      'TABLE(email text, failed_attempts integer, is_locked boolean, locked_at timestamp with time zone)',
+  };
+  const missingColRes = validateCatalogFunctions(
+    [missingColRow, validBaselineRowRecordSuccess, validBaselineRowAdminUnlock],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Missing output column in TABLE fails verification',
+    !missingColRes.passed && missingColRes.errors.some((e) => e.includes('result shape mismatch'))
+  );
+
+  // 6. Wrong underlying return type name (e.g. 'int4' instead of 'record')
+  const wrongUnderlyingTypeRow = {
+    ...validBaselineRowRecordFailed,
+    return_type_name: 'int4',
+  };
+  const wrongUnderlyingRes = validateCatalogFunctions(
+    [wrongUnderlyingTypeRow, validBaselineRowRecordSuccess, validBaselineRowAdminUnlock],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Wrong underlying return type name fails verification',
+    !wrongUnderlyingRes.passed && wrongUnderlyingRes.errors.some((e) => e.includes('underlying return type mismatch'))
+  );
+
+  // 7. Incorrect set-returning flag (proretset = false for TABLE returning function)
+  const falseSetRow = {
+    ...validBaselineRowRecordFailed,
+    proretset: false,
+  };
+  const falseSetRes = validateCatalogFunctions(
+    [falseSetRow, validBaselineRowRecordSuccess, validBaselineRowAdminUnlock],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Incorrect set-returning flag (proretset = false for TABLE function) fails verification',
+    !falseSetRes.passed && falseSetRes.errors.some((e) => e.includes('proretset'))
+  );
+
+  // 8. Incorrect set-returning flag (proretset = true for scalar boolean function)
+  const trueScalarSetRow = {
+    ...validBaselineRowRecordSuccess,
+    proretset: true,
+  };
+  const trueScalarRes = validateCatalogFunctions(
+    [validBaselineRowRecordFailed, trueScalarSetRow, validBaselineRowAdminUnlock],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Incorrect set-returning flag (proretset = true for scalar boolean) fails verification',
+    !trueScalarRes.passed && trueScalarRes.errors.some((e) => e.includes('proretset'))
+  );
+
+  // 9. Unexpected function overload / duplicate function name
+  const overloadedCatalog = [
+    validBaselineRowRecordFailed,
+    {
+      ...validBaselineRowRecordFailed,
+      arg_count: 2,
+      arg_types: ['text', 'text'],
+    },
+    validBaselineRowRecordSuccess,
+    validBaselineRowAdminUnlock,
+  ];
+  const overloadRes = validateCatalogFunctions(overloadedCatalog, EXPECTED_SECURITY_FUNCTIONS);
+  assertReg(
+    'Unexpected function overload / duplicate function name fails verification',
+    !overloadRes.passed && overloadRes.errors.some((e) => e.includes('overloading detected'))
+  );
+
+  // 10. Wrong scalar return type for admin_unlock_account
+  const wrongUnlockTypeRow = {
+    ...validBaselineRowAdminUnlock,
+    return_type_name: 'text',
+    result_type: 'text',
+  };
+  const wrongUnlockRes = validateCatalogFunctions(
+    [validBaselineRowRecordFailed, validBaselineRowRecordSuccess, wrongUnlockTypeRow],
+    EXPECTED_SECURITY_FUNCTIONS
+  );
+  assertReg(
+    'Wrong scalar return type for admin_unlock_account fails verification',
+    !wrongUnlockRes.passed
+  );
+
+  return { passed: failures === 0, testCount: tests, failureCount: failures };
+}
+
 async function main() {
+  if (process.argv.includes('--regression') || process.argv.includes('--self-test')) {
+    const regRes = runFunctionCatalogRegressionChecks();
+    process.exitCode = regRes.passed ? 0 : 1;
+    return;
+  }
+
   console.log('\n================================================================');
   console.log(' DOCUNEXA — PRODUCTION DATABASE READ-ONLY VERIFICATION AUDIT    ');
   console.log(' (STRICTLY READ-ONLY CATALOG INSPECTION VIA READONLY_DATABASE_URL)');
@@ -203,6 +622,7 @@ async function main() {
         ) AS arg_types,
         t_ret.typname AS return_type_name,
         pg_get_function_result(p.oid) AS result_type,
+        p.proretset AS proretset,
         p.prosecdef AS is_security_definer,
         p.proconfig AS config,
         (p.proacl IS NULL OR EXISTS (
@@ -228,122 +648,25 @@ async function main() {
     const funcsRes = await client.query(funcQuery);
     const rows = funcsRes.rows || [];
 
-    if (rows.length !== 3) {
-      console.log(`❌ [FAIL] Expected exactly 3 security functions in catalog, found ${rows.length}.`);
+    const catalogValidation = validateCatalogFunctions(rows, EXPECTED_SECURITY_FUNCTIONS);
+    if (!catalogValidation.passed) {
+      for (const err of catalogValidation.errors) {
+        console.log(`❌ [FAIL] ${err}`);
+      }
       allPassed = false;
+    } else {
+      for (const spec of EXPECTED_SECURITY_FUNCTIONS) {
+        const row = rows.find((r: any) => r.proname === spec.name);
+        console.log(
+          `✓ [PASS] Function ${spec.name}(${row.arg_types.join(', ')}) -> ${row.return_type_name} [${row.result_type}]: exact signature and return shape verified, proretset=${row.proretset}, SECURITY DEFINER, search_path=public, service_role execution only.`
+        );
+      }
     }
 
-    const expectedFunctions = [
-      {
-        name: 'record_failed_login_attempt',
-        expectedArgCount: 3,
-        expectedArgTypes: ['text', 'text', 'int4'],
-        expectedReturnType: 'record',
-        expectedResultType: 'TABLE(email text, failed_attempts integer, is_locked boolean, locked_at timestamp with time zone, locked_reason text)',
-      },
-      {
-        name: 'record_successful_login',
-        expectedArgCount: 1,
-        expectedArgTypes: ['text'],
-        expectedReturnType: 'bool',
-        expectedResultType: 'boolean',
-      },
-      {
-        name: 'admin_unlock_account',
-        expectedArgCount: 3,
-        expectedArgTypes: ['text', 'text', 'text'],
-        expectedReturnType: 'bool',
-        expectedResultType: 'boolean',
-      },
-    ];
-
-    for (const spec of expectedFunctions) {
-      const fnRow = rows.find((r: any) => r.proname === spec.name);
-      if (!fnRow) {
-        console.log(`❌ [FAIL] Function ${spec.name} not found in pg_proc catalog.`);
-        allPassed = false;
-        continue;
-      }
-
-      // Check exact argument count
-      if (fnRow.arg_count !== spec.expectedArgCount) {
-        console.log(
-          `❌ [FAIL] Function ${spec.name} arg count mismatch: expected ${spec.expectedArgCount}, found ${fnRow.arg_count}.`
-        );
-        allPassed = false;
-        continue;
-      }
-
-      // Check exact argument types in exact order (no substring matching)
-      const actualArgTypes = fnRow.arg_types || [];
-      const typesMatch =
-        actualArgTypes.length === spec.expectedArgTypes.length &&
-        spec.expectedArgTypes.every((t, i) => actualArgTypes[i] === t);
-
-      if (!typesMatch) {
-        console.log(
-          `❌ [FAIL] Function ${spec.name} argument types mismatch: expected [${spec.expectedArgTypes.join(', ')}], found [${actualArgTypes.join(', ')}].`
-        );
-        allPassed = false;
-        continue;
-      }
-
-      // Check exact return type
-      if (fnRow.return_type_name !== spec.expectedReturnType) {
-        console.log(
-          `❌ [FAIL] Function ${spec.name} return type mismatch: expected ${spec.expectedReturnType}, found ${fnRow.return_type_name}.`
-        );
-        allPassed = false;
-        continue;
-      }
-
-      // Check SECURITY DEFINER
-      if (!fnRow.is_security_definer) {
-        console.log(`❌ [FAIL] Function ${spec.name} is NOT marked SECURITY DEFINER.`);
-        allPassed = false;
-        continue;
-      }
-
-      // Check fixed search_path = public
-      const configs = fnRow.config || [];
-      const hasSearchPath = configs.some((c: string) => c.toLowerCase().trim() === 'search_path=public');
-      if (!hasSearchPath) {
-        console.log(`❌ [FAIL] Function ${spec.name} lacks fixed search_path = public.`);
-        allPassed = false;
-        continue;
-      }
-
-      // Check PUBLIC privilege revoked (grantee 0 in aclexplode)
-      if (fnRow.public_exec) {
-        console.log(`❌ [FAIL] Function ${spec.name} has EXECUTE granted to PUBLIC (grantee 0).`);
-        allPassed = false;
-        continue;
-      }
-
-      // Check anon role privilege revoked
-      if (fnRow.anon_exec) {
-        console.log(`❌ [FAIL] Function ${spec.name} is executable by anon role.`);
-        allPassed = false;
-        continue;
-      }
-
-      // Check authenticated role privilege revoked
-      if (fnRow.authenticated_exec) {
-        console.log(`❌ [FAIL] Function ${spec.name} is executable by authenticated role.`);
-        allPassed = false;
-        continue;
-      }
-
-      // Check service_role privilege granted
-      if (!fnRow.service_role_exec) {
-        console.log(`❌ [FAIL] Function ${spec.name} is NOT executable by service_role.`);
-        allPassed = false;
-        continue;
-      }
-
-      console.log(
-        `✓ [PASS] Function ${spec.name}(${actualArgTypes.join(', ')}) -> ${fnRow.return_type_name}: exact signature verified, SECURITY DEFINER, search_path=public, service_role execution only.`
-      );
+    // Run regression checks proving that altered/invalid return shapes and overloads fail verification
+    const regressionRes = runFunctionCatalogRegressionChecks();
+    if (!regressionRes.passed) {
+      allPassed = false;
     }
   } catch (err: any) {
     console.log('❌ Read-only database catalog inspection exception:', err.message);
@@ -369,4 +692,9 @@ async function main() {
   }
 }
 
-main();
+const isDirectExecution =
+  process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('verify-production-migrations.ts');
+
+if (isDirectExecution) {
+  main();
+}

@@ -236,10 +236,16 @@ export async function POST(req: Request) {
       // 3. Known default Supabase cookie keys
       cookiesToDelete.add('sb-access-token');
       cookiesToDelete.add('sb-refresh-token');
+      cookiesToDelete.add('sb-docunexa-auth-token');
 
       // Set cookie-expiration headers on the response for each authentication cookie
+      // Invariant: both Max-Age=0 and past Expires date must be emitted to enforce deletion
       for (const name of cookiesToDelete) {
-        errorResponse.cookies.delete(name);
+        errorResponse.cookies.set(name, '', {
+          maxAge: 0,
+          expires: new Date(0),
+          path: '/',
+        });
       }
 
       return errorResponse;

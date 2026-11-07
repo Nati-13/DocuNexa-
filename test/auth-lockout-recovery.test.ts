@@ -13,6 +13,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { runFunctionCatalogRegressionChecks } from '../scripts/verify-production-migrations';
 
 // STRICT PRODUCTION ISOLATION: Never load production .env.local credentials into unit tests
 process.env.DOCUNEXA_TEST_ENV = 'true';
@@ -454,18 +455,8 @@ async function runLockoutTests() {
       mockLoginAttempts.size > 0
     );
 
-    // =========================================================================
-    // PART B: GENUINE POSTGRESQL DATABASE INTEGRATION TESTS
-    // =========================================================================
-    console.log('\n================================================================');
-    console.log('--- PART B: REAL POSTGRESQL DATABASE INTEGRATION TESTS ---');
-    console.log('================================================================');
-
-    let integrationPassed = 0;
-    let integrationFailed = 0;
-    let integrationNotRun = 0;
-
-    const testDbUrl = process.env.TEST_DATABASE_URL || process.env.DISPOSABLE_TEST_DATABASE_URL;
+    // --- 11. DISPOSABLE TEST DATABASE PREFLIGHT & ALLOWLIST UNIT TESTS ---
+    console.log('\n[Mock Test 11] DISPOSABLE DATABASE IDENTITY PREFLIGHT UNIT TESTS');
 
     // Strict local database host allowlist check
     function isPermittedLocalDatabaseHost(urlString?: string): { allowed: boolean; reason?: string } {
@@ -509,6 +500,143 @@ async function runLockoutTests() {
       return { allowed: true };
     }
 
+    interface PreflightIdentityCheckResult {
+      passed: boolean;
+      reason?: string;
+      databaseName?: string;
+      userName?: string;
+      serverAddr?: string;
+    }
+
+    function checkDatabaseNamingConvention(dbName: string): boolean {
+      const SAFE_TEST_CONVENTION = /(test|disposable|scratch|tmp|temp|ci)/i;
+      return SAFE_TEST_CONVENTION.test(dbName);
+    }
+
+    async function performDisposableDatabasePreflight(
+      urlString: string,
+      expectedDbNameEnv?: string
+    ): Promise<PreflightIdentityCheckResult> {
+      const expectedDb = (expectedDbNameEnv || '').trim();
+      if (!expectedDb) {
+        return {
+          passed: false,
+          reason:
+            'DOCUNEXA_EXPECTED_TEST_DATABASE environment variable is not configured. An explicit expected test database name is mandatory before connecting.',
+        };
+      }
+
+      if (!checkDatabaseNamingConvention(expectedDb)) {
+        return {
+          passed: false,
+          reason: `Expected database name "${expectedDb}" does not match safe test naming convention (must contain test/disposable/scratch/tmp/temp/ci).`,
+        };
+      }
+
+      // @ts-ignore
+      const pgModule: any = await import('pg').catch(() => null);
+      if (!pgModule?.Client) {
+        return { passed: false, reason: 'PostgreSQL driver (pg) not available in environment' };
+      }
+
+      const { Client } = pgModule;
+      const preflightClient = new Client({ connectionString: urlString, ssl: false });
+
+      try {
+        await preflightClient.connect();
+
+        // Enforce strictly read-only session during preflight
+        await preflightClient.query('BEGIN READ ONLY;');
+
+        const res = await preflightClient.query(
+          'SELECT current_database() AS db_name, current_user AS db_user, inet_server_addr()::text AS server_addr;'
+        );
+        const row = res.rows[0] || {};
+        const actualDb = (row.db_name || '').trim();
+        const actualUser = (row.db_user || '').trim();
+        const actualServerAddr = row.server_addr ? String(row.server_addr).trim() : null;
+
+        if (actualDb.toLowerCase() !== expectedDb.toLowerCase()) {
+          return {
+            passed: false,
+            reason: `Connected database name "${actualDb}" does not match DOCUNEXA_EXPECTED_TEST_DATABASE ("${expectedDb}").`,
+          };
+        }
+
+        // Validate inet_server_addr() is strictly loopback (or null for Unix sockets)
+        if (actualServerAddr !== null) {
+          const isIpv4Loopback = /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(actualServerAddr);
+          const isIpv6Loopback = actualServerAddr === '::1' || actualServerAddr === '0:0:0:0:0:0:0:1';
+          if (!isIpv4Loopback && !isIpv6Loopback) {
+            return {
+              passed: false,
+              reason: `Server address "${actualServerAddr}" is not a local loopback interface. Public/external addresses strictly rejected.`,
+            };
+          }
+        }
+
+        if (!actualUser) {
+          return {
+            passed: false,
+            reason: 'current_user could not be determined from preflight session.',
+          };
+        }
+
+        return {
+          passed: true,
+          databaseName: actualDb,
+          userName: actualUser,
+          serverAddr: actualServerAddr || 'local-socket',
+        };
+      } catch (err: any) {
+        // Guarantee credentials are never disclosed
+        const sanitizedMsg = (err.message || 'Unknown preflight error')
+          .replace(urlString, '[REDACTED_URL]')
+          .replace(/:\/\/([^@]+)@/g, '://[REDACTED_AUTH]@');
+        return {
+          passed: false,
+          reason: `Preflight identity query failed: ${sanitizedMsg}`,
+        };
+      } finally {
+        await preflightClient.query('ROLLBACK;').catch(() => {});
+        await preflightClient.end().catch(() => {});
+      }
+    }
+
+    // Unit test allowlist and naming guards
+    assert('Host allowlist allows localhost', isPermittedLocalDatabaseHost('postgresql://postgres@localhost:5432/test').allowed);
+    assert('Host allowlist allows 127.0.0.1', isPermittedLocalDatabaseHost('postgresql://postgres@127.0.0.1:5432/test').allowed);
+    assert('Host allowlist allows [::1]', isPermittedLocalDatabaseHost('postgresql://postgres@[::1]:5432/test').allowed);
+    assert('Host allowlist strictly rejects Supabase pooler port 6543', !isPermittedLocalDatabaseHost('postgresql://postgres@127.0.0.1:6543/test').allowed);
+    assert('Host allowlist strictly rejects *.supabase.co', !isPermittedLocalDatabaseHost('postgresql://postgres@db.abcdef.supabase.co:5432/postgres').allowed);
+    assert('Host allowlist strictly rejects docunexa.pro.et', !isPermittedLocalDatabaseHost('postgresql://postgres@docunexa.pro.et:5432/postgres').allowed);
+    assert('Host allowlist strictly rejects external IPs', !isPermittedLocalDatabaseHost('postgresql://postgres@198.51.100.1:5432/test').allowed);
+    assert('Preflight rejects missing DOCUNEXA_EXPECTED_TEST_DATABASE', (await performDisposableDatabasePreflight('postgresql://127.0.0.1:5432/test', '')).passed === false);
+    assert('Preflight rejects unsafe production database naming', (await performDisposableDatabasePreflight('postgresql://127.0.0.1:5432/test', 'production_db')).passed === false);
+    assert('Safe test naming convention recognizes test, disposable, scratch, tmp', checkDatabaseNamingConvention('docunexa_disposable_test'));
+
+    // --- 12. POSTGRESQL CATALOG FUNCTION SHAPE REGRESSION CHECKS ---
+    console.log('\n[Mock Test 12] POSTGRESQL CATALOG FUNCTION SHAPE REGRESSION SUITE');
+    const catalogRegRes = runFunctionCatalogRegressionChecks();
+    assert(
+      'Catalog signature regression suite proves strict rejection of altered shapes, overloads, and wrong types',
+      catalogRegRes.passed && catalogRegRes.testCount >= 10
+    );
+
+    // =========================================================================
+    // PART B: GENUINE POSTGRESQL DATABASE INTEGRATION TESTS
+    // =========================================================================
+    console.log('\n================================================================');
+    console.log('--- PART B: REAL POSTGRESQL DATABASE INTEGRATION TESTS ---');
+    console.log('================================================================');
+
+    let integrationPassed = 0;
+    let integrationFailed = 0;
+    let integrationNotRun = 0;
+
+    const testDbUrl = process.env.TEST_DATABASE_URL || process.env.DISPOSABLE_TEST_DATABASE_URL;
+    const expectedTestDb = process.env.DOCUNEXA_EXPECTED_TEST_DATABASE;
+
     const hostCheck = isPermittedLocalDatabaseHost(testDbUrl);
 
     if (!hostCheck.allowed) {
@@ -518,13 +646,25 @@ async function runLockoutTests() {
       console.log('  (Strict safety: Zero connections or cleanup statements executed against remote/unverified databases)');
       integrationNotRun = 2;
     } else {
-      // @ts-ignore
-      const pgModule: any = await import('pg').catch(() => null);
-      if (!pgModule?.Client) {
-        console.log('  ℹ [NOT RUN] PostgreSQL driver (pg) not available for integration tests.');
+      // Host passed allowlist: now perform strict read-only identity preflight
+      const preflight = await performDisposableDatabasePreflight(testDbUrl!, expectedTestDb);
+
+      if (!preflight.passed) {
+        console.log('  ℹ [NOT RUN] Multi-Connection Concurrency Integration Test: preflight identity check rejected database.');
+        console.log('  ℹ [NOT RUN] Admin Unlock & Audit Rollback Integration Test: preflight identity check rejected database.');
+        console.log(`  Reason: ${preflight.reason}`);
+        console.log('  (Strict safety: Zero write operations or cleanup statements executed due to unconfirmed identity)');
         integrationNotRun = 2;
       } else {
-        const { Client } = pgModule;
+        console.log(`  ✓ [PASS] Read-only identity preflight passed: database="${preflight.databaseName}", user="${preflight.userName}", host="${preflight.serverAddr}".`);
+
+        // @ts-ignore
+        const pgModule: any = await import('pg').catch(() => null);
+        if (!pgModule?.Client) {
+          console.log('  ℹ [NOT RUN] PostgreSQL driver (pg) not available for integration tests.');
+          integrationNotRun = 2;
+        } else {
+          const { Client } = pgModule;
 
         // Integration Test 1: Genuine Multi-Connection Concurrency
         console.log('\n[Integration Test 1] MULTI-CONNECTION CONCURRENT FAILED LOGIN ATTEMPTS');
@@ -628,6 +768,7 @@ async function runLockoutTests() {
         }
       }
     }
+  }
 
     console.log('\n================================================================');
     console.log(` MOCK-LEVEL TESTS: ${passed} of ${total} passed (${Math.round((passed / total) * 100)}%)`);

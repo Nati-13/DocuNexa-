@@ -166,39 +166,110 @@ async function runRouteTests() {
     console.log('\n--- 2. SIGN-OUT & ACTUAL COOKIE EXPIRATION VERIFICATION ---');
     assert('supabase.auth.signOut() is invoked on server client to invalidate session', Boolean(signOutCalled) === true);
 
-    // Inspect actual response cookies and Set-Cookie headers
-    const resCookies = res.cookies ? res.cookies.getAll() : [];
-    const rawSetCookieHeader = res.headers.get('set-cookie') || '';
-    const getSetCookieHeaders = (res.headers as any).getSetCookie ? (res.headers as any).getSetCookie() : [rawSetCookieHeader];
-    const combinedSetCookieStr = getSetCookieHeaders.join('; ');
+    interface CookieDeletionVerification {
+      isDeleted: boolean;
+      hasMaxAgeZero: boolean;
+      hasPastExpires: boolean;
+      reason: string;
+    }
+
+    function verifyCookieActualDeletion(
+      cookieName: string,
+      targetRes: Response
+    ): CookieDeletionVerification {
+      const resCookies = (targetRes as any).cookies ? (targetRes as any).cookies.getAll() : [];
+      const cookieObj = resCookies.find((c: any) => c.name === cookieName);
+
+      let hasMaxAgeZero = false;
+      let hasPastExpires = false;
+      const reasons: string[] = [];
+
+      // 1. Check in response cookie store (NextResponse.cookies)
+      if (cookieObj) {
+        if (cookieObj.maxAge === 0) {
+          hasMaxAgeZero = true;
+          reasons.push('cookieObj.maxAge = 0');
+        }
+        if (cookieObj.expires) {
+          const expDate = new Date(cookieObj.expires);
+          if (!isNaN(expDate.getTime()) && expDate.getTime() < Date.now()) {
+            hasPastExpires = true;
+            reasons.push(`cookieObj.expires in past (${expDate.toISOString()})`);
+          }
+        }
+      }
+
+      // 2. Check in response Set-Cookie headers
+      const setCookieHeaders: string[] = [];
+      if (typeof (targetRes.headers as any).getSetCookie === 'function') {
+        setCookieHeaders.push(...(targetRes.headers as any).getSetCookie());
+      } else {
+        const raw = targetRes.headers.get('set-cookie');
+        if (raw) setCookieHeaders.push(raw);
+      }
+
+      for (const header of setCookieHeaders) {
+        const prefix = `${cookieName}=`;
+        if (header.includes(prefix)) {
+          if (/max-age=0(?!\d)/i.test(header)) {
+            hasMaxAgeZero = true;
+            reasons.push('Set-Cookie header has Max-Age=0');
+          }
+          const expMatch = header.match(/expires=([^;]+)/i);
+          if (expMatch) {
+            const expDate = new Date(expMatch[1].trim());
+            if (!isNaN(expDate.getTime()) && expDate.getTime() < Date.now()) {
+              hasPastExpires = true;
+              reasons.push(`Set-Cookie header has past Expires (${expDate.toUTCString()})`);
+            }
+          }
+        }
+      }
+
+      // STRICT REQUIREMENT: An empty cookie value alone without Max-Age=0 or past Expires date MUST NOT count
+      const isDeleted = hasMaxAgeZero || hasPastExpires;
+
+      return {
+        isDeleted,
+        hasMaxAgeZero,
+        hasPastExpires,
+        reason: isDeleted
+          ? reasons.join('; ')
+          : 'No Max-Age=0 or past Expires date found (empty value alone is rejected)',
+      };
+    }
+
+    // Regression proof: An empty cookie value alone without Max-Age=0 or past Expires date must NOT count as deleted
+    const dummyEmptyOnlyCookieRes = new Response(null, {
+      headers: {
+        'set-cookie': 'sb-test-empty=; Path=/',
+      },
+    });
+    const emptyCheck = verifyCookieActualDeletion('sb-test-empty', dummyEmptyOnlyCookieRes);
+    assert(
+      'Regression proof: An empty cookie value alone without Max-Age=0 or past Expires is strictly rejected',
+      !emptyCheck.isDeleted
+    );
 
     // Verify deletion of the primary auth token cookie
-    const authTokenCookie = resCookies.find((c) => c.name === 'sb-docunexa-auth-token');
-    const authTokenDeleted =
-      Boolean(authTokenCookie && (authTokenCookie.value === '' || authTokenCookie.maxAge === 0)) ||
-      combinedSetCookieStr.includes('sb-docunexa-auth-token=;');
-
+    const authDeletion = verifyCookieActualDeletion('sb-docunexa-auth-token', res);
     assert(
-      'Response contains cookie-expiration header for primary auth token (sb-docunexa-auth-token)',
-      authTokenDeleted,
-      `cookie=${JSON.stringify(authTokenCookie)}`
+      'Response expires primary auth token (sb-docunexa-auth-token) with Max-Age=0 or past Expires',
+      authDeletion.isDeleted && (authDeletion.hasMaxAgeZero || authDeletion.hasPastExpires),
+      authDeletion.reason
     );
 
     // Verify deletion of the refresh token cookie
-    const refreshTokenCookie = resCookies.find((c) => c.name === 'sb-refresh-token');
-    const refreshTokenDeleted =
-      Boolean(refreshTokenCookie && (refreshTokenCookie.value === '' || refreshTokenCookie.maxAge === 0)) ||
-      combinedSetCookieStr.includes('sb-refresh-token=;');
-
+    const refreshDeletion = verifyCookieActualDeletion('sb-refresh-token', res);
     assert(
-      'Response contains cookie-expiration header for refresh token (sb-refresh-token)',
-      refreshTokenDeleted,
-      `cookie=${JSON.stringify(refreshTokenCookie)}`
+      'Response expires refresh token (sb-refresh-token) with Max-Age=0 or past Expires',
+      refreshDeletion.isDeleted && (refreshDeletion.hasMaxAgeZero || refreshDeletion.hasPastExpires),
+      refreshDeletion.reason
     );
 
     // Confirm that unrelated cookie was NOT deleted
-    const unrelatedCookieDeleted = resCookies.some((c) => c.name === 'unrelated-cookie');
-    assert('Unrelated cookies are preserved without accidental deletion', !unrelatedCookieDeleted);
+    const unrelatedDeletion = verifyCookieActualDeletion('unrelated-cookie', res);
+    assert('Unrelated preference cookies are not expired or deleted', !unrelatedDeletion.isDeleted);
 
     console.log('\n--- 3. ZERO DATA LEAKAGE & ABSENCE OF ANALYTICS ---');
     assert('No user object returned in response body', body.user === undefined);
