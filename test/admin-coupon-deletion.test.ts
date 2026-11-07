@@ -27,6 +27,7 @@ import { NextRequest } from 'next/server';
 // In-memory data store for testing
 let mockCoupons: Map<string, any> = new Map();
 let mockRedemptions: Array<{ id: string; coupon_id: string; user_id: string }> = [];
+let mockPaymentOrders: Array<{ id: string; coupon_id: string; status: string }> = [];
 let mockAuditLogs: Array<any> = [];
 let mockCurrentUser: any = null;
 let mockIsAdmin = true;
@@ -34,6 +35,7 @@ let mockIsAdmin = true;
 function setupMockDatabase() {
   mockCoupons = new Map();
   mockRedemptions = [];
+  mockPaymentOrders = [];
   mockAuditLogs = [];
   mockCurrentUser = {
     id: 'admin-uuid-001',
@@ -133,6 +135,15 @@ function setupMockDatabase() {
               error: null,
             });
           }
+          if (table === 'payment_orders') {
+            const couponId = filterEq['coupon_id'];
+            const matches = mockPaymentOrders.filter((o) => o.coupon_id === couponId);
+            return resolve({
+              data: builder._isHead ? null : matches,
+              count: matches.length,
+              error: null,
+            });
+          }
           return resolve({ data: [], error: null });
         },
         delete: () => {
@@ -162,6 +173,35 @@ function setupMockDatabase() {
       };
 
       return builder;
+    },
+    rpc: async (fnName: string, params: any) => {
+      if (fnName === 'admin_delete_coupon_atomic') {
+        const coupon = mockCoupons.get(params.p_coupon_id);
+        if (!coupon) {
+          return { data: [{ success: false, error_message: 'Coupon not found.', error_code: 'COUPON_NOT_FOUND' }], error: null };
+        }
+        if (coupon.redemption_count > 0) {
+          return { data: [{ success: false, error_message: 'Cannot delete coupon: already redeemed.', error_code: 'COUPON_ALREADY_REDEEMED' }], error: null };
+        }
+        const hasRedemptions = mockRedemptions.some((r) => r.coupon_id === params.p_coupon_id);
+        if (hasRedemptions) {
+          return { data: [{ success: false, error_message: 'Cannot delete coupon: redemptions exist.', error_code: 'COUPON_ALREADY_REDEEMED' }], error: null };
+        }
+        const hasOrders = mockPaymentOrders.some((o) => o.coupon_id === params.p_coupon_id);
+        if (hasOrders) {
+          return { data: [{ success: false, error_message: 'Cannot delete coupon: referenced in payment orders.', error_code: 'COUPON_REFERENCED_IN_ORDERS' }], error: null };
+        }
+        mockCoupons.delete(params.p_coupon_id);
+        mockAuditLogs.push({
+          admin_user_id: params.p_admin_user_id,
+          action: 'coupon_deleted',
+          target_coupon_id: params.p_coupon_id,
+          metadata: { code: coupon.code, adminEmail: mockCurrentUser?.email },
+          reason: params.p_reason,
+        });
+        return { data: [{ success: true, deleted_code: coupon.code, error_message: null, error_code: null }], error: null };
+      }
+      return { data: null, error: new Error(`Unknown RPC ${fnName}`) };
     },
   };
   setMockAdminSupabaseClient(adminClient);
@@ -279,6 +319,36 @@ async function runTests() {
     assert.strictEqual(mockCoupons.has('coupon-with-records'), true, 'Coupon must remain intact in DB');
   });
 
+  // 4b. Integrity rule: Coupons referenced in payment_orders must NOT be deleted
+  await test('DELETE endpoint returns 400 if coupon is referenced in payment_orders', async () => {
+    setupMockDatabase();
+    mockCoupons.set('coupon-in-orders', {
+      id: 'coupon-in-orders',
+      code: 'ORDERREF50',
+      discount_type: 'percent',
+      discount_value: 50,
+      redemption_count: 0,
+      max_redemptions: 10,
+      active: true,
+    });
+    mockPaymentOrders.push({
+      id: 'order-123',
+      coupon_id: 'coupon-in-orders',
+      status: 'pending',
+    });
+
+    const req = makeDeleteRequest('coupon-in-orders');
+    const res = await DELETE(req, { params: Promise.resolve({ id: 'coupon-in-orders' }) });
+    assert.strictEqual(res.status, 400, 'Must return 400 when coupon is referenced in payment_orders');
+
+    const json = await res.json();
+    assert.strictEqual(json.code, 'COUPON_REFERENCED_IN_ORDERS');
+    assert.match(json.error, /referenced in \d+ payment order\(s\)/i);
+
+    // Verify coupon remains intact in DB
+    assert.strictEqual(mockCoupons.has('coupon-in-orders'), true, 'Coupon must remain intact in DB');
+  });
+
   // 5. Successful deletion of unredeemed coupon
   await test('DELETE endpoint successfully deletes unredeemed coupon and records audit log', async () => {
     setupMockDatabase();
@@ -321,3 +391,4 @@ async function runTests() {
 }
 
 runTests();
+

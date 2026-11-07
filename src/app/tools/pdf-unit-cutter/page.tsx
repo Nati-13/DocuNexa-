@@ -15,7 +15,8 @@ import {
   FileText,
   RotateCcw,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Languages
 } from 'lucide-react';
 import {
   PdfFileInfo,
@@ -23,10 +24,16 @@ import {
   ValidationResult,
   CutProgressState,
   CutProgressItem,
-  ConfidenceLevel
+  ConfidenceLevel,
+  PageTextData
 } from '@/types';
 import { extractPdfTextPages, getPdfJs, getPdfJsDocumentParams } from '@/lib/pdfReader';
 import { detectDocumentUnits } from '@/lib/detector';
+import {
+  SUPPORTED_LANGUAGES,
+  SupportedLanguageCode,
+  detectDocumentLanguage
+} from '@/lib/multilingual';
 import { validateParts, sanitizeFilename } from '@/lib/validator';
 import {
   extractPdfRange,
@@ -74,6 +81,14 @@ export default function PdfUnitCutterPage() {
     overallConfidence?: ConfidenceLevel;
   }>({});
   const [isBoundariesConfirmed, setIsBoundariesConfirmed] = useState<boolean>(false);
+
+  // Multilingual & OCR State
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguageCode | 'auto'>('auto');
+  const [detectedLanguage, setDetectedLanguage] = useState<{
+    code: SupportedLanguageCode;
+    confidence: ConfidenceLevel;
+  } | null>(null);
+  const [isOcrProcessing, setIsOcrProcessing] = useState<boolean>(false);
 
   // Modals & Interactivity
   const [previewPart, setPreviewPart] = useState<DetectedPart | null>(null);
@@ -219,6 +234,14 @@ export default function PdfUnitCutterPage() {
           : null
       );
 
+      // Detect document language from extracted pages
+      const sampleText = pages.slice(0, 15).map((p) => p.rawText).join('\n');
+      const langResult = detectDocumentLanguage(sampleText);
+      setDetectedLanguage({
+        code: langResult.detectedLanguage,
+        confidence: langResult.confidence,
+      });
+
       const result = detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name);
 
       setParts(result.parts);
@@ -355,18 +378,104 @@ export default function PdfUnitCutterPage() {
     setHasFrontMatter(false);
   };
 
-  // Download Single Part
-  const handleDownloadSinglePart = async (part: DetectedPart) => {
-    let effectiveUncertain: boolean;
-    try {
-      effectiveUncertain = resolveEffectiveUncertainty(splitMode, detectionSummary.isUncertain);
-    } catch (err: any) {
-      alert(err.message || 'Cannot extract part: Document uncertainty state is unverified.');
+  // OCR Enhancement for Scanned Documents
+  const handleRunOcr = async () => {
+    if (!fileInfo) return;
+    const activeBuf = await getActiveBuffer();
+    if (!activeBuf) {
+      alert('Cannot access PDF document data.');
       return;
     }
 
-    if (effectiveUncertain && !isBoundariesConfirmed) {
-      alert('Please review and confirm unit page boundaries before extracting or downloading parts.');
+    setIsOcrProcessing(true);
+    setIsAnalyzing(true);
+    setAnalysisProgress({ current: 0, total: fileInfo.totalPages });
+
+    try {
+      const targetLang =
+        selectedLanguage !== 'auto'
+          ? selectedLanguage
+          : detectedLanguage?.code || 'en';
+      const tesseractCode =
+        SUPPORTED_LANGUAGES[targetLang]?.tesseractCode || 'eng';
+
+      const { createWorker } = await import('tesseract.js');
+      const worker = await createWorker(tesseractCode, 1, {
+        logger: () => {},
+      });
+
+      const pdfjs = await getPdfJs();
+      const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(activeBuf));
+      const pdfDoc = await loadingTask.promise;
+
+      const ocrPages: PageTextData[] = [];
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      for (let p = 1; p <= fileInfo.totalPages; p++) {
+        setAnalysisProgress({ current: p, total: fileInfo.totalPages });
+        const page = await pdfDoc.getPage(p);
+        const viewport = page.getViewport({ scale: 1.5 });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx!, viewport }).promise;
+
+        const {
+          data: { text },
+        } = await worker.recognize(canvas);
+        const lines = text
+          .split('\n')
+          .map((l: string) => l.trim())
+          .filter(Boolean);
+
+        ocrPages.push({
+          pageNumber: p,
+          rawText: text,
+          lines,
+          hasSubstantialText: lines.length > 0,
+        });
+
+        if (typeof page.cleanup === 'function') {
+          page.cleanup();
+        }
+      }
+
+      await worker.terminate();
+
+      const result = detectDocumentUnits(ocrPages, fileInfo.totalPages, fileInfo.name);
+      setParts(result.parts);
+      setOriginalParts(JSON.parse(JSON.stringify(result.parts)));
+      setHasFrontMatter(result.hasFrontMatter);
+      setFrontMatterRange(result.frontMatterRange);
+      setDetectionSummary({
+        isUncertain: result.isUncertain,
+        uncertaintyReason: result.uncertaintyReason,
+        overallConfidence: result.overallConfidence,
+      });
+      setIsBoundariesConfirmed(false);
+      setFileInfo((prev) =>
+        prev ? { ...prev, isScanned: false, avgCharsPerPage: 100 } : null
+      );
+    } catch (err: any) {
+      console.error('OCR processing error:', err);
+      alert(`OCR processing failed: ${err.message || err}`);
+    } finally {
+      setIsOcrProcessing(false);
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Download Single Part
+  const handleDownloadSinglePart = async (part: DetectedPart) => {
+    if (!fileInfo) return;
+    if (
+      part.startPage < 1 ||
+      part.endPage < part.startPage ||
+      part.endPage > fileInfo.totalPages
+    ) {
+      alert(
+        `Invalid page range [${part.startPage}..${part.endPage}] for "${part.title}". Valid document range is 1 to ${fileInfo.totalPages}.`
+      );
       return;
     }
 
@@ -618,14 +727,14 @@ export default function PdfUnitCutterPage() {
                     <button
                       onClick={handleAnalyze}
                       disabled={isAnalyzing}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg text-xs md:text-sm font-semibold disabled:opacity-50 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg text-xs md:text-sm font-semibold disabled:opacity-50 transition-colors cursor-pointer"
                     >
                       <Sparkles size={16} />
                       <span>{isAnalyzing ? `Analyzing (${analysisProgress.current}/${analysisProgress.total})...` : 'Analyze & Detect Units'}</span>
                     </button>
                     <button
                       onClick={handleManualMode}
-                      className="px-3.5 py-2 rounded-md bg-surface border border-border hover:bg-paper text-ink text-xs md:text-sm font-semibold transition-colors"
+                      className="px-3.5 py-2 rounded-md bg-surface border border-border hover:bg-paper text-ink text-xs md:text-sm font-semibold transition-colors cursor-pointer"
                     >
                       Manual Split
                     </button>
@@ -633,12 +742,75 @@ export default function PdfUnitCutterPage() {
                 )}
                 <button
                   onClick={handleRemoveFile}
-                  className="px-3 py-1.5 rounded-md text-muted hover:text-accent border border-border hover:bg-paper text-xs font-semibold transition-colors"
+                  className="px-3 py-1.5 rounded-md text-muted hover:text-accent border border-border hover:bg-paper text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Change File
                 </button>
               </div>
             </div>
+
+            {/* Multilingual Support & Language Detection Toolbar */}
+            <div className="p-4 rounded-md bg-paper border border-border flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 font-semibold text-ink">
+                  <Languages size={16} className="text-brand shrink-0" />
+                  <span>Document Language:</span>
+                </div>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value as any)}
+                  className="px-2.5 py-1.5 rounded-md border border-border bg-surface text-ink font-medium focus:border-brand focus:outline-hidden"
+                >
+                  <option value="auto">Auto Detect (All 10 Languages)</option>
+                  <option value="en">English (English)</option>
+                  <option value="am">Amharic (አማርኛ)</option>
+                  <option value="om">Afaan Oromo (Afaan Oromoo)</option>
+                  <option value="ti">Tigrinya (ትግርኛ)</option>
+                  <option value="ar">Arabic (العربية)</option>
+                  <option value="fr">French (Français)</option>
+                  <option value="es">Spanish (Español)</option>
+                  <option value="sw">Swahili (Kiswahili)</option>
+                  <option value="hi">Hindi (हिन्दी)</option>
+                  <option value="zh">Simplified Chinese (简体中文)</option>
+                </select>
+
+                {detectedLanguage && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand border border-brand/20">
+                    <CheckCircle2 size={13} className="shrink-0" />
+                    <span>
+                      Detected: {SUPPORTED_LANGUAGES[detectedLanguage.code].name} ({SUPPORTED_LANGUAGES[detectedLanguage.code].nativeName}) • {detectedLanguage.confidence} Confidence
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <span className="text-[11px] text-muted hidden md:inline">
+                Supports English, Amharic, Oromo, Tigrinya, Arabic, French, Spanish, Swahili, Hindi &amp; Chinese
+              </span>
+            </div>
+
+            {/* Scanned Document Alert & OCR Trigger */}
+            {fileInfo.isScanned && parts.length === 0 && (
+              <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-200">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">Scanned / Image-Based PDF Detected</span>
+                    <p className="text-muted mt-0.5">
+                      This PDF has very few selectable text characters. You can run client-side OCR text recognition to detect units automatically, or use Manual Split.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRunOcr}
+                  disabled={isOcrProcessing}
+                  className="px-3.5 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold shrink-0 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isOcrProcessing ? 'Running OCR...' : 'Run OCR Recognition'}
+                </button>
+              </div>
+            )}
 
             {/* Analysis In-Progress Banner */}
             {isAnalyzing && (

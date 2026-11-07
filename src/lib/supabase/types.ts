@@ -553,6 +553,19 @@ export type Database = {
         };
         Returns: Json;
       };
+      admin_delete_coupon_atomic: {
+        Args: {
+          p_admin_user_id: string;
+          p_coupon_id: string;
+          p_reason?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          deleted_code: string | null;
+          error_message: string | null;
+          error_code: string | null;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

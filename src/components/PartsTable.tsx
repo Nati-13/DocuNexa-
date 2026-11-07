@@ -447,8 +447,8 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       )}
 
       {validation.warnings.length > 0 && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-md space-y-1 text-xs text-amber-800 dark:text-amber-200">
-          <div className="flex items-center space-x-2 font-semibold mb-1">
+        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-md space-y-2 text-xs text-amber-800 dark:text-amber-200">
+          <div className="flex items-center space-x-2 font-semibold">
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>Range &amp; Filename Warnings:</span>
           </div>
@@ -457,6 +457,49 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               <li key={i}>{warn}</li>
             ))}
           </ul>
+
+          {/* Quick Resolution Actions for Unassigned Page Gaps */}
+          {validation.gaps.length > 0 && (
+            <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-ink">Quick Fix:</span>
+              {validation.gaps.some((g) => g.startPage === 1) && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const firstGap = validation.gaps.find((g) => g.startPage === 1);
+                      if (firstGap) {
+                        onAddPart({
+                          title: 'Part 0 — Front Matter',
+                          startPage: 1,
+                          endPage: firstGap.endPage,
+                          filename: sanitizeFilename(
+                            `${originalFileName.replace(/\.pdf$/i, '')} - Front Matter.pdf`
+                          ),
+                          confidence: 'High',
+                          source: 'manual',
+                        });
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-md bg-brand text-brand-fg font-medium hover:bg-brand/90 transition-colors cursor-pointer text-[11px]"
+                  >
+                    Add &quot;Front Matter&quot; for Pages 1–{validation.gaps.find((g) => g.startPage === 1)?.endPage}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (parts.length > 0) {
+                        onUpdatePart(parts[0].id, { startPage: 1 });
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-md bg-surface border border-border text-ink font-medium hover:bg-paper transition-colors cursor-pointer text-[11px]"
+                  >
+                    Extend Unit 1 to start at Page 1
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -647,14 +690,9 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                       {/* Individual Download Button */}
                       <button
                         type="button"
-                        disabled={Boolean(isUncertain) && !isBoundariesConfirmed}
                         onClick={() => onDownloadSinglePart(part)}
-                        title={
-                          Boolean(isUncertain) && !isBoundariesConfirmed
-                            ? 'Please review and confirm page boundaries before downloading individual parts'
-                            : 'Download this single PDF part now'
-                        }
-                        className="p-1.5 rounded-md text-muted hover:text-brand hover:bg-paper disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        title={`Download "${part.title}" (Pages ${part.startPage}–${part.endPage})`}
+                        className="p-1.5 rounded-md text-muted hover:text-brand hover:bg-paper transition-colors cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>

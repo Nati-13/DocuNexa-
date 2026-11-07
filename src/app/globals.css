@@ -89,6 +89,10 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  input, select, textarea, button {
+    color: inherit;
+  }
+
   h1, h2, h3 {
     font-family: var(--font-serif-display), 'Fraunces', 'Nyala', 'Abyssinica SIL', serif;
     letter-spacing: -0.02em;

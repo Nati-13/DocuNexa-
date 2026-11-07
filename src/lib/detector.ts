@@ -1,4 +1,8 @@
 import { DetectedPart, ConfidenceLevel, PageTextData } from '@/types';
+import {
+  parseMultilingualNumber,
+  SUPPORTED_LANGUAGES,
+} from './multilingual';
 
 // Map of word numbers to integers
 const WORD_NUMBERS: Record<string, number> = {
@@ -74,10 +78,29 @@ export const ETHIOPIC_NUMERALS: Record<string, number> = {
 };
 
 export const HEADING_PREFIXES =
-  'UNIT|CHAPTER|MODULE|LESSON|PART|ክፍል|ምዕራፍ|ትምህርት|ርዕስ|CHAPITRE|UNITÉ|CAPÍTULO|UNIDAD|KAPITEL|TEIL';
+  'UNIT|CHAPTER|MODULE|LESSON|PART|SECTION|' +
+  'ምዕራፍ|ክፍል|አሃድ|ትምህርት|ርዕስ|' +
+  'ክፍሊ|ትምህርቲ|ኣርእስቲ|' +
+  'BOQONNAA|KUTAA|BARNOOTA|MATA\\s+DUREE|' +
+  'الوحدة|وحدة|الفصل|فصل|الباب|باب|الدرس|درس|الجزء|جزء|' +
+  'CHAPITRE|UNITÉ|UNITE|MODULE|LEÇON|LECON|PARTIE|' +
+  'CAPÍTULO|CAPITULO|UNIDAD|MÓDULO|MODULO|LECCIÓN|LECCION|PARTE|' +
+  'SURA|SEHEMU|KITENGO|SOMO|' +
+  'इकाई|अध्याय|पाठ|भाग|खण्ड|' +
+  '单元|章|课|部分|章节';
 
 export const HEADING_NUMBERS =
-  '[0-9]{1,4}|[IVXLCDM]{1,6}|[፩-፳]+|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY';
+  '[0-9]{1,4}|[IVXLCDM]{1,6}|[፩-፳]+|[٠-٩]+|[०-९]+|[一二三四五六七八九十百]+|' +
+  'ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY|' +
+  'الأول|الأولى|الثاني|الثانية|الثالث|الثالثة|الرابع|الرابعة|الخامس|الخامسة|السادس|السادسة|السابع|السابعة|الثامن|الثامنة|التاسع|التاسعة|العاشر|العاشرة|' +
+  'واحد|اثنين|ثلاثة|اربعة|أربعة|خمسة|ستة|سبعة|ثمانية|تسعة|عشرة|' +
+  'एक|दो|तीन|चार|पांच|पाँच|छह|छः|सात|आठ|नौ|दस|' +
+  'አንድ|ሁለት|ሦስት|ሶስት|አራት|አምስት|ስድስት|ሰባት|ስምንት|ዘጠኝ|አስር|' +
+  'ሓደ|ክልተ|ሰለስተ|ኣርባዕተ|ሓሙሽተ|ሽድሽተ|ሾብዓተ|ሸሞንተ|ትሽዓተ|ዓሰርተ|' +
+  'TOKKO|LAMA|SADII|AFUR|SHAN|JA\'A|TORBA|SADDEET|SAGAL|KUDHAN|' +
+  'MOJA|MBILI|TATU|NNE|TANO|SITA|SABA|NANE|TISA|KUMI|' +
+  'UN|UNE|DEUX|TROIS|QUATRE|CINQ|SIX|SEPT|HUIT|NEUF|DIX|' +
+  'UNO|UNA|DOS|TRES|CUATRO|CINCO|SEIS|SIETE|OCHO|NUEVE|DIEZ';
 
 export interface RawHeadingMatch {
   pageNumber: number;
@@ -159,19 +182,27 @@ const HEADING_REGEX = new RegExp(
  * Parses numeric value from string (e.g. '1', 'one', 'IV')
  */
 export function parseUnitNumber(raw: string): number | null {
-  const clean = raw.trim().toLowerCase();
-  
-  const intVal = parseInt(clean, 10);
-  if (!isNaN(intVal)) {
+  if (!raw) return null;
+  const clean = raw.trim();
+
+  // 1. Try universal multilingual numeral parser
+  const multi = parseMultilingualNumber(clean);
+  if (multi !== null) {
+    return multi;
+  }
+
+  const cleanLower = clean.toLowerCase();
+  const intVal = parseInt(cleanLower, 10);
+  if (!isNaN(intVal) && /^[0-9]+$/.test(cleanLower)) {
     return intVal;
   }
 
-  if (WORD_NUMBERS[clean] !== undefined) {
-    return WORD_NUMBERS[clean];
+  if (WORD_NUMBERS[cleanLower] !== undefined) {
+    return WORD_NUMBERS[cleanLower];
   }
 
-  if (ROMAN_NUMERALS[clean] !== undefined) {
-    return ROMAN_NUMERALS[clean];
+  if (ROMAN_NUMERALS[cleanLower] !== undefined) {
+    return ROMAN_NUMERALS[cleanLower];
   }
 
   if (ETHIOPIC_NUMERALS[clean] !== undefined) {
@@ -190,13 +221,13 @@ export function isGenuineHeading(
   totalLinesOnPage: number
 ): RawHeadingMatch | null {
   const trimmed = line.trim();
-  if (!trimmed || trimmed.length < 3) return null;
+  if (!trimmed || trimmed.length < 2) return null;
 
   // Reject math and content expressions
   if (isMathematicalOrContentLine(trimmed)) return null;
 
   // Rule 0: Reject subsections (e.g. Section 1.2, Topic 3, Exercise 4)
-  if (/^\s*(SECTION|SUBSECTION|TOPIC|ACTIVITY|EXERCISE|REVIEW|SUMMARY|FIGURE|TABLE)\b/i.test(trimmed)) {
+  if (/^\s*(SUBSECTION|TOPIC|ACTIVITY|EXERCISE|REVIEW|SUMMARY|FIGURE|TABLE)\b/i.test(trimmed)) {
     return null;
   }
 
@@ -216,6 +247,56 @@ export function isGenuineHeading(
   for (const regex of FALSE_POSITIVE_POSTFIXES) {
     if (regex.test(trimmed)) {
       return null;
+    }
+  }
+
+  // Language Heuristic A: Chinese circumfix pattern e.g. "第一单元 导论" or "第1章 细胞结构"
+  const chineseMatch = trimmed.match(
+    /^\s*第\s*([0-9一二三四五六七八九十百]+)\s*(单元|章|课|部分|节)[:.\-–—\s]*(.*)$/
+  );
+  if (chineseMatch) {
+    const rawNum = chineseMatch[1].trim();
+    const prefixName = chineseMatch[2].trim();
+    let title = chineseMatch[3] ? chineseMatch[3].trim() : '';
+    const numVal = parseUnitNumber(rawNum);
+    if (numVal !== null) {
+      title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+      return {
+        pageNumber: 0,
+        prefix: `第${prefixName}`,
+        numberValue: numVal,
+        numberRaw: rawNum,
+        title: title ? `第${rawNum}${prefixName} – ${title}` : `第${rawNum}${prefixName}`,
+        confidence: 'High',
+        matchedLine: trimmed,
+        lineIndex,
+        source: 'heading',
+      };
+    }
+  }
+
+  // Language Heuristic B: Swahili connecting particles "Sura ya 1", "Kitengo cha 2"
+  const swahiliMatch = trimmed.match(
+    /^\s*(SURA|SEHEMU|KITENGO|SOMO)\s+(?:ya|cha|la|wa)\s+([0-9IVXLCDM]+|MOJA|MBILI|TATU|NNE|TANO|SITA|SABA|NANE|TISA|KUMI)[:.\-–—\s]*(.*)$/i
+  );
+  if (swahiliMatch) {
+    const prefix = swahiliMatch[1].trim();
+    const rawNum = swahiliMatch[2].trim();
+    let title = swahiliMatch[3] ? swahiliMatch[3].trim() : '';
+    const numVal = parseUnitNumber(rawNum);
+    if (numVal !== null) {
+      title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+      return {
+        pageNumber: 0,
+        prefix,
+        numberValue: numVal,
+        numberRaw: rawNum,
+        title: title ? `${prefix} ${rawNum} – ${title}` : `${prefix} ${rawNum}`,
+        confidence: 'High',
+        matchedLine: trimmed,
+        lineIndex,
+        source: 'heading',
+      };
     }
   }
 
@@ -293,15 +374,15 @@ export function findTocPageNumbers(pages: PageTextData[]): Set<number> {
     const lines = page.lines;
     if (!lines || lines.length === 0) continue;
 
-    // Check top 15 lines for TOC title
+    // Check top 15 lines for TOC title across all 10 supported languages
     const hasExplicitTitle = lines.slice(0, 15).some((l) => {
       const upper = l.trim().toUpperCase();
-      return /^(TABLE OF CONTENTS|CONTENTS|SOMMAIRE|TABLE DES MATI[ÈE]RES|INHALTSVERZEICHNIS|ማውጫ|የርዕስ\s*ማውጫ|CONTENIDO|ÍNDICE)(?:\b|$|\s|:)/i.test(upper);
+      return /^(TABLE\s*OF\s*CONTENTS|CONTENTS|SOMMAIRE|TABLE\s*DES\s*MATI[ÈE]RES|INHALTSVERZEICHNIS|ማውጫ|የርዕስ\s*ማውጫ|የይዘት\s*ማውጫ|ትሕዝቶ|መውጫ|መርአዪ\s*ትሕዝቶ|BAAFATA|QABIYYEE|BAAFATA\s*QABIYYEE|الفهرس|المحتويات|جدول\s*المحتويات|فهرس\s*المحتويات|المحتوى|CONTENIDO|ÍNDICE|INDICE|TABLA\s*DE\s*CONTENIDO|YALIYOMO|JEDWALI\s*LA\s*YALIYOMO|विषय\s*सूची|अनुक्रमणिका|सामग्री|目录|目次|内容)(?:\b|$|\s|:)/i.test(upper);
     });
 
     const isContinuedTitle = lines.slice(0, 12).some((l) => {
       const upper = l.trim().toUpperCase();
-      return /^(CONTENTS\s*\(CONTINUED\)|TABLE OF CONTENTS\s*\(CONT\)|CONTENTS\s*CONT|CONTINUED|የቀጠለ)(?:\b|$|\s|:|\))/i.test(upper);
+      return /^(CONTENTS\s*\(CONTINUED\)|TABLE OF CONTENTS\s*\(CONT\)|CONTENTS\s*CONT|CONTINUED|የቀጠለ|تابع\s*الفهرس)(?:\b|$|\s|:|\))/i.test(upper);
     });
 
     // Check for lines with dotted leaders or page numbers at the end
@@ -334,20 +415,51 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
   const entries: TocEntry[] = [];
 
   const TOC_REGEX = new RegExp(
-    `^\\s*(${HEADING_PREFIXES})\\s+(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*?)[.\\s_]{2,}\\s*(\\d{1,4})\\s*$`,
+    `^\\s*(${HEADING_PREFIXES})(?:\\s+ya|\\s+cha|\\s+la)?\\s*(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*?)[.\\s_]{2,}\\s*([0-9٠-٩०-९\\d]{1,4})\\s*$`,
     'i'
   );
 
   const TOC_ALT_REGEX = new RegExp(
-    `^\\s*(${HEADING_PREFIXES})\\s+(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*?)\\s{2,}(\\d{1,4})\\s*$`,
+    `^\\s*(${HEADING_PREFIXES})(?:\\s+ya|\\s+cha|\\s+la)?\\s*(${HEADING_NUMBERS})(?:\\b|(?=[^a-zA-Z0-9]))[:.\\-–—\\s]*(.*?)\\s{2,}([0-9٠-٩०-९\\d]{1,4})\\s*$`,
     'i'
   );
+
+  const TOC_CHINESE_REGEX =
+    /^\s*第\s*([0-9一二三四五六七八九十百]+)\s*(单元|章|课|部分|节)[:.\-–—\s]*(.*?)[.\s_]{2,}\s*([0-9٠-٩०-९\d]{1,4})\s*$/;
+  const TOC_CHINESE_ALT =
+    /^\s*第\s*([0-9一二三四五六七八九十百]+)\s*(单元|章|课|部分|节)[:.\-–—\s]*(.*?)\s{2,}([0-9٠-٩०-९\d]{1,4})\s*$/;
 
   for (const page of pages) {
     if (!targetTocPages.has(page.pageNumber)) continue;
 
     for (let l = 0; l < page.lines.length; l++) {
       const line = page.lines[l].trim();
+
+      // Check Chinese TOC pattern first
+      let chMatch = line.match(TOC_CHINESE_REGEX) || line.match(TOC_CHINESE_ALT);
+      if (chMatch) {
+        const rawNum = chMatch[1].trim();
+        const prefixName = chMatch[2].trim();
+        let title = chMatch[3] ? chMatch[3].trim() : '';
+        const rawPageStr = chMatch[4].trim();
+        const printedPage = parseMultilingualNumber(rawPageStr);
+        const numVal = parseUnitNumber(rawNum);
+
+        if (numVal !== null && printedPage !== null && printedPage > 0) {
+          title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+          entries.push({
+            prefix: `第${prefixName}`,
+            numberValue: numVal,
+            numberRaw: rawNum,
+            title: title ? `第${rawNum}${prefixName} – ${title}` : `第${rawNum}${prefixName}`,
+            printedPage,
+            matchedLine: line,
+            sourcePageNumber: page.pageNumber,
+          });
+          continue;
+        }
+      }
+
       let match = line.match(TOC_REGEX);
       if (!match) {
         match = line.match(TOC_ALT_REGEX);
@@ -357,10 +469,11 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
       const prefix = match[1].trim();
       const rawNum = match[2].trim();
       let title = match[3] ? match[3].trim() : '';
-      const printedPage = parseInt(match[4], 10);
+      const rawPageStr = match[4].trim();
+      const printedPage = parseMultilingualNumber(rawPageStr);
       const numVal = parseUnitNumber(rawNum);
 
-      if (numVal !== null && !isNaN(printedPage) && printedPage > 0) {
+      if (numVal !== null && printedPage !== null && printedPage > 0) {
         title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
         entries.push({
           prefix,

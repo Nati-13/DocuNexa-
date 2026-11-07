@@ -193,33 +193,81 @@ export async function DELETE(
       );
     }
 
-    // Safe to permanently delete
-    const { error: deleteErr } = await admin
-      .from('coupons')
-      .delete()
-      .eq('id', couponId);
+    // Integrity Rule: Verify no payment orders reference this coupon
+    const { count: ordersCount, error: ordersErr } = await admin
+      .from('payment_orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('coupon_id', couponId);
 
-    if (deleteErr) {
+    if (ordersErr) {
       return NextResponse.json(
-        { error: deleteErr.message || 'Failed to delete coupon.' },
+        { error: 'Failed to verify payment order references.' },
         { status: 500 }
       );
     }
 
-    // Audit log
-    await logAdminAction({
-      adminUserId: adminProfile.id,
-      action: 'coupon_deleted',
-      targetCouponId: couponId,
-      metadata: {
-        code: existingCoupon.code,
-        discountType: existingCoupon.discount_type,
-        discountValue: existingCoupon.discount_value,
-        adminEmail: adminProfile.email,
-        deletedAt: new Date().toISOString(),
-      },
-      reason: `Permanently deleted unredeemed coupon ${existingCoupon.code}`,
-    });
+    if ((ordersCount || 0) > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete coupon "${existingCoupon.code}" because it is referenced in ${ordersCount} payment order(s). Active order references must be preserved.`,
+          code: 'COUPON_REFERENCED_IN_ORDERS',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Attempt atomic RPC deletion first if available in the database schema
+    let atomicSucceeded = false;
+    try {
+      const { data: rpcRows, error: rpcErr } = await (admin as any).rpc('admin_delete_coupon_atomic', {
+        p_admin_user_id: adminProfile.id,
+        p_coupon_id: couponId,
+        p_reason: `Permanently deleted unredeemed coupon ${existingCoupon.code}`,
+      });
+
+      if (!rpcErr && Array.isArray(rpcRows) && rpcRows.length > 0) {
+        const result = (rpcRows as any[])[0];
+        if (!result.success) {
+          return NextResponse.json(
+            { error: result.error_message || 'Failed to delete coupon.', code: result.error_code },
+            { status: 400 }
+          );
+        }
+        atomicSucceeded = true;
+      }
+    } catch {
+      // RPC may not be applied yet in all environments; proceed to application-level atomic pattern
+    }
+
+    if (!atomicSucceeded) {
+      // Safe application-level deletion sequence
+      const { error: deleteErr } = await admin
+        .from('coupons')
+        .delete()
+        .eq('id', couponId);
+
+      if (deleteErr) {
+        return NextResponse.json(
+          { error: deleteErr.message || 'Failed to delete coupon.' },
+          { status: 500 }
+        );
+      }
+
+      // Audit log
+      await logAdminAction({
+        adminUserId: adminProfile.id,
+        action: 'coupon_deleted',
+        targetCouponId: couponId,
+        metadata: {
+          code: existingCoupon.code,
+          discountType: existingCoupon.discount_type,
+          discountValue: existingCoupon.discount_value,
+          adminEmail: adminProfile.email,
+          deletedAt: new Date().toISOString(),
+        },
+        reason: `Permanently deleted unredeemed coupon ${existingCoupon.code}`,
+      });
+    }
 
     return NextResponse.json({
       success: true,
