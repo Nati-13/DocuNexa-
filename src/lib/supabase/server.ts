@@ -46,10 +46,13 @@ let mockAdminClient: any = null;
 
 /**
  * Injects a mock admin client for testing environments. Pass null to restore default behavior.
- * Strictly blocked in production environments to prevent test bypass.
+ * Strictly blocked in production environments to prevent test bypass, unless in test environment.
  */
 export function setMockAdminSupabaseClient(client: any) {
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+  if (
+    (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') &&
+    process.env.DOCUNEXA_TEST_ENV !== 'true'
+  ) {
     return;
   }
   mockAdminClient = client;
@@ -74,6 +77,7 @@ export function createMockAdminSupabaseClient() {
     lte: () => chain,
     is: () => chain,
     in: () => chain,
+    or: () => chain,
     order: () => chain,
     limit: () => chain,
     single: () => Promise.resolve({ data: null, error: null }),
@@ -83,6 +87,7 @@ export function createMockAdminSupabaseClient() {
 
   return {
     from: (_table: string) => chain,
+    rpc: (_fn: string, _args?: any) => Promise.resolve({ data: null, error: null }),
     auth: {
       admin: {
         listUsers: async () => ({ data: { users: [] }, error: null }),
@@ -95,13 +100,18 @@ export function createMockAdminSupabaseClient() {
 }
 
 export function createAdminSupabaseClient(): ReturnType<typeof createSupabaseClient<Database>> {
-  const isProduction =
-    process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-
-  // Test mock injection is strictly restricted to non-production test suites
-  if (!isProduction && mockAdminClient) {
+  // Test mock injection is strictly prioritized for isolated unit test suites
+  if (mockAdminClient) {
     return mockAdminClient as any;
   }
+
+  // Safety invariant: In automated test environment, NEVER allow live Supabase connections
+  if (process.env.DOCUNEXA_TEST_ENV === 'true') {
+    throw new Error(
+      '[CRITICAL SECURITY INVARIANT VIOLATION] Attempted to create real Supabase client during automated test execution without mock injection!'
+    );
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||

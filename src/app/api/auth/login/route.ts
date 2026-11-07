@@ -163,10 +163,30 @@ export async function POST(req: Request) {
 
     const needsReconsent = !legalAcceptance;
 
-    // Successful authentication: atomically reset failed login attempt counter
+    // Mandatory security invariant: require confirmed durable counter reset before reporting login success
     const resetResult = await recordSuccessfulLogin(cleanEmail);
     if (!resetResult.success) {
-      console.error(`[SECURITY ALERT] Failed to reset login attempts for ${cleanEmail}: ${resetResult.error}`);
+      console.error(
+        `[SECURITY ALERT] [Request ID: ${requestId}]: Mandatory counter reset failed for ${cleanEmail}:`,
+        resetResult.error
+      );
+
+      // Sign out the newly authenticated user to prevent session establishment on security failure
+      try {
+        await supabase.auth.signOut();
+      } catch (signOutErr) {
+        console.error(`[SECURITY ALERT] [Request ID: ${requestId}]: signOut failed during security abort:`, signOutErr);
+      }
+
+      // Return HTTP 503 with generic error message (never expose internal database or RPC details)
+      return secureJsonResponse(
+        {
+          error: 'Authentication security service is temporarily unavailable. Please try again shortly.',
+          code: 'SECURITY_CHECK_UNAVAILABLE',
+        },
+        { status: 503 },
+        requestId
+      );
     }
 
     // Retrieve profile to confirm plan

@@ -12,7 +12,6 @@
  */
 
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
-import { logAdminAction } from '@/lib/admin/audit';
 
 export const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 export const SUPPORT_SECURITY_EMAIL = 'docunexa.security@gmail.com';
@@ -323,57 +322,52 @@ export async function recordFailedLoginAttempt(
 
 /**
  * Atomically clears failed attempts after a verified successful password login.
+ * Uses atomic PostgreSQL stored procedure record_successful_login.
  * Returns { success: boolean; error?: string } to safely detect reset issues.
+ * In production, fails closed without non-atomic fallback if the RPC is unavailable.
  */
 export async function recordSuccessfulLogin(
   email: string
 ): Promise<{ success: boolean; error?: string }> {
   const cleanEmail = cleanEmailKey(email);
-  const nowIso = new Date().toISOString();
+  if (!cleanEmail) {
+    return { success: false, error: 'A valid email address is required.' };
+  }
 
   try {
     const admin = createAdminSupabaseClient();
 
-    // Try RPC function first
+    // Call atomic PostgreSQL RPC function
     const { error: rpcError } = await (admin as any).rpc('record_successful_login', {
       p_email: cleanEmail,
     });
 
-    if (!rpcError) {
-      testMemoryAttemptsMap.delete(cleanEmail);
-      return { success: true };
-    }
-
-    // Fallback direct update
-    const { error: updateError } = await admin.from('account_login_attempts').upsert({
-      email: cleanEmail,
-      failed_attempts: 0,
-      is_locked: false,
-      locked_at: null,
-      locked_reason: null,
-      unlocked_at: nowIso,
-      updated_at: nowIso,
-    });
-
-    if (updateError) {
-      console.error('[Record Successful Login Error]:', updateError.message);
-      return { success: false, error: updateError.message };
+    if (rpcError) {
+      console.error(
+        '[Production Security Error] Atomic RPC record_successful_login failed:',
+        rpcError.message
+      );
+      return { success: false, error: rpcError.message };
     }
 
     testMemoryAttemptsMap.delete(cleanEmail);
     return { success: true };
   } catch (err: any) {
-    if (!isProduction()) {
-      testMemoryAttemptsMap.delete(cleanEmail);
-      return { success: true };
+    console.error('[Record Successful Login Exception]:', err?.message);
+    if (isProduction()) {
+      return { success: false, error: err?.message || 'Database unavailable' };
     }
-    return { success: false, error: err?.message || 'Failed to reset login attempts' };
+    // Non-production fallback for tests without mock client
+    testMemoryAttemptsMap.delete(cleanEmail);
+    return { success: true };
   }
 }
 
 /**
  * Administratively unlocks a locked account after customer verification.
- * Strictly verifies that BOTH the durable database update and the audit log succeed.
+ * Calls atomic PostgreSQL stored procedure admin_unlock_account which
+ * transactionally updates account_login_attempts AND records the audit log in admin_audit_logs.
+ * Commits ONLY when both succeed; rolls back unlock if audit logging fails.
  */
 export async function adminUnlockAccount(
   email: string,
@@ -381,52 +375,33 @@ export async function adminUnlockAccount(
   reason = 'Admin verified customer identity'
 ): Promise<{ success: boolean; error?: string }> {
   const cleanEmail = cleanEmailKey(email);
-  const nowIso = new Date().toISOString();
 
   if (!cleanEmail) {
     return { success: false, error: 'A valid email address is required for unlock.' };
   }
-  if (!adminUserId) {
+  if (!adminUserId || typeof adminUserId !== 'string' || !adminUserId.trim()) {
     return { success: false, error: 'Administrator user ID is required for authorized unlock.' };
+  }
+
+  // Validate adminUserId format (must be valid UUID for admin_audit_logs foreign key)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(adminUserId.trim())) {
+    return { success: false, error: 'Administrator user ID must be a valid UUID.' };
   }
 
   try {
     const admin = createAdminSupabaseClient();
 
-    // 1. Update database record to unlock
-    const { error: updateError } = await admin.from('account_login_attempts').upsert({
-      email: cleanEmail,
-      failed_attempts: 0,
-      is_locked: false,
-      locked_at: null,
-      locked_reason: null,
-      unlocked_at: nowIso,
-      unlocked_by: adminUserId,
-      updated_at: nowIso,
+    // Call atomic PostgreSQL stored procedure: single transaction with audit log
+    const { error: rpcError } = await (admin as any).rpc('admin_unlock_account', {
+      p_email: cleanEmail,
+      p_admin_user_id: adminUserId.trim(),
+      p_reason: reason,
     });
 
-    if (updateError) {
-      console.error('[Admin Unlock Account DB Error]:', updateError.message);
-      return { success: false, error: `Database unlock failed: ${updateError.message}` };
-    }
-
-    // 2. Append-only audit trail: verify audit operation persistence
-    const auditRes = await logAdminAction({
-      adminUserId,
-      action: 'account_unlocked_by_admin',
-      reason,
-      metadata: {
-        unlockedEmail: cleanEmail,
-        timestamp: nowIso,
-      },
-    });
-
-    if (!auditRes.success) {
-      console.error('[Admin Unlock Account Audit Error]:', auditRes.error);
-      return {
-        success: false,
-        error: `Unlock recorded but audit log failed: ${auditRes.error}`,
-      };
+    if (rpcError) {
+      console.error('[Admin Unlock Account RPC Error]:', rpcError.message);
+      return { success: false, error: rpcError.message };
     }
 
     testMemoryAttemptsMap.delete(cleanEmail);

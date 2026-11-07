@@ -13,23 +13,12 @@
 import fs from 'fs';
 import path from 'path';
 
-// Load .env.local for local testing
-const envPath = path.resolve(process.cwd(), '.env.local');
-if (fs.existsSync(envPath)) {
-  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
-      if (!process.env[key]) {
-        process.env[key] = val;
-      }
-    }
-  }
-}
+// Set test environment flag and ensure no live Supabase production credentials are loaded
+process.env.DOCUNEXA_TEST_ENV = 'true';
+delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+delete process.env.SUPABASE_SECRET_KEY;
+delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 import {
   generateRecoveryCode,
   isValidRecoveryCodeFormat,

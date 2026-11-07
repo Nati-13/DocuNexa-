@@ -126,42 +126,134 @@ async function main() {
     allPassed = false;
   }
 
-  // 5. Verify atomic lockout function existence (Strictly Read-Only)
-  console.log('\n--- 5. ATOMIC POSTGRESQL FUNCTION CHECK (READ-ONLY) ---');
+  // 5. Verify atomic lockout function existence (Strictly Read-Only via Catalog)
+  console.log('\n--- 5. ATOMIC POSTGRESQL FUNCTION CATALOG AUDIT (READ-ONLY) ---');
   let functionsVerified = false;
 
-  // If a direct PostgreSQL connection string is provided, perform read-only catalog query
-  if (process.env.DATABASE_URL || process.env.READONLY_DATABASE_URL) {
+  // Strict requirement: Prefer READONLY_DATABASE_URL only.
+  // Do NOT silently use a general-purpose DATABASE_URL as a supposedly read-only credential.
+  const readonlyConnStr = process.env.READONLY_DATABASE_URL;
+
+  if (readonlyConnStr) {
     try {
-      // Dynamic import to avoid hard dependency if pg driver is not present
+      // Dynamic import to avoid hard dependency if pg driver is not present in all environments
       // @ts-ignore
       const pgModule: any = await import('pg').catch(() => null);
       if (!pgModule?.Client) {
         throw new Error('PostgreSQL driver (pg) is not available in environment');
       }
       const Client = pgModule.Client;
-      const connStr = process.env.READONLY_DATABASE_URL || process.env.DATABASE_URL;
-      const client = new Client({ connectionString: connStr, ssl: { rejectUnauthorized: false } });
+      const client = new Client({
+        connectionString: readonlyConnStr,
+        ssl: {
+          rejectUnauthorized: true,
+          ca: process.env.DATABASE_CA || process.env.SUPABASE_SSL_CERT || undefined,
+        },
+      });
+
       await client.connect();
-      const res = await client.query(
-        "SELECT proname FROM pg_proc WHERE proname = 'record_failed_login_attempt' AND pronamespace = 'public'::regnamespace"
-      );
+
+      // Query pg_proc catalog for exact signature, SECURITY DEFINER, search_path, and privileges
+      const catalogQuery = `
+        SELECT
+          p.proname,
+          pg_get_function_identity_arguments(p.oid) AS identity_args,
+          p.prosecdef AS is_security_definer,
+          p.proconfig AS config,
+          has_function_privilege('public', p.oid, 'execute') AS public_exec,
+          has_function_privilege('anon', p.oid, 'execute') AS anon_exec,
+          has_function_privilege('authenticated', p.oid, 'execute') AS authenticated_exec,
+          has_function_privilege('service_role', p.oid, 'execute') AS service_role_exec
+        FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public'
+          AND p.proname IN ('record_failed_login_attempt', 'record_successful_login', 'admin_unlock_account');
+      `;
+
+      const res = await client.query(catalogQuery);
       await client.end();
 
-      if (res.rows && res.rows.length > 0) {
-        console.log('✓ [PASS] Atomic PostgreSQL function record_failed_login_attempt verified in pg_proc catalog.');
+      const requiredFuncs = [
+        {
+          name: 'record_failed_login_attempt',
+          expectedArgTypes: ['text', 'text', 'integer'],
+        },
+        {
+          name: 'record_successful_login',
+          expectedArgTypes: ['text'],
+        },
+        {
+          name: 'admin_unlock_account',
+          expectedArgTypes: ['text', 'text', 'text'],
+        },
+      ];
+
+      const rows = res.rows || [];
+      let allFuncsValid = true;
+
+      for (const req of requiredFuncs) {
+        const found = rows.find((r: any) => r.proname === req.name);
+        if (!found) {
+          console.log(`⚠️ [NOT VERIFIED] Function ${req.name} not found in PostgreSQL catalog.`);
+          allFuncsValid = false;
+          continue;
+        }
+
+        // Verify arguments
+        const argsStr = (found.identity_args || '').toLowerCase();
+        const argsMatch = req.expectedArgTypes.every((t) => argsStr.includes(t));
+        if (!argsMatch) {
+          console.log(`❌ [FAIL] Function ${req.name} signature mismatch. Found: (${found.identity_args})`);
+          allFuncsValid = false;
+          continue;
+        }
+
+        // Verify SECURITY DEFINER
+        if (!found.is_security_definer) {
+          console.log(`❌ [FAIL] Function ${req.name} is NOT marked SECURITY DEFINER.`);
+          allFuncsValid = false;
+          continue;
+        }
+
+        // Verify fixed search_path = public
+        const configs = found.config || [];
+        const hasFixedPath = configs.some((c: string) => c.toLowerCase().includes('search_path=public'));
+        if (!hasFixedPath) {
+          console.log(`❌ [FAIL] Function ${req.name} lacks fixed search_path = public.`);
+          allFuncsValid = false;
+          continue;
+        }
+
+        // Verify execution privileges: revoked from public/anon/authenticated, granted to service_role
+        if (found.public_exec || found.anon_exec || found.authenticated_exec) {
+          console.log(`❌ [FAIL] Function ${req.name} is accessible to unprivileged roles (public/anon/auth).`);
+          allFuncsValid = false;
+          continue;
+        }
+        if (!found.service_role_exec) {
+          console.log(`❌ [FAIL] Function ${req.name} is NOT executable by service_role.`);
+          allFuncsValid = false;
+          continue;
+        }
+
+        console.log(`✓ [PASS] Function ${req.name}(${found.identity_args}) verified: SECURITY DEFINER, search_path=public, service_role execution only.`);
+      }
+
+      if (allFuncsValid && rows.length >= 3) {
         functionsVerified = true;
-      } else {
-        console.log('⚠️ [NOT VERIFIED] Function record_failed_login_attempt not found in pg_proc catalog.');
       }
     } catch (pgErr: any) {
       console.log('⚠️ [NOT VERIFIED] Read-only catalog query failed:', pgErr.message);
     }
   } else {
-    // Zero-write environment: Do not execute write probe or simulated failure record
-    console.log('⚠️ [NOT VERIFIED] Atomic RPC functions cannot be verified via read-only catalog query without DATABASE_URL.');
+    // READONLY_DATABASE_URL is not set
+    if (process.env.DATABASE_URL) {
+      console.log('⚠️ [WARNING] General-purpose DATABASE_URL is set, but READONLY_DATABASE_URL is strictly required.');
+      console.log('             General-purpose connection strings will NOT be silently used as read-only credentials.');
+    }
+    console.log('⚠️ [NOT VERIFIED] Atomic RPC functions cannot be catalog-verified without READONLY_DATABASE_URL.');
     console.log('                 In accordance with strict release rules, zero write probes or test records were executed.');
-    console.log('                 Status: NOT VERIFIED (pending migration application or catalog connection).');
+    console.log('                 Status: NOT VERIFIED (pending migration application or READONLY_DATABASE_URL configuration).');
   }
 
   if (!functionsVerified) {
