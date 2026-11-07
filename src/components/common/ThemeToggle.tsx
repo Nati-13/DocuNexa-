@@ -61,15 +61,15 @@ export function ThemeToggle({ className = '', showLabel = false }: ThemeTogglePr
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode (paper)' : 'Switch to dark mode (espresso)'}
       title={isDark ? 'Switch to light mode (paper)' : 'Switch to dark mode (espresso)'}
-      className={`inline-flex items-center justify-center gap-2 p-2 rounded-md border border-border bg-surface text-ink hover:border-ink/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer ${className}`}
+      className={`inline-flex items-center justify-center gap-2 p-2 rounded-md border border-border bg-paper hover:bg-paper/80 dark:bg-surface dark:hover:bg-paper text-ink hover:border-ink/40 dark:hover:border-border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 active:scale-95 cursor-pointer shadow-xs ${className}`}
     >
       {isDark ? (
-        <Sun size={16} className="text-accent" aria-hidden="true" />
+        <Sun size={17} className="text-amber-400 hover:text-amber-300 transition-colors shrink-0" aria-hidden="true" />
       ) : (
-        <Moon size={16} className="text-brand" aria-hidden="true" />
+        <Moon size={17} className="text-brand hover:text-brand/80 transition-colors shrink-0" aria-hidden="true" />
       )}
       {showLabel && (
-        <span className="text-xs font-medium">
+        <span className="text-xs font-semibold text-ink">
           {isDark ? 'Light Mode' : 'Dark Mode'}
         </span>
       )}

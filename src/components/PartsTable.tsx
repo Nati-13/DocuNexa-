@@ -511,7 +511,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
-            <tr className="bg-paper border-b border-border text-muted font-semibold uppercase tracking-wider text-[11px]">
+            <tr className="bg-paper border-b border-border text-ink/80 dark:text-ink/80 font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-3 px-3 w-10 text-center">#</th>
               <th className="py-3 px-3 min-w-[180px]">Section Title</th>
               <th className="py-3 px-3 w-24 text-center">Start</th>
@@ -532,10 +532,10 @@ export const PartsTable: React.FC<PartsTableProps> = ({
               return (
                 <tr
                   key={part.id}
-                  className="hover:bg-paper/50 transition-colors group"
+                  className="hover:bg-paper/80 dark:hover:bg-paper/60 focus-within:bg-paper/90 dark:focus-within:bg-paper/50 transition-colors group"
                 >
                   {/* Number index */}
-                  <td className="py-2.5 px-3 text-center text-muted font-medium font-mono text-xs">
+                  <td className="py-2.5 px-3 w-10 text-center text-ink font-semibold font-mono text-xs">
                     {index + 1}
                   </td>
 
@@ -556,7 +556,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                         });
                       }}
                       placeholder="Section Title"
-                      className="w-full px-2.5 py-1.5 border border-transparent hover:border-border focus:border-brand rounded-md bg-transparent focus:bg-surface text-ink font-medium focus:outline-hidden transition-all text-xs sm:text-sm"
+                      className="w-full px-2.5 py-1.5 border border-transparent hover:border-border focus:border-brand rounded-md bg-transparent focus:bg-surface text-ink placeholder:text-muted font-medium focus:outline-hidden transition-all text-xs sm:text-sm"
                     />
                   </td>
 
@@ -572,7 +572,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                           startPage: parseInt(e.target.value, 10) || 1,
                         })
                       }
-                      className="w-18 px-2 py-1.5 text-center font-mono border border-border rounded-md text-ink focus:outline-hidden focus:border-brand bg-paper/60 focus:bg-surface text-xs sm:text-sm"
+                      className="w-18 px-2 py-1.5 text-center font-mono border border-border rounded-md text-ink font-medium focus:outline-hidden focus:border-brand bg-paper/60 hover:bg-paper focus:bg-surface text-xs sm:text-sm"
                     />
                   </td>
 
@@ -588,7 +588,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                           endPage: parseInt(e.target.value, 10) || 1,
                         })
                       }
-                      className="w-18 px-2 py-1.5 text-center font-mono border border-border rounded-md text-ink focus:outline-hidden focus:border-brand bg-paper/60 focus:bg-surface text-xs sm:text-sm"
+                      className="w-18 px-2 py-1.5 text-center font-mono border border-border rounded-md text-ink font-medium focus:outline-hidden focus:border-brand bg-paper/60 hover:bg-paper focus:bg-surface text-xs sm:text-sm"
                     />
                   </td>
 
@@ -615,7 +615,7 @@ export const PartsTable: React.FC<PartsTableProps> = ({
                             filename: sanitizeFilename(e.target.value),
                           })
                         }
-                        className="w-full px-2.5 py-1.5 font-mono text-xs border border-border rounded-md bg-paper/40 hover:border-border focus:border-brand focus:bg-surface text-ink focus:outline-hidden transition-all"
+                        className="w-full px-2.5 py-1.5 font-mono text-xs border border-border rounded-md bg-paper/40 hover:bg-paper focus:border-brand focus:bg-surface text-ink placeholder:text-muted focus:outline-hidden transition-all"
                       />
                     </div>
                   </td>

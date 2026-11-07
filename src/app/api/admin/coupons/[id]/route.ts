@@ -135,3 +135,103 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { profile: adminProfile } = await requireAdmin();
+    const { id: couponId } = await params;
+
+    if (!couponId) {
+      return NextResponse.json({ error: 'Coupon ID is required.' }, { status: 400 });
+    }
+
+    const admin = createAdminSupabaseClient();
+    const { data: existingCoupon, error: fetchErr } = await admin
+      .from('coupons')
+      .select('*')
+      .eq('id', couponId)
+      .single();
+
+    if (fetchErr || !existingCoupon) {
+      return NextResponse.json({ error: 'Coupon not found.' }, { status: 404 });
+    }
+
+    // Integrity Rule: Coupon must have zero redemptions
+    if ((existingCoupon.redemption_count || 0) > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete coupon "${existingCoupon.code}" because it has already been redeemed ${existingCoupon.redemption_count} time(s). Redeemed coupons must be preserved for accounting history and audit consistency.`,
+          code: 'COUPON_ALREADY_REDEEMED',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Integrity Rule: Verify no dependent records in coupon_redemptions
+    const { count: redemptionsCount, error: countErr } = await admin
+      .from('coupon_redemptions')
+      .select('*', { count: 'exact', head: true })
+      .eq('coupon_id', couponId);
+
+    if (countErr) {
+      return NextResponse.json(
+        { error: 'Failed to verify coupon redemption history.' },
+        { status: 500 }
+      );
+    }
+
+    if ((redemptionsCount || 0) > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete coupon "${existingCoupon.code}" because ${redemptionsCount} dependent redemption record(s) exist. Redeemed coupons cannot be permanently deleted.`,
+          code: 'COUPON_ALREADY_REDEEMED',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Safe to permanently delete
+    const { error: deleteErr } = await admin
+      .from('coupons')
+      .delete()
+      .eq('id', couponId);
+
+    if (deleteErr) {
+      return NextResponse.json(
+        { error: deleteErr.message || 'Failed to delete coupon.' },
+        { status: 500 }
+      );
+    }
+
+    // Audit log
+    await logAdminAction({
+      adminUserId: adminProfile.id,
+      action: 'coupon_deleted',
+      targetCouponId: couponId,
+      metadata: {
+        code: existingCoupon.code,
+        discountType: existingCoupon.discount_type,
+        discountValue: existingCoupon.discount_value,
+        adminEmail: adminProfile.email,
+        deletedAt: new Date().toISOString(),
+      },
+      reason: `Permanently deleted unredeemed coupon ${existingCoupon.code}`,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Coupon "${existingCoupon.code}" was permanently deleted.`,
+      deletedCouponId: couponId,
+      code: existingCoupon.code,
+    });
+  } catch (err: any) {
+    const s = err.statusCode || 500;
+    return NextResponse.json(
+      { error: err.message || 'Error deleting coupon' },
+      { status: s }
+    );
+  }
+}

@@ -8,6 +8,7 @@ export interface AuditLogParams {
     | 'coupon_updated'
     | 'coupon_deactivated'
     | 'coupon_reactivated'
+    | 'coupon_deleted'
     | 'manual_grant_ad_free'
     | 'manual_revoke_ad_free'
     | 'payment_reviewed'

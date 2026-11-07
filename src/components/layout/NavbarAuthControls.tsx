@@ -44,13 +44,13 @@ export const NavbarAuthControls: React.FC = () => {
       <div className="hidden sm:flex items-center gap-1.5">
         <Link
           href="/login"
-          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-ink hover:text-brand hover:bg-slate-100 dark:hover:bg-surface transition-colors"
+          className="px-2.5 py-1.5 rounded-md text-xs font-semibold text-ink hover:text-brand hover:bg-paper transition-colors"
         >
           Log in
         </Link>
         <Link
           href="/signup"
-          className="px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-100 hover:bg-border dark:hover:bg-slate-700 text-ink border border-border dark:border-slate-700/60 transition-colors"
+          className="px-3 py-1.5 rounded-md text-xs font-semibold bg-brand hover:bg-brand/90 text-brand-fg transition-all shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 active:scale-95"
         >
           Sign up
         </Link>
@@ -64,7 +64,7 @@ export const NavbarAuthControls: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-100/90 dark:bg-slate-800/90 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-border dark:border-slate-700/70 text-xs font-semibold transition-all cursor-pointer"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-paper hover:bg-surface border border-border text-xs font-semibold transition-all cursor-pointer"
         aria-label="Account menu"
       >
         <div className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px] font-bold">
@@ -106,7 +106,7 @@ export const NavbarAuthControls: React.FC = () => {
             <Link
               href="/account"
               onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-ink hover:bg-slate-100 dark:hover:bg-surface font-medium transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-ink hover:bg-paper font-medium transition-colors"
             >
               <User size={14} className="text-muted" />
               <span>Account & Plan</span>

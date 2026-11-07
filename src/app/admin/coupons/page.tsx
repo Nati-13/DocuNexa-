@@ -14,6 +14,7 @@ import {
   Power,
   Edit2,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 
 export default function AdminCouponsPage() {
@@ -21,6 +22,20 @@ export default function AdminCouponsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Deletion modal states
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    coupon: any | null;
+    loading: boolean;
+    error: string | null;
+  }>({ open: false, coupon: null, loading: false, error: null });
+
+  const [cannotDeleteModal, setCannotDeleteModal] = useState<{
+    open: boolean;
+    coupon: any | null;
+  }>({ open: false, coupon: null });
 
   // Modal State for New Coupon
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -131,6 +146,45 @@ export default function AdminCouponsPage() {
     }
   };
 
+  const handleDeleteClick = (coupon: any) => {
+    setNotification(null);
+    if ((coupon.redemption_count || 0) > 0) {
+      setCannotDeleteModal({ open: true, coupon });
+    } else {
+      setDeleteModal({ open: true, coupon, loading: false, error: null });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.coupon) return;
+    const couponToDelete = deleteModal.coupon;
+    setDeleteModal((prev) => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const res = await fetch(`/api/admin/coupons/${couponToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete coupon');
+      }
+
+      setDeleteModal({ open: false, coupon: null, loading: false, error: null });
+      setNotification({
+        type: 'success',
+        message: `Coupon "${couponToDelete.code}" was permanently deleted.`,
+      });
+      fetchCoupons();
+    } catch (err: any) {
+      setDeleteModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: err.message || 'An error occurred while deleting coupon.',
+      }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Title & Action */}
@@ -154,6 +208,33 @@ export default function AdminCouponsPage() {
           <Plus size={15} /> Create Coupon
         </button>
       </div>
+
+      {/* Notification Banner */}
+      {notification && (
+        <div
+          className={`p-3.5 rounded-md border flex items-center justify-between gap-3 text-xs animate-in fade-in ${
+            notification.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+              : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {notification.type === 'success' ? (
+              <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+            ) : (
+              <AlertTriangle size={16} className="text-rose-600 dark:text-rose-400 shrink-0" />
+            )}
+            <span>{notification.message}</span>
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="p-1 text-muted hover:text-ink rounded-md transition-colors cursor-pointer"
+            aria-label="Dismiss notification"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -261,22 +342,42 @@ export default function AdminCouponsPage() {
                         {c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button
-                          disabled={actionLoadingId === c.id}
-                          onClick={() => handleToggleActive(c)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
-                            c.active
-                              ? 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 hover:bg-rose-100'
-                              : 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900 hover:bg-emerald-100'
-                          }`}
-                        >
-                          {actionLoadingId === c.id ? (
-                            <Loader2 size={11} className="animate-spin" />
-                          ) : (
-                            <Power size={11} />
-                          )}
-                          {c.active ? 'Deactivate' : 'Reactivate'}
-                        </button>
+                        <div className="inline-flex items-center gap-1.5 justify-end">
+                          <button
+                            disabled={actionLoadingId === c.id}
+                            onClick={() => handleToggleActive(c)}
+                            title={c.active ? 'Deactivate coupon' : 'Reactivate coupon'}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+                              c.active
+                                ? 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-900/60 hover:bg-rose-100'
+                                : 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900/60 hover:bg-emerald-100'
+                            }`}
+                          >
+                            {actionLoadingId === c.id ? (
+                              <Loader2 size={11} className="animate-spin" />
+                            ) : (
+                              <Power size={11} />
+                            )}
+                            {c.active ? 'Deactivate' : 'Reactivate'}
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteClick(c)}
+                            title={
+                              (c.redemption_count || 0) > 0
+                                ? `Coupon has been redeemed ${c.redemption_count} time(s) and cannot be deleted.`
+                                : `Delete coupon ${c.code}`
+                            }
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+                              (c.redemption_count || 0) > 0
+                                ? 'text-muted bg-paper/60 border-border hover:bg-paper'
+                                : 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 dark:hover:bg-rose-900/50'
+                            }`}
+                          >
+                            <Trash2 size={11} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -425,7 +526,7 @@ export default function AdminCouponsPage() {
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-surface font-medium"
+                  className="px-4 py-2 rounded-md text-muted hover:bg-slate-100 dark:hover:bg-surface font-medium cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -439,6 +540,145 @@ export default function AdminCouponsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Coupon Confirmation Modal */}
+      {deleteModal.open && deleteModal.coupon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 animate-fade-in">
+          <div className="relative w-full max-w-md bg-surface border border-border rounded-md p-6 shadow-subtle space-y-4">
+            <button
+              onClick={() => setDeleteModal({ open: false, coupon: null, loading: false, error: null })}
+              disabled={deleteModal.loading}
+              className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-full cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0">
+                <Trash2 size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-ink">Delete Coupon</h3>
+                <p className="text-xs text-muted">This action permanently deletes the coupon.</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-paper rounded-md border border-border text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted">Coupon Code:</span>
+                <span className="font-mono font-bold text-ink">{deleteModal.coupon.code}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted">Discount:</span>
+                <span className="font-semibold text-ink">
+                  {deleteModal.coupon.discount_type === 'percent'
+                    ? `${Number(deleteModal.coupon.discount_value).toFixed(0)}%`
+                    : `${Number(deleteModal.coupon.discount_value).toFixed(2)} USDT`}{' '}
+                  off
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted">Redemptions:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  0 (Eligible for deletion)
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted leading-relaxed">
+              Are you sure you want to permanently delete coupon{' '}
+              <strong className="text-ink font-mono">{deleteModal.coupon.code}</strong>? Because this
+              coupon has never been redeemed, it can be safely removed. This action cannot be undone.
+            </p>
+
+            {deleteModal.error && (
+              <div className="p-3 rounded-md bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs flex items-center gap-2">
+                <AlertTriangle size={14} className="shrink-0" />
+                <span>{deleteModal.error}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                disabled={deleteModal.loading}
+                onClick={() => setDeleteModal({ open: false, coupon: null, loading: false, error: null })}
+                className="px-4 py-2 rounded-md bg-surface border border-border hover:bg-paper text-ink font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteModal.loading}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {deleteModal.loading && <Loader2 size={13} className="animate-spin" />}
+                <span>{deleteModal.loading ? 'Deleting...' : 'Permanently Delete'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cannot Delete Redeemed Coupon Modal */}
+      {cannotDeleteModal.open && cannotDeleteModal.coupon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 animate-fade-in">
+          <div className="relative w-full max-w-md bg-surface border border-border rounded-md p-6 shadow-subtle space-y-4">
+            <button
+              onClick={() => setCannotDeleteModal({ open: false, coupon: null })}
+              className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-full cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-ink">Cannot Delete Redeemed Coupon</h3>
+                <p className="text-xs text-muted">Integrity &amp; audit protection rule</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-paper rounded-md border border-border text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted">Coupon Code:</span>
+                <span className="font-mono font-bold text-ink">{cannotDeleteModal.coupon.code}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted">Total Redemptions:</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400">
+                  {cannotDeleteModal.coupon.redemption_count} redeemed
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted leading-relaxed">
+              Coupon <strong className="text-ink font-mono">{cannotDeleteModal.coupon.code}</strong> has already
+              been redeemed by users. To preserve payment audit records, user redemption history, and financial
+              consistency, redeemed coupons cannot be permanently deleted.
+            </p>
+
+            <p className="text-xs text-muted leading-relaxed">
+              To prevent further redemptions, please use the <strong>Deactivate</strong> button instead.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCannotDeleteModal({ open: false, coupon: null })}
+                className="px-4 py-2 rounded-md bg-brand text-brand-fg hover:bg-brand/90 font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Understood
+              </button>
+            </div>
           </div>
         </div>
       )}
