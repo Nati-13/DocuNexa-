@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       if (lower.includes('invalid login credentials') || lower.includes('invalid grant') || lower.includes('user not found')) {
         const failureResult = await recordFailedLoginAttempt(cleanEmail, ip);
 
-        if (failureResult.persistenceFailed && (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production')) {
+        if ((failureResult.unavailable || failureResult.persistenceFailed) && (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production')) {
           return secureJsonResponse(
             {
               error: 'Authentication security service is temporarily unavailable. Please try again shortly.',
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
 
         return secureJsonResponse(
           {
-            error: `Invalid email or password. Attempt ${failureResult.failedAttempts} of 5 before account lockout.`,
+            error: 'Invalid email or password. Please verify your credentials and try again.',
             remainingAttempts: failureResult.remainingAttempts,
           },
           { status: 401 },

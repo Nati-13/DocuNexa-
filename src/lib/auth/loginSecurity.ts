@@ -145,6 +145,21 @@ export async function checkAccountLockoutStatus(email: string): Promise<LockoutC
       };
     }
 
+    // Non-production fallback when running tests without DB records
+    if (!isProduction()) {
+      const mem = testMemoryAttemptsMap.get(cleanEmail);
+      if (mem) {
+        const isLocked = Boolean(mem.isLocked || mem.failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS);
+        return {
+          isLocked,
+          failedAttempts: mem.failedAttempts,
+          remainingAttempts: Math.max(0, MAX_FAILED_LOGIN_ATTEMPTS - mem.failedAttempts),
+          lockedAt: mem.lockedAt,
+          lockedReason: mem.lockedReason,
+        };
+      }
+    }
+
     // No record exists in database: 0 failed attempts
     return { isLocked: false, failedAttempts: 0, remainingAttempts: MAX_FAILED_LOGIN_ATTEMPTS };
   } catch (err: any) {
@@ -193,7 +208,7 @@ export async function recordFailedLoginAttempt(
     try {
       const admin = createAdminSupabaseClient();
 
-      // 1. Try atomic PostgreSQL RPC function first
+      // 1. In production, use the atomic PostgreSQL RPC function strictly
       const { data: rpcData, error: rpcError } = await (admin as any).rpc(
         'record_failed_login_attempt',
         {
@@ -228,53 +243,28 @@ export async function recordFailedLoginAttempt(
         }
       }
 
-      // 2. Durable direct upsert fallback if RPC is not yet registered or supported
-      const { data: existing, error: selectError } = await admin
-        .from('account_login_attempts')
-        .select('failed_attempts, is_locked')
-        .eq('email', cleanEmail)
-        .maybeSingle();
-
-      if (selectError && isProduction()) {
+      // If in production, fail closed immediately if RPC is missing, unavailable, or failed.
+      // Under no circumstances do we fall back to a non-atomic SELECT-then-upsert sequence in production!
+      if (isProduction()) {
+        console.error(
+          '[Production Security Error] Atomic RPC record_failed_login_attempt failed or unavailable:',
+          rpcError?.message || 'No data returned from atomic RPC'
+        );
         return {
           isLocked: true,
           failedAttempts: MAX_FAILED_LOGIN_ATTEMPTS,
           remainingAttempts: 0,
           persistenceFailed: true,
           unavailable: true,
-          error: selectError.message,
+          error: rpcError?.message || 'Atomic security service unavailable',
         };
       }
 
-      const currentAttempts = existing?.failed_attempts ? Number(existing.failed_attempts) : 0;
-      const newFailedCount = currentAttempts + 1;
+      // Non-production test fallback only (isolated to development/test harnesses)
+      const current = testMemoryAttemptsMap.get(cleanEmail);
+      const newFailedCount = (current?.failedAttempts || 0) + 1;
       const isLocked = newFailedCount >= MAX_FAILED_LOGIN_ATTEMPTS;
       const lockedAt = isLocked ? nowIso : undefined;
-
-      const { error: upsertError } = await admin.from('account_login_attempts').upsert({
-        email: cleanEmail,
-        failed_attempts: newFailedCount,
-        last_failed_at: nowIso,
-        is_locked: isLocked,
-        locked_at: lockedAt || null,
-        locked_reason: isLocked ? lockedReason : null,
-        last_ip: ip,
-        updated_at: nowIso,
-      });
-
-      if (upsertError) {
-        console.error('[Failed Login Attempt Persistence Error]:', upsertError.message);
-        if (isProduction()) {
-          return {
-            isLocked: true,
-            failedAttempts: newFailedCount,
-            remainingAttempts: 0,
-            persistenceFailed: true,
-            unavailable: true,
-            error: upsertError.message,
-          };
-        }
-      }
 
       testMemoryAttemptsMap.set(cleanEmail, {
         failedAttempts: newFailedCount,

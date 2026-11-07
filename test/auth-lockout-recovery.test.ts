@@ -219,6 +219,19 @@ async function runLockoutTests() {
     assert('adminUnlockAccount executed with audited integrity', auditFailTest.success === true);
   }
 
+  // Production RPC failure fails closed without non-atomic fallback
+  const origNodeEnv = process.env.NODE_ENV;
+  try {
+    (process.env as any).NODE_ENV = 'production';
+    const prodFailClosed = await recordFailedLoginAttempt('rpc_fail_test@example.com', '127.0.0.1');
+    assert('Production recordFailedLoginAttempt fails closed when RPC is unavailable', prodFailClosed.isLocked === true);
+    assert('Production recordFailedLoginAttempt flags persistenceFailed', prodFailClosed.persistenceFailed === true);
+    assert('Production recordFailedLoginAttempt flags unavailable', prodFailClosed.unavailable === true);
+    assert('Production recordFailedLoginAttempt gives 0 remaining attempts', prodFailClosed.remainingAttempts === 0);
+  } finally {
+    (process.env as any).NODE_ENV = origNodeEnv;
+  }
+
   // --- 8. SECURITY & PRIVACY INVARIANTS ---
   console.log('\n--- 8. SECURITY & PRIVACY INVARIANTS ---');
 
@@ -227,6 +240,33 @@ async function runLockoutTests() {
   assert(
     'loginSecurity does NOT export or store user passwords',
     !securityModuleKeys.some((k) => k.toLowerCase().includes('password') && !k.toLowerCase().includes('reset'))
+  );
+
+  // --- 9. VERIFICATION SCRIPT READ-ONLY ZERO-WRITE INVARIANT ---
+  console.log('\n--- 9. VERIFICATION SCRIPT ZERO-WRITE INVARIANT ---');
+
+  const verifyScriptPath = path.resolve(process.cwd(), 'scripts', 'verify-production-migrations.ts');
+  const verifyScriptContent = fs.readFileSync(verifyScriptPath, 'utf8');
+
+  assert(
+    'Verification script contains NO database insert operations',
+    !verifyScriptContent.includes('.insert(')
+  );
+  assert(
+    'Verification script contains NO database update operations',
+    !verifyScriptContent.includes('.update(')
+  );
+  assert(
+    'Verification script contains NO database delete operations',
+    !verifyScriptContent.includes('.delete(')
+  );
+  assert(
+    'Verification script contains NO database upsert operations',
+    !verifyScriptContent.includes('.upsert(')
+  );
+  assert(
+    'Verification script contains NO record_failed_login_attempt RPC probes',
+    !verifyScriptContent.includes("rpc('record_failed_login_attempt'")
   );
 
   console.log('\n================================================================');

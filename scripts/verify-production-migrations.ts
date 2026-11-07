@@ -126,38 +126,55 @@ async function main() {
     allPassed = false;
   }
 
-  // 5. Verify atomic lockout function existence
-  console.log('\n--- 5. ATOMIC POSTGRESQL FUNCTION CHECK ---');
-  try {
-    // Check if atomic RPC function exists in PostgreSQL
-    const { data: rpcTest, error: rpcErr } = await (supabase as any).rpc('record_failed_login_attempt', {
-      p_email: 'read-only-signature-probe@docunexa.internal',
-      p_ip: '127.0.0.1',
-      p_max_attempts: 999999, // harmless probe that will never lock
-    });
+  // 5. Verify atomic lockout function existence (Strictly Read-Only)
+  console.log('\n--- 5. ATOMIC POSTGRESQL FUNCTION CHECK (READ-ONLY) ---');
+  let functionsVerified = false;
 
-    if (rpcErr) {
-      if (rpcErr.message.includes('function') && rpcErr.message.includes('does not exist')) {
-        console.log('ℹ [INFO] Migration 20261106200000_atomic_account_lockout.sql pending execution in Supabase Dashboard.');
-        console.log('        Durable direct-upsert fallback is currently active.');
-      } else {
-        console.log('ℹ [INFO] RPC function status:', rpcErr.message);
+  // If a direct PostgreSQL connection string is provided, perform read-only catalog query
+  if (process.env.DATABASE_URL || process.env.READONLY_DATABASE_URL) {
+    try {
+      // Dynamic import to avoid hard dependency if pg driver is not present
+      // @ts-ignore
+      const pgModule: any = await import('pg').catch(() => null);
+      if (!pgModule?.Client) {
+        throw new Error('PostgreSQL driver (pg) is not available in environment');
       }
-    } else {
-      console.log('✓ [PASS] Atomic PostgreSQL RPC function record_failed_login_attempt is active in database.');
-      // Clean probe record
-      await supabase.from('account_login_attempts').delete().eq('email', 'read-only-signature-probe@docunexa.internal');
+      const Client = pgModule.Client;
+      const connStr = process.env.READONLY_DATABASE_URL || process.env.DATABASE_URL;
+      const client = new Client({ connectionString: connStr, ssl: { rejectUnauthorized: false } });
+      await client.connect();
+      const res = await client.query(
+        "SELECT proname FROM pg_proc WHERE proname = 'record_failed_login_attempt' AND pronamespace = 'public'::regnamespace"
+      );
+      await client.end();
+
+      if (res.rows && res.rows.length > 0) {
+        console.log('✓ [PASS] Atomic PostgreSQL function record_failed_login_attempt verified in pg_proc catalog.');
+        functionsVerified = true;
+      } else {
+        console.log('⚠️ [NOT VERIFIED] Function record_failed_login_attempt not found in pg_proc catalog.');
+      }
+    } catch (pgErr: any) {
+      console.log('⚠️ [NOT VERIFIED] Read-only catalog query failed:', pgErr.message);
     }
-  } catch (err: any) {
-    console.log('ℹ [INFO] RPC probe exception:', err.message);
+  } else {
+    // Zero-write environment: Do not execute write probe or simulated failure record
+    console.log('⚠️ [NOT VERIFIED] Atomic RPC functions cannot be verified via read-only catalog query without DATABASE_URL.');
+    console.log('                 In accordance with strict release rules, zero write probes or test records were executed.');
+    console.log('                 Status: NOT VERIFIED (pending migration application or catalog connection).');
+  }
+
+  if (!functionsVerified) {
+    allPassed = false;
   }
 
   console.log('\n================================================================');
   if (allPassed) {
     console.log(' RESULT: PRODUCTION DATABASE READ-ONLY VERIFICATION 100% PASS! ');
-    console.log(' Strictly read-only audit: zero test orders or customer lockouts generated.');
+    console.log(' Strictly read-only audit: zero test orders, probes, or customer lockouts generated.');
   } else {
-    console.log(' RESULT: ISSUES DETECTED IN PRODUCTION DATABASE SCHEMA.');
+    console.log(' RESULT: NOT VERIFIED — Pending production migration or read-only catalog connection.');
+    console.log(' Strictly read-only: Zero writes, updates, or deletions were performed.');
   }
   console.log('================================================================\n');
 
