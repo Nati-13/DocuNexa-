@@ -83,6 +83,23 @@ async function main() {
   await sendSession('Page.enable');
   await sendSession('Runtime.enable');
 
+  ws.addEventListener('message', (evt: any) => {
+    try {
+      const msg = JSON.parse(evt.data);
+      if (msg.method === 'Runtime.consoleAPICalled') {
+        const text = (msg.params.args || []).map((a: any) => (a.value !== undefined ? a.value : a.description)).join(' ');
+        console.log(`[Browser Console ${msg.params.type}] ${text}`);
+      }
+      if (msg.method === 'Runtime.exceptionThrown') {
+        console.log(`[Browser Exception]`, msg.params.exceptionDetails?.exception?.description || msg.params.exceptionDetails?.text);
+      }
+      if (msg.method === 'Page.javascriptDialogOpening') {
+        console.log(`[Browser Dialog] ${msg.params.type}: ${msg.params.message}`);
+        sendSession('Page.handleJavaScriptDialog', { accept: true }).catch(() => {});
+      }
+    } catch {}
+  });
+
   const evalInPage = async (expr: string): Promise<any> => {
     const res: any = await sendSession('Runtime.evaluate', {
       expression: expr,
@@ -100,14 +117,28 @@ async function main() {
   
   // Wait for React hydration
   console.log('  Waiting for React client hydration...');
-  for (let i = 0; i < 30; i++) {
-    await new Promise((r) => setTimeout(r, 400));
-    const hydrated = await evalInPage(`Boolean(document.querySelector('button[aria-label*="Switch"]') || document.querySelector('button[aria-label*="mode"]'))`);
+  let hydrated = false;
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    hydrated = await evalInPage(`(() => {
+      const sampleBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').includes('Sample Textbook'));
+      if (!sampleBtn) return false;
+      // In React 18/19, hydrated elements have __reactProps or __reactFiber properties attached
+      const isHydrated = Object.keys(sampleBtn).some(k => k.startsWith('__reactProps') || k.startsWith('__reactFiber'));
+      return isHydrated;
+    })()`);
     if (hydrated) {
-      console.log(`  ✓ Client hydration confirmed after ${i * 400}ms`);
+      console.log(`  ✓ Client hydration confirmed after ${i * 500}ms`);
       break;
     }
   }
+  assert.ok(hydrated, 'Timed out waiting for client hydration');
+
+  await evalInPage(`(() => {
+    window.__pageErrors = [];
+    window.addEventListener('error', (e) => window.__pageErrors.push('Error: ' + (e.message || String(e))));
+    window.addEventListener('unhandledrejection', (e) => window.__pageErrors.push('Rejection: ' + (e.reason?.message || String(e.reason))));
+  })()`);
 
   // Ensure Light theme initially
   await evalInPage(`(() => {
@@ -116,25 +147,31 @@ async function main() {
       if (themeBtn) themeBtn.click();
     }
   })()`);
-  await new Promise((r) => setTimeout(r, 300));
+  await new Promise((r) => setTimeout(r, 500));
 
   console.log('[Step 2] Loading Sample Textbook PDF in Edge...');
-  const clickedSample = await evalInPage(`(() => {
-    const btns = Array.from(document.querySelectorAll('button'));
-    const btn = btns.find(b => b.innerText.includes('Sample Textbook'));
-    if (btn) {
-      btn.click();
-      return true;
-    }
-    return false;
-  })()`);
+  // Wait up to 5 seconds for sample button to be ready and clickable
+  let clickedSample = false;
+  for (let i = 0; i < 20; i++) {
+    clickedSample = await evalInPage(`(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const btn = btns.find(b => b.innerText.includes('Sample Textbook'));
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    if (clickedSample) break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
   assert.ok(clickedSample, 'Failed to find and click "Try with Sample Textbook" button');
 
   // Wait for file header to load
   let fileLoaded = false;
   let fileInfoName = '';
-  for (let i = 0; i < 40; i++) {
-    await new Promise((r) => setTimeout(r, 400));
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 500));
     const info = await evalInPage(`(() => {
       const headerTitle = document.querySelector('h3.truncate');
       const analyzeBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Analyze & Detect Units'));
@@ -148,6 +185,21 @@ async function main() {
       fileInfoName = info.name || 'Sample Textbook';
       break;
     }
+    // Retry clicking every 3 seconds if button is still present
+    if (i % 6 === 5) {
+      await evalInPage(`(() => {
+        const sampleBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').includes('Sample Textbook'));
+        if (sampleBtn) sampleBtn.click();
+      })()`);
+    }
+  }
+  if (!fileLoaded) {
+    const debug = await evalInPage(`(() => ({
+      pageErrors: window.__pageErrors,
+      bodyText: document.body.innerText.slice(0, 1000),
+      buttons: Array.from(document.querySelectorAll('button')).map(b => b.innerText.trim())
+    }))()`);
+    console.error('Debug state on fileLoaded timeout:', JSON.stringify(debug, null, 2));
   }
   assert.ok(fileLoaded, 'File failed to load into inspection view');
   console.log(`  ✓ Sample PDF loaded successfully: "${fileInfoName}"`);

@@ -159,7 +159,7 @@ export default async function RootLayout({
           <BackToTop />
           <FloatingSupportButton />
           <Footer />
-          <MonetagZone />
+          <MonetagZone zoneId="12217455" />
           <MonetagMainZone
             src="https://quge5.com/88/tag.min.js"
             data-zone="289364"

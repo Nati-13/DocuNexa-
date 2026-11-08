@@ -65,6 +65,7 @@ export default function PdfUnitCutterPage() {
 
   // Analysis & Parts State
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [hasAnalyzed, setHasAnalyzed] = useState<boolean>(false);
   const [analysisProgress, setAnalysisProgress] = useState<{ current: number; total: number }>({
     current: 0,
     total: 0,
@@ -182,6 +183,7 @@ export default function PdfUnitCutterPage() {
         avgCharsPerPage: 0,
       });
 
+      setHasAnalyzed(false);
       setParts([]);
       setOriginalParts([]);
       setHasFrontMatter(false);
@@ -209,6 +211,7 @@ export default function PdfUnitCutterPage() {
   const handleRemoveFile = () => {
     setFileInfo(null);
     setFileBuffer(null);
+    setHasAnalyzed(false);
     setParts([]);
     setOriginalParts([]);
     setHasFrontMatter(false);
@@ -272,6 +275,7 @@ export default function PdfUnitCutterPage() {
       });
       setIsBoundariesConfirmed(false);
       setSplitMode('auto');
+      setHasAnalyzed(true);
     } catch (err: any) {
       console.error('Analysis error:', err);
       alert(`Analysis encountered an error: ${err.message || 'Unable to parse PDF text.'}`);
@@ -986,6 +990,28 @@ export default function PdfUnitCutterPage() {
                     }}
                   />
                 </div>
+              </div>
+            )}
+
+            {/* Zero Units Detected Fallback & Recovery Banner */}
+            {hasAnalyzed && parts.length === 0 && !isAnalyzing && !fileInfo.isScanned && (
+              <div className="p-4 rounded-md bg-paper border border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-brand shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold text-ink block">No Top-Level Units or Chapters Automatically Detected</span>
+                    <p className="text-muted mt-0.5">
+                      This document does not match standard top-level Unit/Chapter heading conventions. You can split by custom page ranges using Manual Split mode.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleManualMode}
+                  className="px-3.5 py-2 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold transition-colors cursor-pointer shrink-0"
+                >
+                  Switch to Manual Split
+                </button>
               </div>
             )}
 

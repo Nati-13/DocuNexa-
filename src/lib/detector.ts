@@ -338,7 +338,8 @@ export function isGenuineHeading(
   lineIndex = 0,
   totalLinesOnPage = 1
 ): RawHeadingMatch | null {
-  const trimmed = line.trim();
+  const normalized = line.normalize('NFKC').replace(/[\u2010-\u2015]/g, '-').trim();
+  const trimmed = normalized;
   if (!trimmed || trimmed.length < 2) return null;
 
   // Reject math and content expressions
@@ -563,7 +564,7 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
     if (!targetTocPages.has(page.pageNumber)) continue;
 
     for (let l = 0; l < page.lines.length; l++) {
-      const line = page.lines[l].trim();
+      const line = page.lines[l].normalize('NFKC').replace(/[\u2010-\u2015]/g, '-').trim();
       if (!line) continue;
 
       // Filter out Level 3 exercise / review lines and decimal subsections in TOC

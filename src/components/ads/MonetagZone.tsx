@@ -61,14 +61,15 @@ export function isLocalOrDevEnvironment(): boolean {
 
 interface MonetagZoneProps {
   isAdFree?: boolean;
+  zoneId?: string;
 }
 
 /**
- * Monetag Advertising Zone 12002632
+ * Monetag Advertising Zone 12217455 (default) & legacy zone 12002632
  * Loads https://al5sm.com/tag.min.js safely via next/script on public-facing pages only.
  * Suppressed for Ad-Free users, excluded routes, and dev/test environments.
  */
-export function MonetagZone({ isAdFree = false }: MonetagZoneProps) {
+export function MonetagZone({ isAdFree = false, zoneId = '12217455' }: MonetagZoneProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [isClientLocal, setIsClientLocal] = useState(false);
@@ -105,6 +106,20 @@ export function MonetagZone({ isAdFree = false }: MonetagZoneProps) {
   // Suppress ads on admin, auth, account, payment, and API routes
   if (isRouteExcludedFromAds(pathname)) {
     return null;
+  }
+
+  // If a specific zoneId is passed (e.g. 12217455), use that; otherwise use default zone 12002632
+  if (zoneId && zoneId !== '12002632') {
+    return (
+      <Script
+        id={`monetag-zone-${zoneId}`}
+        src="https://al5sm.com/tag.min.js"
+        data-zone={zoneId}
+        data-cfasync="false"
+        async
+        strategy="afterInteractive"
+      />
+    );
   }
 
   return (

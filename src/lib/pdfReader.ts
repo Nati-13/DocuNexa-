@@ -34,6 +34,19 @@ export function getStandardFontDataUrl(): string {
 }
 
 /**
+ * Shared CMap URL configuration for PDF.js across browser and Node/SSR.
+ * In browser: '/cmaps/' (statically served by Next.js from public/cmaps)
+ * In Node / test runner: './public/cmaps/' (local relative path for fs.readFile)
+ * Avoids any external network requests (e.g. unpkg.com) ensuring full offline & CSP compliance.
+ */
+export function getCMapUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/cmaps/';
+  }
+  return './public/cmaps/';
+}
+
+/**
  * Normalizes PDF buffer bytes by stripping any leading UTF-8/UTF-16 BOM,
  * whitespace, or non-PDF preamble bytes up to the official '%PDF-' signature.
  * Prevents parser crashes on real-world PDFs with envelope headers or BOMs.
@@ -78,6 +91,7 @@ export function getPdfJsDocumentParams(
   return {
     data: safeData,
     standardFontDataUrl: getStandardFontDataUrl(),
+    cMapUrl: getCMapUrl(),
     cMapPacked: true,
     ...(typeof window === 'undefined' ? { disableWorker: true } : {}),
     ...extraOptions,
@@ -91,7 +105,7 @@ export function getPdfJsDocumentParams(
  */
 export async function inspectPdfDocument(
   data: ArrayBuffer | Uint8Array
-): Promise<{ totalPages: number }> {
+): Promise<{ totalPages: number; isScanned?: boolean; sampleAvgChars?: number }> {
   if (!data || data.byteLength === 0) {
     throw new Error('The selected file is empty (0 bytes). Please upload a valid PDF document.');
   }
@@ -163,6 +177,173 @@ export async function inspectPdfDocument(
   }
 }
 
+interface LayoutItem {
+  x: number;
+  y: number;
+  width: number;
+  str: string;
+  dir?: string;
+}
+
+const isRtlChar = (ch: string) =>
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch);
+
+/**
+ * Reconstructs lines from raw PDF text items with column-awareness,
+ * NFKC Unicode normalization, and RTL script ordering.
+ * Resolves horizontal zig-zag interleaving in multi-column layouts.
+ */
+export function reconstructPageLines(rawItems: any[]): { lines: string[]; rawText: string } {
+  const items: LayoutItem[] = [];
+
+  for (const it of rawItems) {
+    if (!('str' in it) || !it.str) continue;
+    // Normalize Unicode compatibility characters (ligatures, fullwidth, decomposed forms)
+    const normalized = String(it.str).normalize('NFKC');
+    if (!normalized.trim()) continue;
+
+    items.push({
+      x: Number(it.transform?.[4]) || 0,
+      y: Number(it.transform?.[5]) || 0,
+      width: Number(it.width) || 0,
+      str: normalized,
+      dir: it.dir,
+    });
+  }
+
+  if (items.length === 0) {
+    return { lines: [], rawText: '' };
+  }
+
+  // Helper to format a cluster of items sorted top-to-bottom into lines
+  const formatCluster = (clusterItems: LayoutItem[]): string[] => {
+    if (clusterItems.length === 0) return [];
+
+    const lineMap = new Map<number, LayoutItem[]>();
+    for (const it of clusterItems) {
+      const yKey = Math.round(it.y / 3.5) * 3.5;
+      if (!lineMap.has(yKey)) lineMap.set(yKey, []);
+      lineMap.get(yKey)!.push(it);
+    }
+
+    const sortedY = Array.from(lineMap.keys()).sort((a, b) => b - a);
+    const clusterLines: string[] = [];
+
+    for (const yKey of sortedY) {
+      const lineItems = lineMap.get(yKey)!;
+      if (lineItems.length === 0) continue;
+
+      // Check for RTL
+      let rtlCount = 0;
+      let nonSpaceCount = 0;
+      for (const it of lineItems) {
+        for (const ch of it.str) {
+          if (!/\s/.test(ch)) {
+            nonSpaceCount++;
+            if (isRtlChar(ch)) rtlCount++;
+          }
+        }
+      }
+      const isRtl = nonSpaceCount > 0 && rtlCount / nonSpaceCount > 0.4;
+
+      const sortedX = isRtl
+        ? [...lineItems].sort((a, b) => b.x - a.x)
+        : [...lineItems].sort((a, b) => a.x - b.x);
+
+      let lineText = '';
+      for (let i = 0; i < sortedX.length; i++) {
+        const curr = sortedX[i];
+        if (i === 0) {
+          lineText = curr.str;
+        } else {
+          const prev = sortedX[i - 1];
+          const gap = curr.x - (prev.x + prev.width);
+          if (gap >= 2) {
+            lineText += ' ' + curr.str;
+          } else {
+            lineText += curr.str;
+          }
+        }
+      }
+
+      const trimmed = lineText.trim();
+      if (trimmed) clusterLines.push(trimmed);
+    }
+
+    return clusterLines;
+  };
+
+  // Check for multi-column layout
+  const minX = Math.min(...items.map((i) => i.x));
+  const maxX = Math.max(...items.map((i) => i.x + i.width));
+  const contentWidth = maxX - minX;
+
+  let isTwoColumn = false;
+  let midX = minX + contentWidth / 2;
+  let bannerSplitY = -Infinity;
+
+  if (contentWidth > 280 && items.length >= 8) {
+    const minY = Math.min(...items.map((i) => i.y));
+    const maxY = Math.max(...items.map((i) => i.y));
+    const height = maxY - minY;
+
+    const candidateBodyItems = items.filter(
+      (i) => i.y < maxY - height * 0.15 && i.y > minY + height * 0.08
+    );
+
+    if (candidateBodyItems.length >= 6) {
+      const gutterWidth = 24;
+      const gutterLeft = midX - gutterWidth / 2;
+      const gutterRight = midX + gutterWidth / 2;
+
+      let leftCount = 0;
+      let rightCount = 0;
+      let crossingCount = 0;
+
+      for (const it of candidateBodyItems) {
+        const itemRight = it.x + it.width;
+        if (itemRight <= gutterLeft) {
+          leftCount++;
+        } else if (it.x >= gutterRight) {
+          rightCount++;
+        } else {
+          crossingCount++;
+        }
+      }
+
+      if (leftCount >= 3 && rightCount >= 3 && crossingCount <= Math.max(1, candidateBodyItems.length * 0.1)) {
+        isTwoColumn = true;
+        const colItems = items.filter((i) => i.x + i.width <= gutterLeft || i.x >= gutterRight);
+        if (colItems.length > 0) {
+          const highestColY = Math.max(...colItems.map((i) => i.y));
+          bannerSplitY = highestColY + 8;
+        }
+      }
+    }
+  }
+
+  let finalLines: string[] = [];
+
+  if (isTwoColumn) {
+    const bannerItems = items.filter((i) => i.y > bannerSplitY);
+    const col1Items = items.filter((i) => i.y <= bannerSplitY && i.x < midX);
+    const col2Items = items.filter((i) => i.y <= bannerSplitY && i.x >= midX);
+
+    finalLines = [
+      ...formatCluster(bannerItems),
+      ...formatCluster(col1Items),
+      ...formatCluster(col2Items),
+    ];
+  } else {
+    finalLines = formatCluster(items);
+  }
+
+  return {
+    lines: finalLines,
+    rawText: finalLines.join('\n'),
+  };
+}
+
 /**
  * Loads a PDF document and extracts text page by page, checking for scanned status
  */
@@ -179,13 +360,8 @@ export async function extractPdfTextPages(
 }> {
   const pdfjs = await getPdfJs();
 
-  // Slice buffer and configure standardFontDataUrl & cMapUrl
-  const loadingTask = pdfjs.getDocument(
-    getPdfJsDocumentParams(arrayBuffer, {
-      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-      cMapPacked: true,
-    })
-  );
+  // Slice buffer and configure standardFontDataUrl & local cMapUrl
+  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(arrayBuffer));
 
   let pdfDoc: any = null;
   const pages: PageTextData[] = [];
@@ -215,98 +391,20 @@ export async function extractPdfTextPages(
 
       const page = await pdfDoc.getPage(pageNum);
       try {
-        const textContent = await page.getTextContent();
-
-        // Group text items by roughly their vertical Y coordinate to form lines
-        const rawItems = textContent.items as any[];
-        interface PositionedItem {
-          x: number;
-          str: string;
-          width: number;
-          dir?: string;
-        }
-        const lineMap = new Map<number, PositionedItem[]>();
-
-        for (const item of rawItems) {
-          if (!('str' in item) || !item.str) continue;
-
-          // item.transform: [scaleX, skewY, skewX, scaleY, transX, transY]
-          const yKey = Math.round(item.transform[5] / 4) * 4;
-          const xPos = Number(item.transform[4]) || 0;
-          const width = Number(item.width) || 0;
-          if (!lineMap.has(yKey)) {
-            lineMap.set(yKey, []);
-          }
-          lineMap.get(yKey)!.push({ x: xPos, str: item.str, width, dir: item.dir });
+        let lines: string[] = [];
+        let rawText = '';
+        try {
+          const textContent = await page.getTextContent();
+          const reconstructed = reconstructPageLines(textContent.items as any[]);
+          lines = reconstructed.lines;
+          rawText = reconstructed.rawText;
+        } catch {
+          // Resilient single-page text recovery: if textContent throws on a complex page,
+          // treat page as having no extractable text rather than failing whole document
+          lines = [];
+          rawText = '';
         }
 
-        // Sort lines from top of page to bottom (higher transY is top in PDF coordinates)
-        const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => b - a);
-        const lines: string[] = [];
-
-        const isRtlChar = (ch: string) =>
-          /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch);
-
-        for (const key of sortedKeys) {
-          const itemsOnLine = lineMap.get(key)!;
-          if (itemsOnLine.length === 0) continue;
-
-          // Check if line contains predominantly RTL (Arabic) characters
-          let rtlCharCount = 0;
-          let nonSpaceCharCount = 0;
-          for (const it of itemsOnLine) {
-            for (const ch of it.str) {
-              if (!/\s/.test(ch)) {
-                nonSpaceCharCount++;
-                if (isRtlChar(ch)) rtlCharCount++;
-              }
-            }
-          }
-          const isPredominantlyRtl =
-            nonSpaceCharCount > 0 && rtlCharCount / nonSpaceCharCount > 0.4;
-
-          // Sort items from left to right to discover horizontal layout columns
-          const ltrSorted = [...itemsOnLine].sort((a, b) => a.x - b.x);
-
-          // Partition into column clusters when large horizontal gaps exist (> 60px)
-          const columnClusters: PositionedItem[][] = [];
-          let currentCluster: PositionedItem[] = [];
-
-          for (const it of ltrSorted) {
-            if (currentCluster.length === 0) {
-              currentCluster.push(it);
-            } else {
-              const prev = currentCluster[currentCluster.length - 1];
-              const prevRight = prev.x + prev.width;
-              const gap = it.x - Math.max(prevRight, prev.x);
-              // Multi-column threshold: gap > 60px and absolute delta > 80px
-              if (gap > 60 && it.x - prev.x > 80) {
-                columnClusters.push(currentCluster);
-                currentCluster = [it];
-              } else {
-                currentCluster.push(it);
-              }
-            }
-          }
-          if (currentCluster.length > 0) {
-            columnClusters.push(currentCluster);
-          }
-
-          // For each column cluster, join into a line adhering to reading direction
-          for (const cluster of columnClusters) {
-            let orderedItems = cluster;
-            if (isPredominantlyRtl) {
-              // Right-to-left: highest X coordinate first to preserve natural Arabic reading order
-              orderedItems = [...cluster].sort((a, b) => b.x - a.x);
-            }
-            const lineText = orderedItems.map((it) => it.str).join(' ').trim();
-            if (lineText) {
-              lines.push(lineText);
-            }
-          }
-        }
-
-        const rawText = lines.join('\n');
         const charCount = rawText.replace(/\s/g, '').length;
         totalChars += charCount;
 

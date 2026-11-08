@@ -47,4 +47,24 @@ if (fs.existsSync(srcWorker)) {
   console.log('[copy-pdf-assets] Successfully copied local pdf.worker.min.mjs to public/');
 }
 
+// Copy local PDF.js CMaps to public/cmaps/ to ensure local Unicode / CMap decoding without external CDN
+const srcCmaps = path.join(__dirname, '..', 'node_modules', 'pdfjs-dist', 'cmaps');
+const destCmaps = path.join(__dirname, '..', 'public', 'cmaps');
+let cmapsCopied = 0;
+if (fs.existsSync(srcCmaps)) {
+  if (!fs.existsSync(destCmaps)) {
+    fs.mkdirSync(destCmaps, { recursive: true });
+  }
+  const cmapFiles = fs.readdirSync(srcCmaps);
+  for (const file of cmapFiles) {
+    const srcFile = path.join(srcCmaps, file);
+    const destFile = path.join(destCmaps, file);
+    if (fs.statSync(srcFile).isFile()) {
+      fs.copyFileSync(srcFile, destFile);
+      cmapsCopied++;
+    }
+  }
+  console.log(`[copy-pdf-assets] Successfully copied ${cmapsCopied} CMap files to public/cmaps/`);
+}
+
 console.log(`[copy-pdf-assets] Successfully copied ${copied} standard font assets to public/standard_fonts/`);
