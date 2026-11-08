@@ -2,6 +2,7 @@ import { PDFDocument } from 'pdf-lib';
 import JSZip from 'jszip';
 import { DetectedPart, CutProgressItem, CutProgressState } from '@/types';
 import { sanitizeFilename } from './validator';
+import { normalizePdfBytes } from './pdfReader';
 
 /**
  * Extracts a specific range of pages (1-indexed, inclusive) into a new PDFDocument bytes
@@ -14,7 +15,8 @@ export async function extractPdfRange(
   if (!sourceBytes || sourceBytes.byteLength === 0) {
     throw new Error('Cannot extract pages: PDF buffer is empty or detached.');
   }
-  const safeBytes = sourceBytes.slice(0);
+  const normalized = normalizePdfBytes(sourceBytes);
+  const safeBytes = normalized.slice(0);
   const srcDoc = await PDFDocument.load(safeBytes);
   const totalPages = srcDoc.getPageCount();
 

@@ -7,7 +7,7 @@ export interface DetectedPart {
   endPage: number;
   filename: string;
   confidence: ConfidenceLevel;
-  source?: 'heading' | 'toc' | 'manual';
+  source?: 'heading' | 'toc' | 'manual' | 'outline';
   originalHeading?: string;
 }
 

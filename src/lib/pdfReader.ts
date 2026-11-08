@@ -1,4 +1,6 @@
 import { PageTextData } from '@/types';
+import { DocumentSection } from '@/types/structure';
+import { extractOutlineStructure } from './structureDetector';
 
 let pdfjsLibInstance: any = null;
 
@@ -32,6 +34,31 @@ export function getStandardFontDataUrl(): string {
 }
 
 /**
+ * Normalizes PDF buffer bytes by stripping any leading UTF-8/UTF-16 BOM,
+ * whitespace, or non-PDF preamble bytes up to the official '%PDF-' signature.
+ * Prevents parser crashes on real-world PDFs with envelope headers or BOMs.
+ */
+export function normalizePdfBytes(data: ArrayBuffer | Uint8Array): Uint8Array {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const searchLimit = Math.min(bytes.length, 2048);
+  for (let i = 0; i <= searchLimit - 5; i++) {
+    if (
+      bytes[i] === 0x25 && // %
+      bytes[i + 1] === 0x50 && // P
+      bytes[i + 2] === 0x44 && // D
+      bytes[i + 3] === 0x46 && // F
+      bytes[i + 4] === 0x2d // -
+    ) {
+      if (i > 0) {
+        return bytes.subarray(i);
+      }
+      return bytes;
+    }
+  }
+  return bytes;
+}
+
+/**
  * Shared parameter builder for pdfjs.getDocument().
  * Universally provides:
  * 1. Safe sliced Uint8Array preventing detachment of the caller's buffer.
@@ -43,10 +70,10 @@ export function getPdfJsDocumentParams(
   data: Uint8Array | ArrayBuffer,
   extraOptions: Record<string, any> = {}
 ): Record<string, any> {
-  const safeData =
-    data instanceof Uint8Array
-      ? new Uint8Array(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength))
-      : new Uint8Array(data.slice(0));
+  const normalized = normalizePdfBytes(data);
+  const safeData = new Uint8Array(
+    normalized.buffer.slice(normalized.byteOffset, normalized.byteOffset + normalized.byteLength)
+  );
 
   return {
     data: safeData,
@@ -69,12 +96,11 @@ export async function inspectPdfDocument(
     throw new Error('The selected file is empty (0 bytes). Please upload a valid PDF document.');
   }
 
+  const normalized = normalizePdfBytes(data);
+
   // Quick signature check: First 1024 bytes must contain %PDF-
-  const sliceLen = Math.min(data.byteLength, 1024);
-  const headBytes =
-    data instanceof Uint8Array
-      ? data.subarray(0, sliceLen)
-      : new Uint8Array(data.slice(0, sliceLen));
+  const sliceLen = Math.min(normalized.byteLength, 1024);
+  const headBytes = normalized.subarray(0, sliceLen);
   let headString = '';
   for (let i = 0; i < headBytes.length; i++) {
     headString += String.fromCharCode(headBytes[i]);
@@ -149,6 +175,7 @@ export async function extractPdfTextPages(
   totalPages: number;
   isScanned: boolean;
   avgCharsPerPage: number;
+  outlines?: DocumentSection[] | null;
 }> {
   const pdfjs = await getPdfJs();
 
@@ -165,10 +192,17 @@ export async function extractPdfTextPages(
   let totalChars = 0;
   let pagesWithNoText = 0;
   let totalPages = 0;
+  let outlines: DocumentSection[] | null = null;
 
   try {
     pdfDoc = await loadingTask.promise;
     totalPages = pdfDoc.numPages;
+
+    try {
+      outlines = await extractOutlineStructure(pdfDoc, totalPages);
+    } catch {
+      // Outline not present or non-standard
+    }
 
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
       if (shouldCancel && shouldCancel()) {
@@ -328,6 +362,7 @@ export async function extractPdfTextPages(
     totalPages,
     isScanned,
     avgCharsPerPage,
+    outlines,
   };
 }
 

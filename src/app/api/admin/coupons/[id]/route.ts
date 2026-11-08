@@ -159,9 +159,20 @@ export async function DELETE(
 
     if (rpcErr) {
       console.error('admin_delete_coupon_atomic RPC error:', rpcErr);
+      if (
+        rpcErr.code === '22P02' ||
+        String(rpcErr.message || '').toLowerCase().includes('invalid input syntax for type uuid')
+      ) {
+        return NextResponse.json(
+          { error: 'Invalid coupon ID format.', code: 'INVALID_COUPON_ID' },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
-          error: 'Coupon deletion service is temporarily unavailable. Database migration 20261107200000_atomic_admin_delete_coupon must be applied.',
+          error:
+            'Coupon deletion service is temporarily unavailable. Database migration 20261107200000_atomic_admin_delete_coupon must be applied.',
           code: 'RPC_UNAVAILABLE',
         },
         { status: 503 }

@@ -1,4 +1,5 @@
 import { DetectedPart, ConfidenceLevel, PageTextData } from '@/types';
+import { DocumentSection } from '@/types/structure';
 import {
   parseMultilingualNumber,
   SUPPORTED_LANGUAGES,
@@ -334,8 +335,8 @@ export function parseUnitNumber(raw: string): number | null {
  */
 export function isGenuineHeading(
   line: string,
-  lineIndex: number,
-  totalLinesOnPage: number
+  lineIndex = 0,
+  totalLinesOnPage = 1
 ): RawHeadingMatch | null {
   const trimmed = line.trim();
   if (!trimmed || trimmed.length < 2) return null;
@@ -648,7 +649,8 @@ export interface UnitDetectionResult {
 export function detectDocumentUnits(
   pages: PageTextData[],
   totalPages: number,
-  originalFilename = 'Document'
+  originalFilename = 'Document',
+  outlineSections?: DocumentSection[] | null
 ): UnitDetectionResult {
   // 1. Identify all Table of Contents pages
   const tocPages = findTocPageNumbers(pages);
@@ -718,7 +720,14 @@ export function detectDocumentUnits(
   // Level 2: Section / Topic (Subheadings - only used if document has ZERO Level 1 headings)
   const hasLevel1Physical = rawHeadings.some((h) => h.level === 1);
   const hasLevel1Toc = tocEntries.some((t) => t.level === 1);
-  const splitLevel: HeadingHierarchyLevel = (hasLevel1Physical || hasLevel1Toc) ? 1 : 2;
+  const hasLevel1Outline = Boolean(
+    outlineSections &&
+      outlineSections.some(
+        (s) => s.level === 1 && !s.isUnresolved && s.startPage >= 1 && s.startPage <= totalPages
+      )
+  );
+  const splitLevel: HeadingHierarchyLevel =
+    hasLevel1Physical || hasLevel1Toc || hasLevel1Outline ? 1 : 2;
 
   // Filter physical headings and TOC entries strictly by splitLevel:
   // When Level 1 is present, Level 2 sections and Level 3 exercises stay inside parent units!
@@ -773,7 +782,7 @@ export function detectDocumentUnits(
     title: string;
     physicalPage: number;
     confidence: ConfidenceLevel;
-    source: 'heading' | 'toc' | 'manual';
+    source: 'heading' | 'toc' | 'manual' | 'outline';
     originalHeading?: string;
   }>();
 
@@ -826,6 +835,54 @@ export function detectDocumentUnits(
             originalHeading: toc.matchedLine,
           });
         }
+      }
+    }
+  }
+
+  // Complement with PDF outline bookmarks (digital bookmarks)
+  if (outlineSections && outlineSections.length > 0) {
+    const validOutlines = outlineSections.filter(
+      (s) => s.level === 1 && !s.isUnresolved && s.startPage >= 1 && s.startPage <= totalPages
+    );
+
+    for (const outline of validOutlines) {
+      const parsedHeading = isGenuineHeading(outline.title);
+      let prefix = 'Unit';
+      let numberVal = 0;
+      let unitTitle = outline.title;
+
+      if (parsedHeading && parsedHeading.level === 1) {
+        prefix = parsedHeading.prefix;
+        numberVal = parsedHeading.numberValue;
+        unitTitle = parsedHeading.title;
+      } else {
+        const m = outline.title.match(
+          /^\s*(UNIT|CHAPTER|MODULE|LESSON|PART|ምዕራፍ|الفصل|CAPÍTULO|CHAPITRE|SURAT)\s+([0-9]{1,3}|[IVXLCDM]{1,6}|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|፩|፪|፫|፬|፭|፮|፯|፰|፱|፲)\b[:.\-–—\s]*(.*)$/i
+        );
+        if (m) {
+          prefix = m[1];
+          numberVal = parseMultilingualNumber(m[2]) || 0;
+          unitTitle = outline.title;
+        }
+      }
+
+      const key =
+        numberVal > 0 ? `${prefix.toLowerCase()}_${numberVal}` : `outline_p${outline.startPage}`;
+
+      if (candidateMap.has(key)) {
+        const existing = candidateMap.get(key)!;
+        existing.confidence = 'High';
+        existing.source = 'outline';
+      } else {
+        candidateMap.set(key, {
+          prefix,
+          numberValue: numberVal,
+          title: unitTitle,
+          physicalPage: outline.startPage,
+          confidence: 'High',
+          source: 'outline',
+          originalHeading: outline.title,
+        });
       }
     }
   }

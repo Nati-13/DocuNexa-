@@ -93,6 +93,11 @@
     color: inherit;
   }
 
+  ::selection {
+    background-color: rgb(var(--brand) / 0.25);
+    color: rgb(var(--ink));
+  }
+
   h1, h2, h3 {
     font-family: var(--font-serif-display), 'Fraunces', 'Nyala', 'Abyssinica SIL', serif;
     letter-spacing: -0.02em;

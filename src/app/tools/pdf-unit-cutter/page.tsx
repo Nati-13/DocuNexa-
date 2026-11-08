@@ -27,6 +27,7 @@ import {
   ConfidenceLevel,
   PageTextData
 } from '@/types';
+import { DocumentSection } from '@/types/structure';
 import { extractPdfTextPages, getPdfJs, getPdfJsDocumentParams, inspectPdfDocument } from '@/lib/pdfReader';
 import { detectDocumentUnits } from '@/lib/detector';
 import {
@@ -103,6 +104,7 @@ export default function PdfUnitCutterPage() {
   const [isFolderSupported, setIsFolderSupported] = useState<boolean>(false);
   const [selectedFolderText, setSelectedFolderText] = useState<string>('');
   const selectedDirHandleRef = useRef<any>(null);
+  const documentOutlinesRef = useRef<DocumentSection[] | null>(null);
 
   // Project file hidden input
   const projectInputRef = useRef<HTMLInputElement>(null);
@@ -229,10 +231,11 @@ export default function PdfUnitCutterPage() {
     setAnalysisProgress({ current: 0, total: fileInfo.totalPages });
 
     try {
-      const { pages, isScanned, avgCharsPerPage } = await extractPdfTextPages(
+      const { pages, isScanned, avgCharsPerPage, outlines } = await extractPdfTextPages(
         activeBuf,
         (current, total) => setAnalysisProgress({ current, total })
       );
+      documentOutlinesRef.current = outlines || null;
 
       setFileInfo((prev) =>
         prev
@@ -256,7 +259,7 @@ export default function PdfUnitCutterPage() {
         setDetectedLanguage(null);
       }
 
-      const result = detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name);
+      const result = detectDocumentUnits(pages, fileInfo.totalPages, fileInfo.name, outlines);
 
       setParts(result.parts);
       setOriginalParts(JSON.parse(JSON.stringify(result.parts)));
@@ -506,7 +509,12 @@ export default function PdfUnitCutterPage() {
         );
       }
 
-      const result = detectDocumentUnits(ocrPages, fileInfo.totalPages, fileInfo.name);
+      const result = detectDocumentUnits(
+        ocrPages,
+        fileInfo.totalPages,
+        fileInfo.name,
+        documentOutlinesRef.current
+      );
       setParts(result.parts);
       setOriginalParts(JSON.parse(JSON.stringify(result.parts)));
       setHasFrontMatter(result.hasFrontMatter);
