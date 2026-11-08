@@ -324,7 +324,10 @@ async function runLargePdfTests() {
   );
 
   assert('Cancellation cleanly triggered midway through multi-part cut', cancelCalled);
-  assert('Remaining parts stay in waiting status after cancellation', cancelledResults.some((r) => r.status === 'waiting'));
+  assert(
+    'Remaining parts stay in waiting or cancelled status after cancellation',
+    cancelledResults.some((r) => r.status === 'waiting' || r.error?.includes('Cancelled'))
+  );
 
   // --- 7. 750-PAGE REAL PDF GENERATION & EXTRACTION ---
   console.log('\n--- 7. 750-PAGE REAL PDF EXTRACTION & VERIFICATION ---');

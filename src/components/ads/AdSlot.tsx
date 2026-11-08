@@ -32,15 +32,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
   const { user } = useAuth();
   const pathname = usePathname();
 
-  // Collapses completely for authenticated Ad-Free users
-  if (user?.plan === 'ad_free') {
-    return null;
-  }
-
-  // Suppress on sensitive/auth/admin/payment routes
-  if (isRouteExcludedFromAds(pathname)) {
-    return null;
-  }
+  const isExcluded = user?.plan === 'ad_free' || isRouteExcludedFromAds(pathname);
 
   const effectivePlacement: 'banner' | 'rectangle' | 'in-feed' =
     placement || (format === 'rectangle' ? 'rectangle' : format === 'responsive' ? 'in-feed' : 'banner');
@@ -59,7 +51,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
       : 'min-h-[80px]';
 
   useEffect(() => {
-    if (!isRealProviderConfigured) return;
+    if (isExcluded || !isRealProviderConfigured) return;
 
     try {
       if (typeof window !== 'undefined' && (window as any).adsbygoogle) {
@@ -68,7 +60,12 @@ export const AdSlot: React.FC<AdSlotProps> = ({
     } catch {
       // Gracefully ignore ad blocker or network errors
     }
-  }, [isRealProviderConfigured, slotId]);
+  }, [isExcluded, isRealProviderConfigured, slotId]);
+
+  // Collapses completely for authenticated Ad-Free users or excluded routes
+  if (isExcluded) {
+    return null;
+  }
 
   // When third-party ad network is active, render external ad unit
   if (isRealProviderConfigured) {

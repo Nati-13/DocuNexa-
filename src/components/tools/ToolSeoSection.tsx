@@ -172,7 +172,7 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
               Is there a file size limit or cost to use {tool.name}?
             </h4>
             <p className="text-xs sm:text-sm text-muted leading-relaxed">
-              {tool.name} is completely free with zero subscription paywalls, watermarks, or artificial limits. Processing capacity is determined solely by your device's available memory.
+              {tool.name} is completely free with zero subscription paywalls, watermarks, or artificial limits. Processing capacity is determined solely by your device&apos;s available memory.
             </p>
           </div>
 
@@ -202,7 +202,7 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tool }) => {
                 Need to split textbooks or long course documents into structured chapters?
               </h4>
               <p className="text-xs sm:text-sm text-muted leading-relaxed">
-                Try DocuNexa's flagship{' '}
+                Try DocuNexa&apos;s flagship{' '}
                 <Link href="/tools/pdf-unit-cutter" className="text-brand font-semibold hover:underline">
                   PDF Unit Cutter
                 </Link>{' '}

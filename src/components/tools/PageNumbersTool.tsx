@@ -303,7 +303,7 @@ export function PageNumbersTool() {
             <div className="p-3.5 rounded-md bg-paper border border-border text-xs text-muted space-y-1">
               <span className="font-bold text-ink block">Preview on Canvas:</span>
               <p className="font-mono text-brand font-bold">
-                "{getPreviewText(1)}" at {position}
+                &quot;{getPreviewText(1)}&quot; at {position}
               </p>
             </div>
           </div>
