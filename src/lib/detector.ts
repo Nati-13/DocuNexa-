@@ -77,17 +77,40 @@ export const ETHIOPIC_NUMERALS: Record<string, number> = {
   '፶': 50,
 };
 
-export const HEADING_PREFIXES =
-  'UNIT|CHAPTER|MODULE|LESSON|PART|SECTION|' +
-  'ምዕራፍ|ክፍል|አሃድ|ትምህርት|ርዕስ|' +
-  'ክፍሊ|ትምህርቲ|ኣርእስቲ|' +
-  'BOQONNAA|KUTAA|BARNOOTA|MATA\\s+DUREE|' +
-  'الوحدة|وحدة|الفصل|فصل|الباب|باب|الدرس|درس|الجزء|جزء|' +
-  'CHAPITRE|UNITÉ|UNITE|MODULE|LEÇON|LECON|PARTIE|' +
-  'CAPÍTULO|CAPITULO|UNIDAD|MÓDULO|MODULO|LECCIÓN|LECCION|PARTE|' +
-  'SURA|SEHEMU|KITENGO|SOMO|' +
-  'इकाई|अध्याय|पाठ|भाग|खण्ड|' +
-  '单元|章|课|部分|章节';
+export type HeadingHierarchyLevel = 1 | 2 | 3;
+
+/**
+ * Level 1 prefixes: Top-level units and chapters eligible for separate PDF output.
+ * Across English and all 9 supported localized languages.
+ */
+export const LEVEL1_PREFIXES =
+  'UNIT|CHAPTER|MODULE|' +
+  'ምዕራፍ|አሃድ|' +
+  'ክፍሊ|' +
+  'BOQONNAA|' +
+  'الوحدة|وحدة|الفصل|فصل|الباب|باب|' +
+  'CHAPITRE|UNITÉ|UNITE|' +
+  'CAPÍTULO|CAPITULO|UNIDAD|MÓDULO|MODULO|' +
+  'SURA|KITENGO|' +
+  'इकाई|अध्याय|' +
+  '单元|章';
+
+/**
+ * Level 2 prefixes: Sections, subsections, topics, and lessons that belong inside a parent unit.
+ */
+export const LEVEL2_PREFIXES =
+  'SECTION|SUBSECTION|TOPIC|SUBTOPIC|LESSON|PART|' +
+  'ክፍል|ትምህርት|ርዕስ|' +
+  'ትምህርቲ|ኣርእስቲ|' +
+  'KUTAA|BARNOOTA|MATA\\s+DUREE|' +
+  'الدرس|درس|الجزء|جزء|' +
+  'LEÇON|LECON|PARTIE|' +
+  'LECCIÓN|LECCION|PARTE|' +
+  'SEHEMU|SOMO|' +
+  'पाठ|भाग|खण्ड|' +
+  '课|部分|节|章节';
+
+export const HEADING_PREFIXES = `${LEVEL1_PREFIXES}|${LEVEL2_PREFIXES}`;
 
 export const HEADING_NUMBERS =
   '[0-9]{1,4}|[IVXLCDM]{1,6}|[፩-፳]+|[٠-٩]+|[०-९]+|[一二三四五六七八九十百]+|' +
@@ -112,6 +135,7 @@ export interface RawHeadingMatch {
   matchedLine: string;
   lineIndex: number;
   source: 'heading' | 'toc';
+  level: HeadingHierarchyLevel;
 }
 
 export interface TocEntry {
@@ -122,6 +146,99 @@ export interface TocEntry {
   printedPage: number;
   matchedLine: string;
   sourcePageNumber: number;
+  level: HeadingHierarchyLevel;
+}
+
+/**
+ * Classifies a heading prefix into Level 1 (top-level unit/chapter) or Level 2 (section/topic).
+ */
+export function classifyHeadingPrefix(prefix: string): HeadingHierarchyLevel {
+  const clean = prefix.trim();
+  const level1Regex = new RegExp(`^(?:${LEVEL1_PREFIXES})$`, 'i');
+  if (level1Regex.test(clean)) return 1;
+  return 2;
+}
+
+/**
+ * Detects Level 3 exercises, questions, reviews, and assessment headings
+ * across English and all 9 supported localized languages.
+ * These lines must NEVER trigger a top-level unit boundary or separate PDF.
+ */
+export function isExerciseOrReviewLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+
+  // Terminal boundary that safely matches ASCII word boundary OR non-Latin script end-of-string / punctuation
+  const END = '(?:\b|$|\s|[:.\-–—፡፤：、，?？])';
+
+  // 1. Explicit Review Questions / Unit Review / Chapter Review / Summaries
+  const reviewPattern = new RegExp(
+    '^(?:(?:UNIT|CHAPTER|MODULE)\\s+[0-9IVXLCDM]+\\s*[:.\\-–—\\s]*)?(?:REVIEW\\s+QUESTIONS|REVIEW\\s+EXERCISES|UNIT\\s+REVIEW|CHAPTER\\s+REVIEW|MODULE\\s+REVIEW|UNIT\\s+SUMMARY(?:\\s+(?:AND|&)\\s+EXERCISES?)?|CHAPTER\\s+SUMMARY(?:\\s+(?:AND|&)\\s+EXERCISES?)?|SUMMARY\\s+(?:AND|&)\\s+(?:REVIEW|EXERCISES?)|SUMMARY\\s+AND\\s+REVIEW|END\\s+OF\\s+(?:UNIT|CHAPTER)\\s+EXERCISES|REVISION\\s+EXERCISES|SELF-ASSESSMENT|SELF-TEST|PRACTICE\\s+QUESTIONS|PRACTICE\\s+EXERCISES|STUDY\\s+QUESTIONS|ACTIVITIES|ACTIVITY\\s+[0-9]+)' + END,
+    'i'
+  );
+  if (reviewPattern.test(trimmed)) return true;
+
+  // 2. Part-based exercise sections (e.g. "Part I: True or False", "Part II: Multiple Choice", "ክፍል ፩፡ እውነት ወይም ሐሰት", "Kutaa 1: Dhugaa ykn Soba", "第一部分：判断题")
+  const partExercisePattern = new RegExp(
+    '^\\s*(?:PART|PARTIE|PARTE|भाग|الجزء|ክፍል|ክፍሊ|KUTAA|SEHEMU(?:\\s+ya)?|第)\\s*(?:[0-9IVXLCDM]+|[A-Z]|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|الأول|الثاني|الثالث|፩|፪|፫|፬|፭|[一二三四五六七八九十]+)?(?:\\s*부분|\\s*部分)?\\s*[:.\\-–—\\s፡፤：、，]+\\s*(?:TRUE\\s+OR\\s+FALSE|TRUE\\s*\\/\\s*FALSE|MULTIPLE\\s+CHOICE|FILL\\s+IN|MATCHING|SHORT\\s+ANSWER|COMPLETION|EXERCISES?|QUESTIONS?|REVIEW|PROBLEMS?|VRAI\\s+OU\\s+FAUX|CHOIX\\s+MULTIPLES|VERDADERO\\s+O\\s+FALSO|OPCI[ÓO]N\\s+M[ÚU]LTIPLE|KWELI\\s+AU\\s+SI\\s+KWELI|CHAGUO|እውነት|ምርጫ|ክፍት\\s+ቦታ|ሕቶታት|DHUGAA|FILANNOO|BAKKA\\s+DUWWAA|صواب|صح\\s+أم\\s+خطأ|اختيار|املأ|سؤال|सत्य|बहुविकल्पी|रिक्त|判断题|选择题|填空题)',
+    'i'
+  );
+  if (partExercisePattern.test(trimmed)) return true;
+
+  // 3. True / False patterns in all 10 languages
+  const trueFalsePattern = new RegExp(
+    '^\\s*(?:(?:ITEM|QUESTION|SECTION|PART|KUTAA|SEHEMU|ክፍሊ?)?\\s*[0-9IVXLCDM፩-፭]*\\s*[:.\\-–—\\s፡፤：、，]*)*(?:TRUE\\s+OR\\s+FALSE|TRUE\\s*\\/\\s*FALSE|TRUE\\s+FALSE|VRAI\\s+OU\\s+FAUX|VERDADERO\\s+O\\s+FALSO|KWELI\\s+AU\\s+SI\\s+KWELI|እውነት\\s+ወይም\\s+ሐሰት|እውነት\\s*\\/\\s*ሐሰት|እውነት\\s+ወይም\\s+ሀሰት|ሓቂ\\s+ወይ\\s+ሓሶት|DHUGAA\\s+YKN\\s+SOBA|صح\\s+أم\\s+خطأ|صواب\\s+أو\\s+خطأ|सत्य\\s+या\\s+असत्य|判断题)' + END,
+    'i'
+  );
+  if (trueFalsePattern.test(trimmed)) return true;
+
+  // 4. Multiple Choice patterns in all 10 languages
+  const multipleChoicePattern = new RegExp(
+    '^\\s*(?:(?:ITEM|QUESTION|SECTION|PART|KUTAA|SEHEMU|ክፍሊ?)?\\s*[0-9IVXLCDM፩-፭]*\\s*[:.\\-–—\\s፡፤：、，]*)*(?:MULTIPLE\\s+CHOICE|CHOIX\\s+MULTIPLES?|QCM|OPCI[ÓO]N\\s+M[ÚU]LTIPLE|SELECCI[ÓO]N\\s+M[ÚU]LTIPLE|CHAGUO\\s+SAHIHI|MASWALI\\s+YA\\s+KUCHAGUA|ምርጫ|የምርጫ\\s+ጥያቄዎች|ናይ\\s+ምርጫ\\s+ሕቶታት|FILANNOO|GAAFFILEE\\s+FILANNOO|اختيار\\s+من\\s+متعدد|أسئلة\\s+الاختيار\\s+من\\s+متعدد|बहुविकल्पी|वस्तुनिष्ठ\\s+प्रश्न|单选题|多选题|选择题)' + END,
+    'i'
+  );
+  if (multipleChoicePattern.test(trimmed)) return true;
+
+  // 5. Fill in the Blank / Matching patterns in all 10 languages
+  const fillMatchingPattern = new RegExp(
+    '^\\s*(?:(?:ITEM|QUESTION|SECTION|PART|KUTAA|SEHEMU|ክፍሊ?)?\\s*[0-9IVXLCDM፩-፭]*\\s*[:.\\-–—\\s፡፤：、，]*)*(?:FILL\\s+IN\\s+THE\\s+BLANKS?|COMPLETION\\s+QUESTIONS?|MATCHING\\s+QUESTIONS?|MATCHING\\s+ITEMS?|MATCH\\s+COLUMN|MATCH\\s+THE\\s+FOLLOWING|REMPLIR\\s+LES\\s+BLANCS?|APPARIEMENT|COMPLETAR\\s+LOS\\s+ESPACIOS|RELACIONAR\\s+COLUMNAS|JAZA\\s+NAFASI\\s+ZILIZO\\s+WAZI|OANISHA|ክፍት\\s+ቦታውን\\s+ሙሉ|የማዛመድ\\s+ጥያቄዎች|ክፉት\\s+ቦታ\\s+ምምላእ|ምዝማድ|BAKKA\\s+DUWWAA\\s+GUUTUU|WALSIMSIISI|املأ\\s+الفراغ|أكمل\\s+الفراغ|صل\\s+بين\\s+العمودين|المطابقة|रिक्त\\s+स्थान\\s+भरें|सुमेलित\\s+कीजिए|填空题|连线题|匹配题)' + END,
+    'i'
+  );
+  if (fillMatchingPattern.test(trimmed)) return true;
+
+  // 6. Localized review questions and summaries in all 10 languages
+  const localizedReviewPattern = new RegExp(
+    '^\\s*(?:የክለሳ\\s+ጥያቄዎች|የምዕራፉ\\s+ማጠቃለያ|የክፍሉ\\s+ማጠቃለያ|የክለሳ\\s+መልመጃዎች|መልመጃ\\s+[0-9]+|ሕቶታት\\s+ክለሳ|መጠቃለሊ\\s+ምዕራፍ|GAAFFILEE\\s+IRRA-DEEBII|CUUNFAA\\s+BOQONNAA|GILGAALA\\s+IRRA-DEEBII|أسئلة\\s+المراجعة|مراجعة\\s+الوحدة|مراجعة\\s+الفصل|ملخص\\s+الوحدة|ملخص\\s+الفصل|تمارين|QUESTIONS\\s+DE\\s+R[ÉE]VISION|R[ÉE]SUM[ÉE]\\s+DU\\s+CHAPITRE|EXERCICES\\s+DE\\s+R[ÉE]VISION|PREGUNTAS\\s+DE\\s+REPASO|RESUMEN\\s+DEL\\s+CAP[ÍI]TULO|EJERCICIOS\\s+DE\\s+REPASO|MASWALI\\s+YA\\s+MARUDIO|MUHTASARI\\s+WA\\s+SURA|MAZOEZI|पुनरावलोकन\\s+प्रश्न|अध्याय\\s+सारांश|अभ्यास\\s+प्रश्न|本章小结|单元小结|复习题|课后习题|本章练习)' + END,
+    'i'
+  );
+  if (localizedReviewPattern.test(trimmed)) return true;
+
+  return false;
+}
+
+/**
+ * Detects Level 2 sections, subsections, and topics that belong inside a parent unit.
+ */
+export function isSectionOrSubheadingLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+
+  // Decimal numbered sections like "1.1 Ecosystem Dynamics", "2.4 Energy Flow", "3.1.2 Climate"
+  if (/^\s*[0-9]+\.[0-9]+(?:\.[0-9]+)?\b/.test(trimmed)) {
+    return true;
+  }
+
+  // Explicit decimal subsections with keywords e.g. "Section 2.4 - Energy Flow", "Unit 1.1 Topic Overview"
+  if (/^\s*(?:UNIT|CHAPTER|MODULE|LESSON|PART|SECTION|SUBSECTION|TOPIC|SUBTOPIC)\s+[0-9]+\.[0-9]+/i.test(trimmed)) {
+    return true;
+  }
+
+  // Non-decimal subsection keywords
+  if (/^\s*(?:SUBSECTION|TOPIC|SUBTOPIC|ACTIVITY)\s+[0-9IVXLCDM]+/i.test(trimmed)) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -226,13 +343,18 @@ export function isGenuineHeading(
   // Reject math and content expressions
   if (isMathematicalOrContentLine(trimmed)) return null;
 
-  // Rule 0: Reject subsections (e.g. Section 1.2, Topic 3, Exercise 4)
-  if (/^\s*(SUBSECTION|TOPIC|ACTIVITY|EXERCISE|REVIEW|SUMMARY|FIGURE|TABLE)\b/i.test(trimmed)) {
+  // Rule 0a: Strictly reject Level 3 exercises, questions, review questions, and summaries
+  if (isExerciseOrReviewLine(trimmed)) {
     return null;
   }
 
-  // Rule 0b: Reject decimal subsections (e.g. Unit 1.1, Chapter 2.4)
-  if (/^\s*(UNIT|CHAPTER|MODULE|LESSON|PART)\s+[0-9]+\.[0-9]+/i.test(trimmed)) {
+  // Rule 0b: Strictly reject Level 2 decimal sections and subsections (e.g. 1.1, Section 2.4, Unit 1.1)
+  if (isSectionOrSubheadingLine(trimmed)) {
+    return null;
+  }
+
+  // Rule 0c: Reject subsections and general markers
+  if (/^\s*(SUBSECTION|TOPIC|ACTIVITY|EXERCISE|REVIEW|SUMMARY|FIGURE|TABLE)\b/i.test(trimmed)) {
     return null;
   }
 
@@ -261,6 +383,7 @@ export function isGenuineHeading(
     const numVal = parseUnitNumber(rawNum);
     if (numVal !== null) {
       title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+      const isLevel1 = prefixName === '单元' || prefixName === '章';
       return {
         pageNumber: 0,
         prefix: `第${prefixName}`,
@@ -271,6 +394,7 @@ export function isGenuineHeading(
         matchedLine: trimmed,
         lineIndex,
         source: 'heading',
+        level: isLevel1 ? 1 : 2,
       };
     }
   }
@@ -286,6 +410,7 @@ export function isGenuineHeading(
     const numVal = parseUnitNumber(rawNum);
     if (numVal !== null) {
       title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+      const isLevel1 = /^(SURA|KITENGO)$/i.test(prefix);
       return {
         pageNumber: 0,
         prefix,
@@ -296,6 +421,7 @@ export function isGenuineHeading(
         matchedLine: trimmed,
         lineIndex,
         source: 'heading',
+        level: isLevel1 ? 1 : 2,
       };
     }
   }
@@ -342,6 +468,8 @@ export function isGenuineHeading(
     confidence = 'Low';
   }
 
+  const level = classifyHeadingPrefix(prefix);
+
   return {
     pageNumber: 0, // Assigned by caller
     prefix,
@@ -352,6 +480,7 @@ export function isGenuineHeading(
     matchedLine: trimmed,
     lineIndex,
     source: 'heading',
+    level,
   };
 }
 
@@ -434,6 +563,11 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
 
     for (let l = 0; l < page.lines.length; l++) {
       const line = page.lines[l].trim();
+      if (!line) continue;
+
+      // Filter out Level 3 exercise / review lines and decimal subsections in TOC
+      if (isExerciseOrReviewLine(line)) continue;
+      if (isSectionOrSubheadingLine(line)) continue;
 
       // Check Chinese TOC pattern first
       let chMatch = line.match(TOC_CHINESE_REGEX) || line.match(TOC_CHINESE_ALT);
@@ -447,6 +581,7 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
 
         if (numVal !== null && printedPage !== null && printedPage > 0) {
           title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+          const isLevel1 = prefixName === '单元' || prefixName === '章';
           entries.push({
             prefix: `第${prefixName}`,
             numberValue: numVal,
@@ -455,6 +590,7 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
             printedPage,
             matchedLine: line,
             sourcePageNumber: page.pageNumber,
+            level: isLevel1 ? 1 : 2,
           });
           continue;
         }
@@ -475,6 +611,7 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
 
       if (numVal !== null && printedPage !== null && printedPage > 0) {
         title = title.replace(/^[:.\-–—\s]+/, '').replace(/[:.\-–—\s]+$/, '');
+        const level = classifyHeadingPrefix(prefix);
         entries.push({
           prefix,
           numberValue: numVal,
@@ -483,6 +620,7 @@ export function extractTocEntries(pages: PageTextData[], tocPageNumbers?: Set<nu
           printedPage,
           matchedLine: line,
           sourcePageNumber: page.pageNumber,
+          level,
         });
       }
     }
@@ -531,6 +669,30 @@ export function detectDocumentUnits(
       const match = isGenuineHeading(line, l, page.lines.length);
       if (!match) continue;
 
+      // Check if heading has no title on line l (e.g. "UNIT ONE") and line l + 1 has the unit title
+      if (
+        match.title === `${match.prefix} ${match.numberRaw}` &&
+        l + 1 < page.lines.length
+      ) {
+        const nextLine = page.lines[l + 1].trim();
+        if (
+          nextLine.length >= 2 &&
+          nextLine.length <= 80 &&
+          !isMathematicalOrContentLine(nextLine) &&
+          !isExerciseOrReviewLine(nextLine) &&
+          !isSectionOrSubheadingLine(nextLine) &&
+          !isGenuineHeading(nextLine, l + 1, page.lines.length)
+        ) {
+          const cleanedSub = nextLine
+            .replace(/^[:.\-–—\s]+/, '')
+            .replace(/[:.\-–—\s]+$/, '');
+          if (cleanedSub.length > 0) {
+            match.title = `${match.prefix} ${match.numberRaw} – ${cleanedSub}`;
+            match.matchedLine = `${match.matchedLine}\n${nextLine}`;
+          }
+        }
+      }
+
       const key = `${match.prefix.toLowerCase()}_${match.numberValue}`;
 
       // Filter out repeated running headers at the top of subsequent pages
@@ -551,9 +713,21 @@ export function detectDocumentUnits(
   // 3. Extract TOC entries
   const tocEntries = extractTocEntries(pages, tocPages);
 
+  // Determine strict hierarchy level:
+  // Level 1: Unit / Chapter (Standard textbook top-level - eligible for separate PDF output)
+  // Level 2: Section / Topic (Subheadings - only used if document has ZERO Level 1 headings)
+  const hasLevel1Physical = rawHeadings.some((h) => h.level === 1);
+  const hasLevel1Toc = tocEntries.some((t) => t.level === 1);
+  const splitLevel: HeadingHierarchyLevel = (hasLevel1Physical || hasLevel1Toc) ? 1 : 2;
+
+  // Filter physical headings and TOC entries strictly by splitLevel:
+  // When Level 1 is present, Level 2 sections and Level 3 exercises stay inside parent units!
+  const eligibleHeadings = rawHeadings.filter((h) => h.level === splitLevel);
+  const eligibleTocEntries = tocEntries.filter((t) => t.level === splitLevel);
+
   // 4. Map physical body headings
   const physicalMap = new Map<string, RawHeadingMatch>();
-  for (const heading of rawHeadings) {
+  for (const heading of eligibleHeadings) {
     const key = `${heading.prefix.toLowerCase()}_${heading.numberValue}`;
     if (!physicalMap.has(key) || heading.pageNumber < physicalMap.get(key)!.pageNumber) {
       physicalMap.set(key, heading);
@@ -562,7 +736,7 @@ export function detectDocumentUnits(
 
   // 5. Establish page-number mapping & offset calibration
   const offsetEvidence: number[] = [];
-  for (const toc of tocEntries) {
+  for (const toc of eligibleTocEntries) {
     const key = `${toc.prefix.toLowerCase()}_${toc.numberValue}`;
     if (physicalMap.has(key)) {
       const physHeading = physicalMap.get(key)!;
@@ -620,7 +794,7 @@ export function detectDocumentUnits(
   let uncertaintyReason = '';
 
   // Complement with TOC entries
-  for (const toc of tocEntries) {
+  for (const toc of eligibleTocEntries) {
     const key = `${toc.prefix.toLowerCase()}_${toc.numberValue}`;
     if (!candidateMap.has(key)) {
       if (isOffsetReliable && consensusOffset !== null) {
