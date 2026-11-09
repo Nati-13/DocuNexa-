@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { profile: adminProfile } = await requireAdmin();
+    const { profile: adminProfile, adminUserId } = await requireAdmin();
     const { id: paymentId } = await params;
 
     if (!paymentId) {
@@ -19,6 +19,7 @@ export async function POST(
     const action = body?.action; // 'approve' | 'reject'
     const reason = (body?.reason || '').trim();
     const txIdEvidence = (body?.txId || body?.evidence || '').trim();
+    const bybitDepositIdEvidence = (body?.bybitDepositId || '').trim();
     const confirmed = Boolean(body?.confirm);
 
     if (!action || !['approve', 'reject'].includes(action)) {
@@ -56,55 +57,80 @@ export async function POST(
     const nowIso = new Date().toISOString();
 
     if (action === 'approve') {
-      // Manual approval: Mark payment confirmed, record tx evidence, upgrade user
-      const effectiveTxId = txIdEvidence || order.tx_id || `MANUAL-${Date.now()}`;
+      // Require payment evidence (either provided in review or previously recorded on order)
+      const effectiveTxId = txIdEvidence || order.tx_id || null;
+      const effectiveDepositId = bybitDepositIdEvidence || order.bybit_deposit_id || null;
 
-      await admin
-        .from('payment_orders')
-        .update({
-          status: 'confirmed',
-          confirmed_at: nowIso,
-          tx_id: effectiveTxId,
-          received_amount: order.received_amount || order.payment_amount_usdt,
-          failure_reason: null,
-          updated_at: nowIso,
-        })
-        .eq('id', order.id);
+      if (!effectiveTxId && !effectiveDepositId) {
+        return NextResponse.json(
+          {
+            error: 'Payment evidence (transaction ID or Bybit deposit ID) is required to approve an order.',
+            code: 'MISSING_PAYMENT_EVIDENCE',
+          },
+          { status: 400 }
+        );
+      }
 
-      // Elevate target user to ad_free
-      await admin
-        .from('profiles')
-        .update({
-          plan: 'ad_free',
-          updated_at: nowIso,
-        })
-        .eq('id', order.user_id);
+      // Enforce at least 10 characters justification for exceptional order statuses
+      const isExceptionalStatus = ['amount_mismatch', 'expired', 'cancelled'].includes(order.status);
+      if (isExceptionalStatus && (!reason || reason.length < 10)) {
+        return NextResponse.json(
+          {
+            error: `Approving an order in '${order.status}' status requires a detailed justification reason of at least 10 characters.`,
+            code: 'INSUFFICIENT_JUSTIFICATION',
+          },
+          { status: 400 }
+        );
+      }
 
-      // Record audit log
-      await logAdminAction({
-        adminUserId: adminProfile.id,
-        action: 'payment_manually_approved',
-        targetUserId: order.user_id,
-        targetPaymentId: order.id,
-        reason,
-        metadata: {
-          orderId: order.order_id,
-          network: order.network,
-          previousStatus: order.status,
-          paymentAmountUsdt: order.payment_amount_usdt,
-          evidenceTxId: effectiveTxId,
-          adminEmail: adminProfile.email,
-        },
+      // Execute the atomic PostgreSQL transaction RPC.
+      // Strictly NO fallback to sequential multi-request updates.
+      const { data, error: rpcErr } = await admin.rpc('admin_approve_payment_atomic', {
+        p_payment_id: order.id,
+        p_admin_user_id: adminUserId,
+        p_tx_id: effectiveTxId,
+        p_bybit_deposit_id: effectiveDepositId,
+        p_review_notes: reason,
       });
+
+      if (rpcErr) {
+        console.error('[AdminPaymentReview] Atomic approval RPC failed:', rpcErr);
+        return NextResponse.json(
+          {
+            error: `Atomic payment approval failed: ${rpcErr.message}. Migration 20261108200000_subscription_plans_and_entitlements must be applied to the database.`,
+            code: rpcErr.code || 'RPC_EXECUTION_FAILED',
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!data?.success) {
+        const statusCode = data?.code === 'NOT_FOUND' ? 404 : 409;
+        return NextResponse.json(
+          {
+            error: data?.error || 'Payment approval was rejected by atomic transaction constraints.',
+            code: data?.code || 'APPROVAL_REJECTED',
+          },
+          { status: statusCode }
+        );
+      }
+
+      const isIdempotentRetry = Boolean(data.already_confirmed);
+      const msg = isIdempotentRetry
+        ? `Order ${order.order_id} was already confirmed. Entitlements and original timestamp preserved.`
+        : `Order ${order.order_id} manually approved. User upgraded to ${data.plan}.`;
 
       return NextResponse.json({
         success: true,
-        message: `Order ${order.order_id} manually approved. User upgraded to Ad-Free.`,
+        message: msg,
         status: 'confirmed',
+        alreadyConfirmed: isIdempotentRetry,
+        plan: data.plan,
+        subscriptionExpiresAt: data.subscription_expires_at,
       });
     } else {
       // Manual rejection
-      await admin
+      const { error: rejectErr } = await admin
         .from('payment_orders')
         .update({
           failure_reason: `Rejected by admin: ${reason}`,
@@ -112,8 +138,15 @@ export async function POST(
         })
         .eq('id', order.id);
 
+      if (rejectErr) {
+        return NextResponse.json(
+          { error: `Failed to reject payment order: ${rejectErr.message}` },
+          { status: 500 }
+        );
+      }
+
       await logAdminAction({
-        adminUserId: adminProfile.id,
+        adminUserId,
         action: 'payment_manually_rejected',
         targetUserId: order.user_id,
         targetPaymentId: order.id,

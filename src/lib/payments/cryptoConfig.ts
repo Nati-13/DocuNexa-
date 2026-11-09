@@ -56,14 +56,14 @@ export const OFFICIAL_CONTRACTS = {
 } as const;
 
 export interface CryptoSelectorOption {
-  id: CryptoPaymentMethodId;
+  id: CryptoPaymentMethodId | 'bybit_uid';
   label: string;
   shortLabel: string;
   tokenSymbol: 'USDT' | 'USDC';
   tokenLogoSrc: string;
   tokenLogoAlt: string;
   networkName: string;
-  networkKey: 'Polygon' | 'Aptos' | 'TRON' | 'Polygon_USDC';
+  networkKey: 'Polygon' | 'Aptos' | 'TRON' | 'Polygon_USDC' | 'Bybit_UID';
   networkLogoSrc: string;
   networkLogoAlt: string;
   status: 'active' | 'coming_soon';
@@ -217,6 +217,42 @@ export const CRYPTO_SELECTOR_OPTIONS: CryptoSelectorOption[] = [
     indicatorColor: 'bg-blue-500',
     tooltip: 'Active payment method: Verified on Polygon PoS network (Native USDC 0x3c49...).',
   },
+];
+
+/**
+ * Fifth payment rail: Internal Bybit Account-to-Account transfer via Recipient UID
+ */
+export const BYBIT_UID_PAYMENT_OPTION: CryptoSelectorOption = {
+  id: 'bybit_uid',
+  label: 'Bybit UID — USDT',
+  shortLabel: 'Bybit UID',
+  tokenSymbol: 'USDT',
+  tokenLogoSrc: '/images/crypto/usdt.png',
+  tokenLogoAlt: 'Tether USDT official logo',
+  networkName: 'Bybit Internal (Off-chain)',
+  networkKey: 'Bybit_UID',
+  networkLogoSrc: '/images/crypto/bybit.svg',
+  networkLogoAlt: 'Bybit official exchange logo',
+  status: 'active',
+  isEnabled: true,
+  contractAddress: '',
+  badgeText: 'Active',
+  badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  indicatorColor: 'bg-amber-500',
+  tooltip: 'Active exchange payment: Direct account-to-account transfer via Bybit Send & Receive with zero fees.',
+};
+
+/**
+ * Authoritative 5-method checkout selector:
+ * 1. USDT — Polygon
+ * 2. USDT — Aptos
+ * 3. USDT — TRON (TRC20)
+ * 4. USDC — Polygon PoS Native
+ * 5. Bybit UID — USDT
+ */
+export const CHECKOUT_PAYMENT_METHODS: CryptoSelectorOption[] = [
+  ...CRYPTO_SELECTOR_OPTIONS,
+  BYBIT_UID_PAYMENT_OPTION,
 ];
 
 /**

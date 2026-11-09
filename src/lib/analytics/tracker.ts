@@ -2,54 +2,15 @@ import crypto from 'crypto';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { AnalyticsEventType, DbAnalyticsEvent } from '@/lib/supabase/types';
 
-// Map of common ISO country codes to human-readable country names
-export const COUNTRY_NAMES: Record<string, string> = {
-  ET: 'Ethiopia',
-  US: 'United States',
-  GB: 'United Kingdom',
-  DE: 'Germany',
-  FR: 'France',
-  CA: 'Canada',
-  AU: 'Australia',
-  IN: 'India',
-  KE: 'Kenya',
-  NG: 'Nigeria',
-  ZA: 'South Africa',
-  NL: 'Netherlands',
-  SE: 'Sweden',
-  BR: 'Brazil',
-  JP: 'Japan',
-  SG: 'Singapore',
-  AE: 'United Arab Emirates',
-  SA: 'Saudi Arabia',
-  EG: 'Egypt',
-  CN: 'China',
-  IT: 'Italy',
-  ES: 'Spain',
-  CH: 'Switzerland',
-  PL: 'Poland',
-  TR: 'Turkey',
-  Unknown: 'Unknown Location',
-};
+import {
+  getCountryName,
+  getCountryFlag,
+  normalizeCountryCode,
+  ISO_COUNTRY_NAMES,
+} from '@/lib/countryNames';
 
-export function getCountryName(code: string | null | undefined): string {
-  if (!code || code === 'Unknown' || code === 'XX' || code === 'T1') {
-    return 'Unknown Location';
-  }
-  const upper = code.toUpperCase();
-  return COUNTRY_NAMES[upper] || upper;
-}
-
-export function getCountryFlag(code: string | null | undefined): string {
-  if (!code || code === 'Unknown' || code === 'XX' || code.length !== 2) {
-    return '🌐';
-  }
-  const codePoints = code
-    .toUpperCase()
-    .split('')
-    .map((char) => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-}
+export const COUNTRY_NAMES = ISO_COUNTRY_NAMES;
+export { getCountryName, getCountryFlag, normalizeCountryCode };
 
 // In-memory fallback vault for resilient metric reporting
 interface MemoryEvent {
@@ -122,7 +83,7 @@ export async function recordAnalyticsEvent({
   const dateStr = new Date(now).toISOString().slice(0, 10);
   const cleanPath = (path || '/').split('?')[0].toLowerCase();
   const visitorHash = hashVisitorIdentifier(ip || '127.0.0.1', dateStr);
-  const cleanCountry = countryCode && countryCode.length === 2 ? countryCode.toUpperCase() : null;
+  const cleanCountry = normalizeCountryCode(countryCode);
 
   // Save in memory vault
   memoryAnalyticsVault.push({
@@ -291,7 +252,7 @@ export async function getAnalyticsSummary(rangeDays: number = 30): Promise<Analy
       }
 
       // Country stats
-      const c = ev.countryCode || 'Unknown';
+      const c = normalizeCountryCode(ev.countryCode) || 'Unknown';
       countryPageViews[c] = (countryPageViews[c] || 0) + 1;
       if (!countryUniqueVisitors[c]) countryUniqueVisitors[c] = new Set();
       if (isValidVisitorHash) {

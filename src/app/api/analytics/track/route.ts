@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
 
     const countryCode =
       req.headers.get('x-vercel-ip-country') ||
+      (req as any).geo?.country ||
       req.headers.get('cf-ipcountry') ||
+      req.headers.get('x-country-code') ||
       req.headers.get('x-country') ||
       null;
 

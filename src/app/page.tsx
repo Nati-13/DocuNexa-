@@ -115,7 +115,7 @@ export default function HomePage() {
     },
     {
       q: 'Is DocuNexa really 100% free?',
-      a: 'Yes. Every core tool is completely free with zero subscription requirements or daily page limits. Users who wish to remove advertising can choose a one-time $2 Ad-Free upgrade.',
+      a: 'Yes. Every core tool is completely free with zero subscription requirements or daily page limits. Users who wish to remove advertising can choose flexible Weekly ($1), Monthly ($3), or Yearly ($27) Ad-Free plans.',
     },
     {
       q: 'What is the PDF Unit Cutter tool?',
@@ -831,7 +831,7 @@ export default function HomePage() {
             DocuNexa is a free PDF toolkit built to make document work easier for everyone.
           </h2>
           <p className="text-sm text-muted">
-            No subscription required. All core PDF tools are free with zero paywalls. An optional one-time Ad-Free upgrade is available for users who prefer an ad-free workspace. Built for students, teachers, researchers, and professionals worldwide.
+            No subscription required. All core PDF tools are free with zero paywalls. An optional one-time Ad-Free upgrade or flexible subscriptions (Weekly, Monthly, Yearly) are available for users who prefer an ad-free workspace. Built for students, teachers, researchers, and professionals worldwide.
           </p>
         </div>
 

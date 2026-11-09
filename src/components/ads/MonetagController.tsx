@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { isRouteExcludedFromAds } from './MonetagZone';
+import { isUserAdFree } from '@/lib/planCatalog';
 
 /**
  * Client-side component that ensures AD-FREE users and visitors on sensitive/private routes
@@ -19,7 +20,7 @@ export function MonetagServiceWorkerCleanup() {
       return;
     }
 
-    const isAdFree = user?.plan === 'ad_free';
+    const isAdFree = isUserAdFree(user?.plan, user?.subscription_expires_at);
     const isExcluded = isRouteExcludedFromAds(pathname);
 
     // 1. Unregister Monetag service worker for ad-free users or when on excluded routes

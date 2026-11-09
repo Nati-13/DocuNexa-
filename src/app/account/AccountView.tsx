@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Profile as User, DbPaymentOrder as PaymentOrder } from '@/lib/supabase/types';
 import { useAuth } from '@/context/AuthContext';
+import { getPlan, isUserAdFree, isUserPro } from '@/lib/planCatalog';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -139,7 +141,9 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
     window.location.reload();
   };
 
-  const isAdFree = user.plan === 'ad_free';
+  const isAdFree = isUserAdFree(user.plan, user.subscription_expires_at);
+  const isPro = isUserPro(user.plan, user.subscription_expires_at);
+  const planInfo = getPlan(user.plan);
 
   return (
     <div className="space-y-8">
@@ -203,15 +207,22 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                 Current Plan
               </h2>
 
-              {isAdFree ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                  <CheckCircle2 size={13} /> AD-FREE
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-paper border border-border text-muted text-xs font-bold">
-                  FREE
-                </span>
-              )}
+              <div className="flex items-center gap-1.5">
+                {isPro && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-brand/10 border border-brand/20 text-brand text-xs font-bold">
+                    <Sparkles size={11} /> PRO
+                  </span>
+                )}
+                {isAdFree ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                    <CheckCircle2 size={13} /> {user.plan === 'ad_free' ? 'LIFETIME AD-FREE' : `${planInfo.name.toUpperCase()} (AD-FREE)`}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-paper border border-border text-muted text-xs font-bold">
+                    FREE
+                  </span>
+                )}
+              </div>
             </div>
 
             {isAdFree ? (
@@ -220,47 +231,36 @@ export function AccountView({ user: initialUser, payments: initialPayments }: Ac
                   ✓ Advertising Disabled
                 </p>
                 <p className="text-xs text-muted leading-relaxed">
-                  Your DocuNexa account currently has advertising disabled. You have unlimited access to every PDF tool with zero Monetag ads.
+                  {user.plan === 'ad_free'
+                    ? 'Your account has grandfathered Lifetime Ad-Free access. You have unlimited access to every PDF tool with zero Monetag ads.'
+                    : `Your ${planInfo.name} subscription is active. All tools are 100% ad-free.`}
                 </p>
+                {user.subscription_expires_at && (
+                  <p className="text-xs font-mono text-muted">
+                    Entitlement active through: {new Date(user.subscription_expires_at).toLocaleDateString()}
+                  </p>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
                 <p className="text-xs text-muted leading-relaxed">
-                  You are using DocuNexa for free with advertisements enabled. Ads help support our free client-side processing infrastructure.
+                  You are using DocuNexa on the free ad-supported tier. Choose an Ad-Free or Pro subscription anytime below.
                 </p>
               </div>
             )}
           </div>
 
-          {!isAdFree && (
-            <div className="pt-4 border-t border-border">
-              {checkoutError && (
-                <div className="mb-3 p-3 rounded-md bg-rose-500/10 border border-rose-500/30 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                  <span>{checkoutError}</span>
-                </div>
-              )}
-
-              <button
-                onClick={() => handleStartCheckout()}
-                disabled={checkoutLoading}
-                className="w-full py-3 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-              >
-                {checkoutLoading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" /> Generating Order...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={16} /> Remove Ads — $2
-                  </>
-                )}
-              </button>
-              <p className="text-[11px] text-center text-muted mt-1.5">
-                $2.00 USD one-time crypto payment on Polygon, Aptos, or TRON. Never billed again.
-              </p>
-            </div>
-          )}
+          <div className="pt-4 border-t border-border space-y-2">
+            <Link
+              href="/choose-plan"
+              className="w-full py-2.5 px-4 rounded-md bg-brand hover:bg-brand/90 text-brand-fg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            >
+              <Sparkles size={14} /> {isAdFree ? 'Change or Renew Plan' : 'Upgrade Plan / Remove Ads'}
+            </Link>
+            <p className="text-[11px] text-center text-muted">
+              Weekly ($1), Monthly ($3), or Yearly ($27 provisional) via USDT, USDC, or Bybit UID. Manual renewals with zero recurring card rebills.
+            </p>
+          </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { getCurrentUser } from '@/lib/auth';
+import { isUserAdFree } from '@/lib/planCatalog';
 import { AuthProvider } from '@/context/AuthContext';
 import { MonetagServiceWorkerCleanup } from '@/components/ads/MonetagController';
 import { MonetagZone, MonetagMainZone } from '@/components/ads/MonetagZone';
@@ -104,7 +105,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
-  const isAdFree = user?.plan === 'ad_free';
+  const isAdFree = isUserAdFree(user?.plan, (user as any)?.subscription_expires_at);
 
   const rootJsonLd = {
     '@context': 'https://schema.org',
@@ -150,7 +151,14 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen bg-paper text-ink font-sans antialiased flex flex-col transition-colors selection:bg-brand/15 selection:text-ink">
         <AnalyticsTracker />
-        <AuthProvider initialUser={user ? { id: user.id, email: user.email, plan: user.plan, created_at: user.created_at } : null}>
+        <AuthProvider initialUser={user ? { 
+          id: user.id, 
+          email: user.email, 
+          plan: user.plan, 
+          subscription_expires_at: (user as any)?.subscription_expires_at || null,
+          subscription_started_at: (user as any)?.subscription_started_at || null,
+          created_at: user.created_at 
+        } : null}>
           <Navbar />
           <ScrollProgress />
           <div className="flex-1">

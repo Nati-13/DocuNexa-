@@ -169,7 +169,7 @@ export default function TermsPage() {
 
               <ul className="list-disc pl-5 space-y-2 text-muted">
                 <li>
-                  <strong>Pricing & Discounts:</strong> The standard price for DocuNexa Ad-Free is $2.00 USD. When a valid promotional coupon code is applied, the final payable price is discounted accordingly (e.g. 25% off reduces the price to $1.50).
+                  <strong>Pricing &amp; Plans Catalog:</strong> DocuNexa offers flexible subscription tiers alongside its baseline $2.00 USD rate, including Weekly ($1/wk), Weekly Pro ($2/wk), Monthly ($3/mo, Save 25%), Monthly Pro ($6/mo, Save 25%), Yearly ($27/yr, 25% off monthly), and Yearly Pro ($54/yr, 25% off monthly). Grandfathered one-time payment purchasers retain permanent Lifetime Ad-Free access without additional fees. When a valid promotional coupon is applied, the final payable amount is discounted accordingly.
                 </li>
                 <li>
                   <strong>Unique Payment Amount:</strong> Each order generates a unique payment amount based on the final price (e.g. 2.004821 USDT for normal orders or 1.504821 USDT when discounted) with 6 decimal places to uniquely identify your deposit on the Polygon blockchain without requiring personal banking information.

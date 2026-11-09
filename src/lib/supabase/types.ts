@@ -1,9 +1,19 @@
-export type UserPlan = 'free' | 'ad_free';
+export type UserPlan =
+  | 'free'
+  | 'weekly'
+  | 'weekly_pro'
+  | 'monthly'
+  | 'monthly_pro'
+  | 'yearly'
+  | 'yearly_pro'
+  | 'ad_free';
 
 export type Profile = {
   id: string; // uuid
   email: string;
   plan: UserPlan;
+  subscription_expires_at?: string | null;
+  subscription_started_at?: string | null;
   is_suspended?: boolean;
   created_at: string;
   updated_at: string;
@@ -28,18 +38,21 @@ export type PaymentOrderStatus =
   | 'expired'
   | 'amount_mismatch'
   | 'late_payment'
-  | 'cancelled';
+  | 'cancelled'
+  | 'ambiguous';
 
 export type CouponDiscountType = 'percent' | 'fixed_usdt';
 
-export type PaymentNetwork = 'Polygon' | 'Aptos' | 'TRON';
+export type PaymentNetwork = 'Polygon' | 'Aptos' | 'TRON' | 'Bybit_UID';
 export type PaymentCurrency = 'USDT' | 'USDC';
 
 export type DbPaymentOrder = {
   id: string; // uuid
   user_id: string; // uuid
   order_id: string;
-  product: 'ad_free';
+  product: string;
+  plan_id?: string | null;
+  subscription_duration_days?: number | null;
   base_amount_usd: number | string;
   payment_amount_usdt: number | string;
   currency: PaymentCurrency;
@@ -56,6 +69,9 @@ export type DbPaymentOrder = {
   confirmations: number | null;
   received_amount: number | string | null;
   failure_reason: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  review_notes?: string | null;
   updated_at: string;
   coupon_id?: string | null;
   coupon_code?: string | null;
@@ -192,7 +208,9 @@ export type Database = {
           id?: string;
           user_id: string;
           order_id: string;
-          product?: 'ad_free';
+          product?: string;
+          plan_id?: string | null;
+          subscription_duration_days?: number | null;
           base_amount_usd?: number | string;
           payment_amount_usdt: number | string;
           currency?: PaymentCurrency;
@@ -209,6 +227,9 @@ export type Database = {
           confirmations?: number | null;
           received_amount?: number | string | null;
           failure_reason?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          review_notes?: string | null;
           updated_at?: string;
           coupon_id?: string | null;
           coupon_code?: string | null;
@@ -221,7 +242,9 @@ export type Database = {
           id?: string;
           user_id?: string;
           order_id?: string;
-          product?: 'ad_free';
+          product?: string;
+          plan_id?: string | null;
+          subscription_duration_days?: number | null;
           base_amount_usd?: number | string;
           payment_amount_usdt?: number | string;
           currency?: PaymentCurrency;
@@ -238,6 +261,9 @@ export type Database = {
           confirmations?: number | null;
           received_amount?: number | string | null;
           failure_reason?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          review_notes?: string | null;
           updated_at?: string;
           coupon_id?: string | null;
           coupon_code?: string | null;
@@ -565,6 +591,28 @@ export type Database = {
           error_message: string | null;
           error_code: string | null;
         }[];
+      };
+      admin_approve_payment_atomic: {
+        Args: {
+          p_payment_id: string;
+          p_admin_user_id: string;
+          p_tx_id?: string | null;
+          p_bybit_deposit_id?: string | null;
+          p_review_notes?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          payment_id?: string;
+          status?: string;
+          confirmed_at?: string;
+          user_id?: string;
+          plan?: string;
+          subscription_expires_at?: string | null;
+          already_confirmed?: boolean;
+          message?: string;
+          error?: string;
+          code?: string;
+        };
       };
     };
     Enums: Record<string, never>;

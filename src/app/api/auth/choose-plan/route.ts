@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentProfile, hasUserAcceptedCurrentTerms } from '@/lib/supabase/server';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+import { isPaidPlan } from '@/lib/planCatalog';
 
 export async function POST(req: Request) {
   const { errorResponse, requestId } = await guardApiRequest(req, {
@@ -58,6 +59,15 @@ export async function POST(req: Request) {
         success: true,
         plan: profile.plan,
         redirect: '/account?checkout=ad_free',
+      }, { status: 200 }, requestId);
+    }
+
+    if (isPaidPlan(plan)) {
+      // Paid subscription selection: route to checkout with selected plan
+      return secureJsonResponse({
+        success: true,
+        plan: profile.plan,
+        redirect: `/account?checkout=${encodeURIComponent(plan)}`,
       }, { status: 200 }, requestId);
     }
 

@@ -27,6 +27,8 @@ export async function GET(req: Request) {
         id: profile.id,
         email: profile.email,
         plan: profile.plan,
+        subscription_expires_at: profile.subscription_expires_at || null,
+        subscription_started_at: profile.subscription_started_at || null,
         created_at: profile.created_at,
       },
     }, { status: 200 }, requestId);

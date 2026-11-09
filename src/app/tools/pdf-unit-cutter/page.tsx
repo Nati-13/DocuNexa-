@@ -817,6 +817,15 @@ export default function PdfUnitCutterPage() {
                     <BookOpen size={16} className="text-brand" />
                     <span>Try with Sample Textbook</span>
                   </button>
+
+                  <Link
+                    href="/tools/pdf-unit-cutter/review"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-paper hover:bg-surface border border-border text-ink text-sm font-semibold transition-colors"
+                    title="Batch evaluation and supervised feedback across folders of PDFs"
+                  >
+                    <ShieldCheck size={16} className="text-brand" />
+                    <span>Review & Learning Mode</span>
+                  </Link>
                 </div>
 
                 <p className="text-xs text-muted pt-3">

@@ -181,11 +181,11 @@ export default function AdminPlansPage() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-emerald-500" />
-                <span>One-time payment: $2.00 USDT on Polygon PoS</span>
+                <span>Pricing: Weekly ($1), Monthly ($3), Yearly ($27), plus Pro early-access tiers</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-emerald-500" />
-                <span>Lifetime entitlement validity (Never expires)</span>
+                <span>Manual crypto renewals (Polygon / Aptos USDT) with grandfathered lifetime support</span>
               </div>
             </div>
           </div>

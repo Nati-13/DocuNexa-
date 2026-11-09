@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import { useAuth } from '@/context/AuthContext';
+import { isUserAdFree } from '@/lib/planCatalog';
 
 /**
  * Route prefixes where advertisements must NEVER be loaded:
@@ -98,8 +99,8 @@ export function MonetagZone({ isAdFree = false, zoneId = '12217455' }: MonetagZo
     return null;
   }
 
-  // Suppress ads for ad-free subscribers
-  if (isAdFree || user?.plan === 'ad_free') {
+  // Suppress ads for ad-free subscribers (active weekly, monthly, yearly, pro, or grandfathered lifetime)
+  if (isAdFree || user?.plan === 'ad_free' || isUserAdFree(user?.plan, user?.subscription_expires_at)) {
     return null;
   }
 
@@ -182,8 +183,8 @@ export function MonetagMainZone({
     return null;
   }
 
-  // Suppress ads for ad-free subscribers
-  if (isAdFree || user?.plan === 'ad_free') {
+  // Suppress ads for ad-free subscribers (active weekly, monthly, yearly, pro, or grandfathered lifetime)
+  if (isAdFree || user?.plan === 'ad_free' || isUserAdFree(user?.plan, user?.subscription_expires_at)) {
     return null;
   }
 

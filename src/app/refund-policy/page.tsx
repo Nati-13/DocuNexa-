@@ -75,18 +75,18 @@ export default function RefundPolicyPage() {
         </p>
       </section>
 
-      {/* 3. One-Time Payment Structure */}
+      {/* 3. Manual Renewal Structure */}
       <section id="one-time-nature" className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-bold text-ink">
-          3. One-Time Payment Structure (No Recurring Subscriptions)
+          3. Manual Renewal Structure (No Automatic Recurring Rebills)
         </h2>
         <div className="p-4 rounded-md bg-brand-50/60 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800/60 text-xs sm:text-sm text-ink space-y-2">
           <p className="font-bold text-brand-800 dark:text-brand-300">
             Zero Surprise Recurring Charges:
           </p>
           <p>
-            The DocuNexa <strong>Ad-Free upgrade ($2.00 USD)</strong> is a single, one-time payment.
-            It is <strong>NOT</strong> an automatically renewing monthly or annual subscription. You will never be billed again unexpectedly.
+            DocuNexa subscription plans (Weekly $1, Monthly $3, Yearly $27, and Pro tiers) are renewed manually by the user using cryptocurrency (USDT on Polygon or Aptos).
+            DocuNexa does <strong>NOT</strong> perform automated card rebills or unexpected deductions. Grandfathered one-time Ad-Free purchasers retain permanent lifetime access.
           </p>
         </div>
       </section>

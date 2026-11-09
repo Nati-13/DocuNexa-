@@ -467,49 +467,179 @@ export async function extractPdfTextPages(
 /**
  * Renders a specific single page to a canvas context
  */
+export interface RenderPdfPageOptions {
+  scale?: number;
+  signal?: AbortSignal;
+  pdfDoc?: any;
+}
+
+// Active canvas render registry to prevent concurrent renders on the same canvas
+const activeCanvasRenderTasks = new WeakMap<
+  HTMLCanvasElement,
+  {
+    renderTask: any;
+    promise: Promise<void>;
+    cancel: () => void;
+  }
+>();
+
+/**
+ * Safely cancels any active PDF.js render operation on a specific canvas element
+ * and awaits completion so the canvas is clean for subsequent render calls.
+ */
+export async function cancelActiveCanvasRender(canvas: HTMLCanvasElement): Promise<void> {
+  const active = activeCanvasRenderTasks.get(canvas);
+  if (active) {
+    try {
+      active.cancel();
+    } catch {
+      // ignore immediate sync cancel error
+    }
+    try {
+      await active.promise;
+    } catch {
+      // ignore RenderingCancelledException
+    }
+    activeCanvasRenderTasks.delete(canvas);
+  }
+}
+
+/**
+ * Safely renders a PDF page to a canvas element.
+ * Guarantees:
+ * 1. Mutual exclusion: any prior in-flight render on the canvas is cancelled and awaited.
+ * 2. Signal abortion: immediately stops if AbortSignal is triggered.
+ * 3. Document reuse: accepts existing pdfDoc instance or arrayBuffer.
+ * 4. Proper cleanup: frees page resources and worker tasks.
+ * 5. Transparent cancellation handling: RenderingCancelledException does not bubble as an error.
+ */
 export async function renderPdfPageToCanvas(
-  arrayBuffer: ArrayBuffer,
+  source: ArrayBuffer | Uint8Array | any,
   pageNumber: number,
   canvas: HTMLCanvasElement,
-  scale = 1.2
+  optionsOrScale: number | RenderPdfPageOptions = 1.2
 ): Promise<void> {
+  const options: RenderPdfPageOptions =
+    typeof optionsOrScale === 'number' ? { scale: optionsOrScale } : optionsOrScale;
+  const scale = options.scale ?? 1.2;
+  const signal = options.signal;
+
+  if (signal?.aborted) {
+    return;
+  }
+
+  // 1. Cancel and await any prior render task on this canvas element
+  await cancelActiveCanvasRender(canvas);
+
+  if (signal?.aborted) {
+    return;
+  }
+
   const pdfjs = await getPdfJs();
-  const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(arrayBuffer));
   let pdfDoc: any = null;
+  let shouldDestroyDoc = false;
 
-  try {
+  // Determine if source is already an open PDFDocumentProxy
+  if (source && typeof source.getPage === 'function') {
+    pdfDoc = source;
+  } else if (options.pdfDoc && typeof options.pdfDoc.getPage === 'function') {
+    pdfDoc = options.pdfDoc;
+  } else {
+    const loadingTask = pdfjs.getDocument(getPdfJsDocumentParams(source));
     pdfDoc = await loadingTask.promise;
-    const page = await pdfDoc.getPage(pageNumber);
-    try {
-      const viewport = page.getViewport({ scale });
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+    shouldDestroyDoc = true;
+  }
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const renderContext = {
-        canvasContext: ctx,
-        viewport: viewport,
-      };
-
-      await page.render(renderContext).promise;
-    } finally {
-      if (typeof page.cleanup === 'function') {
-        page.cleanup();
-      }
-    }
-  } finally {
-    if (pdfDoc && typeof pdfDoc.destroy === 'function') {
+  if (signal?.aborted) {
+    if (shouldDestroyDoc && pdfDoc && typeof pdfDoc.destroy === 'function') {
       try {
         await pdfDoc.destroy();
       } catch {
         // ignore cleanup error
       }
     }
-    if (loadingTask && typeof loadingTask.destroy === 'function') {
+    return;
+  }
+
+  let page: any = null;
+  let renderTask: any = null;
+
+  try {
+    page = await pdfDoc.getPage(pageNumber);
+    if (signal?.aborted) return;
+
+    const viewport = page.getViewport({ scale });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const renderContext = {
+      canvasContext: ctx,
+      viewport: viewport,
+    };
+
+    renderTask = page.render(renderContext);
+
+    let isCancelled = false;
+    const taskPromise = (async () => {
       try {
-        await loadingTask.destroy();
+        await renderTask.promise;
+      } catch (err: any) {
+        if (
+          err?.name === 'RenderingCancelledException' ||
+          err?.message?.includes('Rendering cancelled')
+        ) {
+          // Normal cancellation, suppress
+          return;
+        }
+        throw err;
+      } finally {
+        if (activeCanvasRenderTasks.get(canvas)?.renderTask === renderTask) {
+          activeCanvasRenderTasks.delete(canvas);
+        }
+      }
+    })();
+
+    const cancelFn = () => {
+      if (!isCancelled) {
+        isCancelled = true;
+        try {
+          renderTask.cancel();
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    activeCanvasRenderTasks.set(canvas, {
+      renderTask,
+      promise: taskPromise,
+      cancel: cancelFn,
+    });
+
+    if (signal) {
+      if (signal.aborted) {
+        cancelFn();
+      } else {
+        signal.addEventListener('abort', cancelFn, { once: true });
+      }
+    }
+
+    await taskPromise;
+  } finally {
+    if (page && typeof page.cleanup === 'function') {
+      try {
+        page.cleanup();
+      } catch {
+        // ignore cleanup error
+      }
+    }
+    if (shouldDestroyDoc && pdfDoc && typeof pdfDoc.destroy === 'function') {
+      try {
+        await pdfDoc.destroy();
       } catch {
         // ignore cleanup error
       }

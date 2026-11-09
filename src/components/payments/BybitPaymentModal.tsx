@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Copy,
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { QrCode } from './QrCode';
 import { formatPaymentAmount } from '@/lib/payments/format';
-import { CRYPTO_SELECTOR_OPTIONS, OFFICIAL_CONTRACTS } from '@/lib/payments/cryptoConfig';
+import { CRYPTO_SELECTOR_OPTIONS, CHECKOUT_PAYMENT_METHODS, OFFICIAL_CONTRACTS } from '@/lib/payments/cryptoConfig';
 
 export interface PaymentOrderData {
   orderId: string;
@@ -62,12 +62,20 @@ export function BybitPaymentModal({
     'pending' | 'detected' | 'confirmed' | 'expired' | 'amount_mismatch' | 'late_payment'
   >('pending');
   const [statusMessage, setStatusMessage] = useState(
-    order.network === 'Aptos'
+    order.network === 'Bybit_UID'
+      ? 'Waiting for internal USDT transfer to Bybit UID...'
+      : order.network === 'Aptos'
       ? 'Waiting for transfer on Aptos mainnet...'
+      : order.network === 'TRON'
+      ? 'Waiting for transfer on TRON network (TRC20)...'
       : 'Waiting for transfer on Polygon network...'
   );
   const [txId, setTxId] = useState<string | null>(null);
   const [confirmations, setConfirmations] = useState<string | null>(null);
+  const [txIdInput, setTxIdInput] = useState('');
+  const [senderUidInput, setSenderUidInput] = useState('');
+  const [submittingTxId, setSubmittingTxId] = useState(false);
+  const [txIdFeedback, setTxIdFeedback] = useState<string | null>(null);
 
   // Client-side portal mounting
   useEffect(() => {
@@ -145,14 +153,18 @@ export function BybitPaymentModal({
     return () => clearInterval(interval);
   }, [status]);
 
-  // Polling server for Bybit deposit updates every 6 seconds
+  const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollCountRef = useRef(0);
+
+  // Polling server for Bybit deposit updates with adaptive backoff
   const pollStatus = useCallback(async () => {
     if (status === 'confirmed' || status === 'expired' || status === 'late_payment') {
       return;
     }
 
     try {
-      const res = await fetch(`/api/payments/bybit/check?orderId=${encodeURIComponent(order.orderId)}`);
+      const senderUidParam = senderUidInput.trim() ? `&senderUid=${encodeURIComponent(senderUidInput.trim())}` : '';
+      const res = await fetch(`/api/payments/bybit/check?orderId=${encodeURIComponent(order.orderId)}${senderUidParam}`);
       const data = await res.json();
 
       if (!res.ok) return;
@@ -164,31 +176,103 @@ export function BybitPaymentModal({
         setTimeout(() => {
           onConfirmed();
         }, 1800);
+        return;
       } else if (data.status === 'detected') {
         setStatus('detected');
-        setStatusMessage(data.message || 'Deposit detected on Polygon! Waiting for Bybit confirmation...');
+        setStatusMessage(data.message || 'Deposit detected on Bybit! Processing confirmation...');
         if (data.txId) setTxId(data.txId);
         if (data.confirmations) setConfirmations(data.confirmations);
       } else if (data.status === 'late_payment') {
         setStatus('late_payment');
         setStatusMessage(data.message || 'Payment received after order expired. Please contact support.');
         if (data.txId) setTxId(data.txId);
+        return;
       } else if (data.status === 'amount_mismatch') {
         setStatus('amount_mismatch');
         setStatusMessage(data.message || 'Incorrect amount detected. Please contact support.');
       } else if (data.status === 'expired') {
         setStatus('expired');
         setStatusMessage('Order has expired.');
+        return;
       }
+
+      // Schedule next adaptive poll
+      pollCountRef.current += 1;
+      let nextDelay = 6000;
+      if (data.retryAfter) {
+        nextDelay = Math.max(8000, Number(data.retryAfter) * 1000);
+      } else if (!senderUidInput.trim()) {
+        nextDelay = 10000; // Less aggressive when sender UID is not entered
+      } else if (pollCountRef.current > 30) {
+        nextDelay = 14000; // Backoff after ~3 minutes
+      } else if (pollCountRef.current > 10) {
+        nextDelay = 9000; // Backoff after ~1 minute
+      }
+
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+      pollTimerRef.current = setTimeout(() => {
+        pollStatus();
+      }, nextDelay);
     } catch {
-      // Ignore transient network errors during poll
+      // Ignore transient network errors and schedule retry with backoff
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+      pollTimerRef.current = setTimeout(() => {
+        pollStatus();
+      }, 10000);
     }
-  }, [order.orderId, status, onConfirmed]);
+  }, [order.orderId, status, onConfirmed, senderUidInput]);
 
   useEffect(() => {
-    const pollInterval = setInterval(pollStatus, 6000);
-    return () => clearInterval(pollInterval);
-  }, [pollStatus]);
+    // Start adaptive polling
+    const initialDelay = senderUidInput.trim() ? 5000 : 8000;
+    pollTimerRef.current = setTimeout(() => {
+      pollStatus();
+    }, initialDelay);
+
+    return () => {
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current);
+      }
+    };
+  }, [pollStatus, senderUidInput]);
+
+  // Option B: Customer submits Bybit internal transaction ID (txID)
+  const handleVerifyTxId = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = txIdInput.trim();
+    if (!trimmed) return;
+    setSubmittingTxId(true);
+    setTxIdFeedback(null);
+    try {
+      const senderUidParam = senderUidInput.trim() ? `&senderUid=${encodeURIComponent(senderUidInput.trim())}` : '';
+      const res = await fetch(
+        `/api/payments/bybit/check?orderId=${encodeURIComponent(order.orderId)}&txId=${encodeURIComponent(trimmed)}${senderUidParam}`
+      );
+      const data = await res.json();
+      if (data.status === 'confirmed') {
+        setStatus('confirmed');
+        setStatusMessage('Internal transfer confirmed on Bybit! Entitlement activated.');
+        if (data.txId) setTxId(data.txId);
+        setTimeout(() => onConfirmed(), 1800);
+      } else if (data.status === 'detected') {
+        setStatus('detected');
+        setStatusMessage(data.message || 'Transfer detected on Bybit. Processing confirmation.');
+        if (data.txId) setTxId(data.txId);
+      } else if (data.status === 'amount_mismatch') {
+        setStatus('amount_mismatch');
+        setStatusMessage(data.message || 'Incorrect amount detected on Bybit.');
+      } else {
+        setTxIdFeedback(
+          data.message ||
+            'Transaction ID submitted. Awaiting verification or Bybit record settlement.'
+        );
+      }
+    } catch (err: any) {
+      setTxIdFeedback(err.message || 'Error submitting transaction ID');
+    } finally {
+      setSubmittingTxId(false);
+    }
+  };
 
   // Format MM:SS
   const minutes = Math.floor(secondsRemaining / 60);
@@ -223,7 +307,9 @@ export function BybitPaymentModal({
                 />
                 <img
                   src={
-                    order.network === 'Aptos'
+                    order.network === 'Bybit_UID'
+                      ? '/images/crypto/bybit.svg'
+                      : order.network === 'Aptos'
                       ? '/images/crypto/aptos.png'
                       : order.network === 'TRON'
                       ? '/images/crypto/tron.png'
@@ -235,7 +321,7 @@ export function BybitPaymentModal({
                   className="w-3.5 h-3.5 rounded-full object-contain"
                 />
               </div>
-              <span>{order.currency || 'USDT'} ({order.network})</span>
+              <span>{order.currency || 'USDT'} ({order.network === 'Bybit_UID' ? 'Bybit UID' : order.network})</span>
             </div>
             <span className="text-xs text-muted font-mono hidden sm:inline">
               #{order.orderId.slice(0, 8)}
@@ -290,11 +376,11 @@ export function BybitPaymentModal({
             </div>
           ) : (
             <>
-              {/* Payment Method / Network Selection Control (4 Options) */}
+              {/* Payment Method / Network Selection Control (5 Options) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-ink">
-                    Payment Method ({CRYPTO_SELECTOR_OPTIONS.length} Options)
+                    Payment Method ({CHECKOUT_PAYMENT_METHODS.length} Options)
                   </span>
                   <span className="text-[11px] text-muted">
                     Choose payment rail
@@ -302,8 +388,9 @@ export function BybitPaymentModal({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 sm:p-1.5 rounded-md bg-paper border border-border/80">
-                  {CRYPTO_SELECTOR_OPTIONS.map((method) => {
+                  {CHECKOUT_PAYMENT_METHODS.map((method) => {
                     const isSelected =
+                      (method.id === 'bybit_uid' && (order.network === 'Bybit_UID' || order.network === 'Bybit')) ||
                       (method.id === 'polygon_usdt' && order.network === 'Polygon' && (order.currency === 'USDT' || !order.currency)) ||
                       (method.id === 'aptos_usdt' && order.network === 'Aptos') ||
                       (method.id === 'tron_usdt' && order.network === 'TRON') ||
@@ -363,54 +450,11 @@ export function BybitPaymentModal({
                       );
                     }
 
-                    // Disabled / Coming Soon methods
-                    return (
-                      <button
-                        key={method.id}
-                        type="button"
-                        disabled={true}
-                        aria-disabled="true"
-                        title={method.tooltip}
-                        className="py-2.5 px-2.5 sm:px-3 rounded-md text-xs font-semibold bg-slate-100/50 dark:bg-slate-800/30 text-muted border border-dashed border-border/60 flex items-center justify-between gap-2 cursor-not-allowed opacity-75 select-none min-w-0"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {/* Dual Official Brand Logos: Token + Network */}
-                          <div className="flex items-center gap-1 shrink-0 opacity-70" aria-label={`${method.tokenLogoAlt} and ${method.networkLogoAlt}`}>
-                            <img
-                              src={method.tokenLogoSrc}
-                              alt={method.tokenLogoAlt}
-                              width={22}
-                              height={22}
-                              className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0 shadow-xs object-contain"
-                              loading="eager"
-                            />
-                            <img
-                              src={method.networkLogoSrc}
-                              alt={method.networkLogoAlt}
-                              width={22}
-                              height={22}
-                              className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full shrink-0 shadow-xs object-contain"
-                              loading="eager"
-                            />
-                          </div>
-                          <div className="flex flex-col text-left min-w-0">
-                            <span className="text-xs font-semibold text-muted truncate leading-tight">
-                              {method.shortLabel}
-                            </span>
-                            <span className="text-[10px] text-muted font-mono truncate leading-tight">
-                              {method.id === 'polygon_usdc' ? 'Native (0x3c49...)' : method.networkName}
-                            </span>
-                          </div>
-                        </div>
-                        <span className={`text-[7.5px] sm:text-[8.5px] font-bold uppercase tracking-tight sm:tracking-normal px-1.5 py-0.5 rounded ${method.badgeColor} shrink-0`}>
-                          {method.badgeText}
-                        </span>
-                      </button>
-                    );
+                    return null;
                   })}
                 </div>
                 <p className="text-[11px] text-muted leading-normal px-0.5">
-                  All four payment methods are active. Select your preferred network and token to proceed.
+                  All five payment methods are active. Select your preferred network, token, or Bybit UID to proceed.
                 </p>
               </div>
 
@@ -584,58 +628,85 @@ export function BybitPaymentModal({
                 </button>
               </div>
 
-              {/* Prominent Network Warning Banner */}
+              {/* Prominent Network / Exchange Transfer Instructions */}
               <div className={`p-4 rounded-md border text-xs space-y-1.5 ${
-                order.network === 'Aptos'
+                order.network === 'Bybit_UID'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-ink'
+                  : order.network === 'Aptos'
                   ? 'bg-teal-50/70 dark:bg-teal-950/40 border-teal-300 dark:border-teal-800/70 text-teal-950 dark:text-teal-200'
                   : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
               }`}>
                 <div className="flex items-center gap-2 font-bold">
                   <AlertTriangle size={16} className={order.network === 'Aptos' ? 'text-teal-600 dark:text-teal-400 shrink-0' : 'text-amber-600 dark:text-amber-400 shrink-0'} />
-                  <span>Important {order.network} Payment Warning</span>
+                  <span>
+                    {order.network === 'Bybit_UID'
+                      ? 'Bybit Internal Transfer Instructions'
+                      : `Important ${order.network} Payment Warning`}
+                  </span>
                 </div>
-                <p className="leading-relaxed">
-                  Send <strong>EXACTLY {displayAmount} {order.currency || 'USDT'}</strong> using the <strong>
-                    {order.network === 'Aptos'
-                      ? 'Aptos Mainnet'
-                      : order.network === 'TRON'
-                      ? 'TRON (TRC20)'
-                      : order.currency === 'USDC'
-                      ? 'Polygon PoS (Native USDC)'
-                      : 'Polygon PoS'}
-                  </strong> network.
-                </p>
-                <p className="leading-relaxed text-[11px] font-medium opacity-90">
-                  <strong>CRITICAL:</strong> The selected network ({order.network}) and token ({order.currency || 'USDT'}) must match what you send from your wallet or exchange.
-                </p>
-                {order.network === 'Aptos' ? (
-                  <p className="text-[10px] font-mono text-teal-800 dark:text-teal-300 pt-0.5 break-all">
-                    Official Tether USDt Fungible Asset Metadata ID: {OFFICIAL_CONTRACTS.APTOS_USDT_METADATA}
-                  </p>
-                ) : order.network === 'TRON' ? (
-                  <p className="text-[10px] font-mono text-red-800 dark:text-red-300 pt-0.5 break-all">
-                    Official Tether USDt (TRC20) Contract: {OFFICIAL_CONTRACTS.TRON_USDT_TRC20}
-                  </p>
-                ) : order.currency === 'USDC' ? (
-                  <p className="text-[10px] font-mono text-blue-800 dark:text-blue-300 pt-0.5 break-all">
-                    Official Native Circle USDC Contract: {OFFICIAL_CONTRACTS.POLYGON_USDC_NATIVE}
-                    <br />
-                    <span className="font-semibold text-rose-500">Notice: Legacy bridged USDC.e (0x2791...) is strictly incompatible.</span>
-                  </p>
+                {order.network === 'Bybit_UID' ? (
+                  <div className="space-y-1.5 leading-relaxed">
+                    <p>
+                      Transfer <strong>EXACTLY {displayAmount} USDT</strong> directly inside Bybit using <strong>Bybit Send & Receive / Internal Transfer</strong>.
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1 text-[11px] text-muted">
+                      <li>Open Bybit App or Website &rarr; <strong>Assets</strong> &rarr; <strong>Send / Transfer</strong>.</li>
+                      <li>Choose <strong>Transfer via Bybit UID</strong> (Zero fees).</li>
+                      <li>Paste Recipient UID: <strong className="font-mono text-ink">{order.destinationAddress}</strong>.</li>
+                      <li>Transfer exact amount: <strong className="font-mono text-ink">{displayAmount} USDT</strong>.</li>
+                    </ol>
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium pt-0.5">
+                      ✓ Instant internal transfer with zero blockchain gas fees.
+                    </p>
+                  </div>
                 ) : (
-                  <p className="text-[10px] font-mono text-amber-800 dark:text-amber-300 pt-0.5 break-all">
-                    Official Tether USDt (Polygon PoS) Contract: {OFFICIAL_CONTRACTS.POLYGON_USDT}
-                  </p>
+                  <>
+                    <p className="leading-relaxed">
+                      Send <strong>EXACTLY {displayAmount} {order.currency || 'USDT'}</strong> using the <strong>
+                        {order.network === 'Aptos'
+                          ? 'Aptos Mainnet'
+                          : order.network === 'TRON'
+                          ? 'TRON (TRC20)'
+                          : order.currency === 'USDC'
+                          ? 'Polygon PoS (Native USDC)'
+                          : 'Polygon PoS'}
+                      </strong> network.
+                    </p>
+                    <p className="leading-relaxed text-[11px] font-medium opacity-90">
+                      <strong>CRITICAL:</strong> The selected network ({order.network}) and token ({order.currency || 'USDT'}) must match what you send from your wallet or exchange.
+                    </p>
+                    {order.network === 'Aptos' ? (
+                      <p className="text-[10px] font-mono text-teal-800 dark:text-teal-300 pt-0.5 break-all">
+                        Official Tether USDt Fungible Asset Metadata ID: {OFFICIAL_CONTRACTS.APTOS_USDT_METADATA}
+                      </p>
+                    ) : order.network === 'TRON' ? (
+                      <p className="text-[10px] font-mono text-red-800 dark:text-red-300 pt-0.5 break-all">
+                        Official Tether USDt (TRC20) Contract: {OFFICIAL_CONTRACTS.TRON_USDT_TRC20}
+                      </p>
+                    ) : order.currency === 'USDC' ? (
+                      <p className="text-[10px] font-mono text-blue-800 dark:text-blue-300 pt-0.5 break-all">
+                        Official Native Circle USDC Contract: {OFFICIAL_CONTRACTS.POLYGON_USDC_NATIVE}
+                        <br />
+                        <span className="font-semibold text-rose-500">Notice: Legacy bridged USDC.e (0x2791...) is strictly incompatible.</span>
+                      </p>
+                    ) : (
+                      <p className="text-[10px] font-mono text-amber-800 dark:text-amber-300 pt-0.5 break-all">
+                        Official Tether USDt (Polygon PoS) Contract: {OFFICIAL_CONTRACTS.POLYGON_USDT}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* Destination Address & QR Code */}
+              {/* Destination Address / UID & QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <img
                       src={
-                        order.network === 'Aptos'
+                        order.network === 'Bybit_UID'
+                          ? '/images/crypto/bybit.svg'
+                          : order.network === 'Aptos'
                           ? '/images/crypto/aptos.png'
                           : order.network === 'TRON'
                           ? '/images/crypto/tron.png'
@@ -647,7 +718,9 @@ export function BybitPaymentModal({
                       className="w-4 h-4 rounded-full object-contain shrink-0"
                     />
                     <span className="text-xs font-bold text-ink">
-                      {order.network === 'Aptos'
+                      {order.network === 'Bybit_UID'
+                        ? 'Recipient Bybit UID'
+                        : order.network === 'Aptos'
                         ? 'Aptos Receiving Address'
                         : order.network === 'TRON'
                         ? 'TRON (TRC20) Receiving Address'
@@ -657,7 +730,7 @@ export function BybitPaymentModal({
                     </span>
                   </div>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-paper text-muted">
-                    Network: {order.network}
+                    {order.network === 'Bybit_UID' ? 'Internal Transfer' : `Network: ${order.network}`}
                   </span>
                 </div>
 
@@ -665,7 +738,7 @@ export function BybitPaymentModal({
                 <div
                   onClick={handleCopyAddress}
                   className="p-3 rounded-md bg-paper border border-border font-mono text-xs sm:text-sm text-ink break-all select-all cursor-pointer hover:border-brand-500 transition-colors"
-                  title="Click to copy address"
+                  title={order.network === 'Bybit_UID' ? 'Click to copy Bybit UID' : 'Click to copy address'}
                 >
                   {order.destinationAddress}
                 </div>
@@ -675,6 +748,62 @@ export function BybitPaymentModal({
                   <div className="flex justify-center pt-1 animate-in fade-in duration-150">
                     <QrCode value={order.destinationAddress} size={150} />
                   </div>
+                )}
+
+                {/* Optional Sender UID Input */}
+                {order.network === 'Bybit_UID' && (
+                  <div className="p-3 rounded-md bg-paper border border-border space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-ink">
+                        Your Bybit Sender UID (Optional)
+                      </span>
+                      <span className="text-[10px] text-muted font-mono">Fast Match</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={senderUidInput}
+                      onChange={(e) => setSenderUidInput(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="e.g. 554433221 (speeds up instant automated confirmation)"
+                      className="w-full px-3 py-1.5 rounded-md text-xs font-mono bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+                    />
+                    <p className="text-[10px] text-muted leading-tight">
+                      Supplying your account UID ensures immediate automatic invoice attribution.
+                    </p>
+                  </div>
+                )}
+
+                {/* Option B: Customer submits Bybit internal transfer txID */}
+                {order.network === 'Bybit_UID' && (
+                  <form onSubmit={handleVerifyTxId} className="p-3 rounded-md bg-paper border border-border space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-ink">
+                        Option B — Enter your Bybit internal transfer transaction ID
+                      </span>
+                      <span className="text-[10px] text-muted font-mono">txID</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={txIdInput}
+                        onChange={(e) => {
+                          setTxIdInput(e.target.value);
+                          setTxIdFeedback(null);
+                        }}
+                        placeholder="e.g. 1046927 or Bybit transfer txID"
+                        className="flex-1 px-3 py-1.5 rounded-md text-xs font-mono bg-surface border border-border text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                      <button
+                        type="submit"
+                        disabled={submittingTxId || !txIdInput.trim()}
+                        className="px-3.5 py-1.5 rounded-md text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center min-w-[110px]"
+                      >
+                        {submittingTxId ? <Loader2 size={12} className="animate-spin" /> : 'Verify Transfer'}
+                      </button>
+                    </div>
+                    {txIdFeedback && (
+                      <p className="text-[11px] text-brand font-medium leading-normal">{txIdFeedback}</p>
+                    )}
+                  </form>
                 )}
               </div>
 
@@ -724,7 +853,9 @@ export function BybitPaymentModal({
 
               {/* Honest Disclosure Caveat */}
               <p className="text-[11px] text-center text-muted leading-relaxed">
-                Waiting for {order.network} blockchain confirmation. Deposits are credited automatically once verified by the server.
+                {order.network === 'Bybit_UID'
+                  ? 'Waiting for Bybit internal transfer confirmation. Transfers are credited automatically once verified by the server.'
+                  : `Waiting for ${order.network} blockchain confirmation. Deposits are credited automatically once verified by the server.`}
               </p>
             </>
           )}

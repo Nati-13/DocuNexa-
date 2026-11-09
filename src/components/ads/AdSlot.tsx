@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { isRouteExcludedFromAds } from './MonetagZone';
+import { isUserAdFree } from '@/lib/planCatalog';
 import { SignupPromoBanner } from './SignupPromoBanner';
 import { AdFreePromoBanner } from './AdFreePromoBanner';
 
@@ -32,7 +33,10 @@ export const AdSlot: React.FC<AdSlotProps> = ({
   const { user } = useAuth();
   const pathname = usePathname();
 
-  const isExcluded = user?.plan === 'ad_free' || isRouteExcludedFromAds(pathname);
+  const isExcluded =
+    user?.plan === 'ad_free' ||
+    isUserAdFree(user?.plan, user?.subscription_expires_at) ||
+    isRouteExcludedFromAds(pathname);
 
   const effectivePlacement: 'banner' | 'rectangle' | 'in-feed' =
     placement || (format === 'rectangle' ? 'rectangle' : format === 'responsive' ? 'in-feed' : 'banner');

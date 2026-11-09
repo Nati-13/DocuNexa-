@@ -212,9 +212,11 @@ export default function AdminAnalyticsPage() {
                       <div className="font-bold text-xs text-ink">
                         {c.countryName}
                       </div>
-                      <div className="font-mono text-[10px] text-muted">
-                        ISO: {c.countryCode}
-                      </div>
+                      {c.countryCode !== 'Unknown' && (
+                        <div className="font-mono text-[10px] text-muted">
+                          ISO: {c.countryCode}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-brand-500/10 text-brand font-bold text-[10px]">
@@ -287,9 +289,11 @@ export default function AdminAnalyticsPage() {
                             <span className="font-semibold text-ink">
                               {c.countryName}
                             </span>
-                            <span className="font-mono text-[10px] text-muted ml-1.5 uppercase">
-                              [{c.countryCode}]
-                            </span>
+                            {c.countryCode !== 'Unknown' && (
+                              <span className="font-mono text-[10px] text-muted ml-1.5 uppercase">
+                                [{c.countryCode}]
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>

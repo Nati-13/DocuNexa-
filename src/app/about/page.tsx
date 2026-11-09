@@ -187,7 +187,7 @@ export default function AboutPage() {
             Why DocuNexa is Free & How It Is Maintained
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            DocuNexa is maintained as an accessible document toolkit where all 34 core PDF tools remain completely free without subscriptions, paywalls, or feature limits. To sustain hosting and continuous development, the platform is supported by non-intrusive advertising, with an optional one-time Ad-Free upgrade for visitors who prefer a distraction-free workspace. All document processing executes 100% client-side without compromising document privacy.
+            DocuNexa is maintained as an accessible document toolkit where all 34 core PDF tools remain completely free without subscriptions, paywalls, or feature limits. To sustain hosting and continuous development, the platform is supported by non-intrusive advertising, alongside an optional one-time Ad-Free upgrade and flexible Weekly ($1), Monthly ($3), or Yearly ($27) Ad-Free and Pro subscription plans for visitors who prefer a distraction-free workspace. All document processing executes 100% client-side without compromising document privacy.
           </p>
           <div className="pt-2 flex flex-wrap gap-4 text-xs font-semibold">
             <Link href="/privacy" className="text-brand-400 hover:text-brand-300 underline underline-offset-4">

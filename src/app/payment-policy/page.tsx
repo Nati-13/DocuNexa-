@@ -63,29 +63,50 @@ export default function PaymentPolicyPage() {
         </p>
       </section>
 
-      {/* 2. Product Pricing & Coupons */}
+      {/* 2. Subscription Plans Catalog & Pricing */}
       <section id="pricing-model" className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-bold text-ink">
-          2. Product Pricing &amp; Promotional Coupon Discounts
+          2. Subscription Plans Catalog &amp; Pricing
         </h2>
         <p>
-          DocuNexa features a single, straightforward paid tier:
+          DocuNexa offers transparent, flexible subscription tiers with zero surprise credit card rebills:
         </p>
-        <div className="p-5 rounded-md bg-surface border border-border space-y-3 text-xs sm:text-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border">
-            <div>
-              <span className="block font-bold text-ink text-base">Ad-Free Upgrade</span>
-              <span className="text-muted">One-time account upgrade (Permanent)</span>
+        <div className="p-5 rounded-md bg-surface border border-border space-y-4 text-xs sm:text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">FREE ($0)</span>
+              <p className="text-2xs text-muted">Core tools free forever with non-intrusive ads.</p>
             </div>
-            <div className="text-right">
-              <span className="text-xl font-extrabold text-brand">$2.00 USD</span>
-              <span className="block text-[10px] text-muted">Fixed rate in USDT</span>
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">WEEKLY ($1 / wk)</span>
+              <p className="text-2xs text-muted">100% ad-free across all tools for 7 days.</p>
+            </div>
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">WEEKLY PRO ($2 / wk)</span>
+              <p className="text-2xs text-muted">Ad-free plus early access to future tools.</p>
+            </div>
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">MONTHLY ($3 / mo)</span>
+              <p className="text-2xs text-muted">Ad-free for 30 days (Save 25% vs weekly).</p>
+            </div>
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">MONTHLY PRO ($6 / mo)</span>
+              <p className="text-2xs text-muted">Ad-free plus early access (Save 25% vs weekly).</p>
+            </div>
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">YEARLY ($27 / yr)</span>
+              <p className="text-2xs text-muted">Ad-free for 365 days (25% off 12 monthly payments).</p>
+            </div>
+            <div className="p-3 rounded border border-border bg-paper space-y-1">
+              <span className="font-bold text-ink block">YEARLY PRO ($54 / yr)</span>
+              <p className="text-2xs text-muted">Ad-free + early access (25% off 12 monthly payments).</p>
             </div>
           </div>
-          <ul className="list-disc pl-5 space-y-1.5 text-muted">
-            <li><strong>No Subscription:</strong> This is a one-time charge. There are no recurring monthly, quarterly, or annual renewal fees.</li>
-            <li><strong>Promotional Coupons:</strong> Legitimate coupon codes may apply percentage discounts (e.g. 25% discount yields $1.50) or fixed USDT discounts. Discounts are strictly validated server-side.</li>
-            <li><strong>Scope of Upgrade:</strong> Ad-Free permanently removes third-party Monetag advertising banners, interstitial scripts, and sponsor blocks across all 34 tools for your account.</li>
+          <ul className="list-disc pl-5 space-y-1.5 text-muted text-xs">
+            <li><strong>Manual Renewals:</strong> All subscription periods are renewed manually via the active cryptocurrency rails (Polygon / Aptos USDT). There are no recurring credit card rebills.</li>
+            <li><strong>Grandfathered Lifetime Access:</strong> Customers who previously purchased the one-time Ad-Free upgrade retain permanent, lifetime ad removal.</li>
+            <li><strong>Promotional Coupons:</strong> Verified coupon codes apply percentage discounts or fixed USDT discounts at checkout.</li>
+            <li><strong>Pro Entitlements:</strong> Pro plans include priority feature access and early preview of upcoming document processing capabilities.</li>
           </ul>
         </div>
       </section>

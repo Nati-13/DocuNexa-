@@ -4,16 +4,23 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+import { UserPlan } from '@/lib/supabase/types';
+import { isUserAdFree, isUserPro } from '@/lib/planCatalog';
+
 export interface AuthUser {
   id: string;
   email: string;
-  plan: 'free' | 'ad_free';
+  plan: UserPlan;
+  subscription_expires_at?: string | null;
+  subscription_started_at?: string | null;
   created_at?: string;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  isAdFree: boolean;
+  isPro: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -21,6 +28,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAdFree: false,
+  isPro: false,
   refreshUser: async () => {},
   logout: async () => {},
 });
@@ -87,8 +96,11 @@ export function AuthProvider({
     }
   };
 
+  const isAdFree = isUserAdFree(user?.plan, user?.subscription_expires_at);
+  const isPro = isUserPro(user?.plan, user?.subscription_expires_at);
+
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdFree, isPro, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,6 +7,8 @@ import { getPolygonUsdcConfig, isValidEvmAddress } from '@/lib/payments/polygonU
 import { validateCouponForUser, normalizeCouponCode } from '@/lib/coupons';
 import { CouponDiscountType, PaymentNetwork, PaymentCurrency } from '@/lib/supabase/types';
 import { guardApiRequest, secureJsonResponse } from '@/lib/security/apiGuard';
+import { getPlan } from '@/lib/planCatalog';
+import { fulfillPaymentOrder } from '@/lib/payments/subscriptionFulfillment';
 
 export async function POST(req: Request) {
   const { errorResponse, requestId } = await guardApiRequest(req, {
@@ -44,26 +46,36 @@ export async function POST(req: Request) {
       );
     }
 
-    if (profile.plan === 'ad_free') {
+    const body = await req.json().catch(() => ({}));
+    const rawCouponCode = body?.couponCode || body?.code;
+    const requestedPlanId = (body?.plan || body?.planId || 'monthly').toString().toLowerCase().trim();
+    const planDef = getPlan(requestedPlanId);
+
+    if (profile.plan === 'ad_free' && !planDef.isPro) {
       return secureJsonResponse({
         success: true,
         alreadyPaid: true,
-        message: 'Your account is already Ad-Free.',
+        message: 'Your account is already grandfathered with permanent Lifetime Ad-Free access.',
         redirect: '/account',
       }, { status: 200 }, requestId);
     }
-
-    const body = await req.json().catch(() => ({}));
-    const rawCouponCode = body?.couponCode || body?.code;
 
     // Parse requested method, network, and currency
     const rawMethod = (body?.method || body?.paymentMethod || '').toString().toLowerCase().trim();
     const rawNetwork = (body?.network || '').toString().trim();
     const rawCurrency = (body?.currency || '').toString().toUpperCase().trim();
 
-    let methodId: 'polygon_usdt' | 'aptos_usdt' | 'tron_usdt' | 'polygon_usdc';
+    let methodId: 'polygon_usdt' | 'aptos_usdt' | 'tron_usdt' | 'polygon_usdc' | 'bybit_uid';
 
     if (
+      rawMethod === 'bybit_uid' ||
+      rawMethod === 'bybit' ||
+      rawMethod === 'uid' ||
+      rawNetwork === 'Bybit_UID' ||
+      rawNetwork === 'Bybit'
+    ) {
+      methodId = 'bybit_uid';
+    } else if (
       rawMethod === 'tron_usdt' ||
       rawMethod === 'tron' ||
       rawMethod === 'trc20' ||
@@ -93,7 +105,7 @@ export async function POST(req: Request) {
     } else {
       return NextResponse.json(
         {
-          error: `Unsupported payment method "${rawMethod || rawNetwork}". Active methods are USDT (Polygon), USDT (Aptos), USDT (TRON), and USDC (Polygon).`,
+          error: `Unsupported payment method "${rawMethod || rawNetwork}". Active methods are USDT (Polygon), USDT (Aptos), USDT (TRON), USDC (Polygon), and Bybit UID (USDT).`,
           code: 'UNSUPPORTED_NETWORK',
         },
         { status: 400 }
@@ -104,7 +116,21 @@ export async function POST(req: Request) {
     let requestedCurrency: PaymentCurrency;
     let destinationAddress: string;
 
-    if (methodId === 'tron_usdt') {
+    if (methodId === 'bybit_uid') {
+      requestedNetwork = 'Bybit_UID';
+      requestedCurrency = 'USDT';
+      const { uid } = getBybitConfig();
+      if (!uid || uid.trim().length === 0) {
+        return NextResponse.json(
+          {
+            error: 'Bybit UID payments are temporarily unavailable. Missing recipient UID configuration.',
+            code: 'METHOD_UNAVAILABLE',
+          },
+          { status: 503 }
+        );
+      }
+      destinationAddress = uid.trim();
+    } else if (methodId === 'tron_usdt') {
       requestedNetwork = 'TRON';
       requestedCurrency = 'USDT';
       const tronConfig = getTronConfig();
@@ -166,8 +192,8 @@ export async function POST(req: Request) {
     let couponCode: string | null = null;
     let discountType: CouponDiscountType | null = null;
     let discountAmountUsdt = '0.0000';
-    let originalAmountUsd = '2.0000';
-    let finalAmountUsdt = '2.0000';
+    let originalAmountUsd = planDef.priceUsd.toFixed(4);
+    let finalAmountUsdt = planDef.priceUsd.toFixed(4);
     let formattedDiscount: string | null = null;
 
     // Strict server-side revalidation of coupon code
@@ -260,8 +286,8 @@ export async function POST(req: Request) {
         .insert({
           user_id: profile.id,
           order_id: orderId,
-          product: 'ad_free',
-          base_amount_usd: 2.00,
+          product: planDef.id,
+          base_amount_usd: planDef.priceUsd,
           original_amount_usd: originalAmountUsd,
           discount_amount_usdt: discountAmountUsdt,
           final_amount_usdt: '0.0000',
@@ -343,15 +369,9 @@ export async function POST(req: Request) {
       }
 
       // Step D: Activate user entitlement in profile
-      const { error: profileError } = await admin
-        .from('profiles')
-        .update({
-          plan: 'ad_free',
-          updated_at: nowIso,
-        })
-        .eq('id', profile.id);
-
-      if (profileError) {
+      try {
+        await fulfillPaymentOrder(admin, profile.id, planDef.id, nowIso);
+      } catch (profileError: any) {
         // ROLLBACK Steps A, B & C
         await admin
           .from('coupons')
@@ -480,8 +500,10 @@ export async function POST(req: Request) {
     const { error: insertError } = await admin.from('payment_orders').insert({
       user_id: profile.id,
       order_id: orderId,
-      product: 'ad_free',
-      base_amount_usd: 2.00,
+      product: planDef.id,
+      plan_id: planDef.id,
+      subscription_duration_days: planDef.durationDays,
+      base_amount_usd: planDef.priceUsd,
       original_amount_usd: originalAmountUsd,
       discount_amount_usdt: discountAmountUsdt,
       final_amount_usdt: finalAmountUsdt,
@@ -520,6 +542,12 @@ export async function POST(req: Request) {
       basePriceUsd: originalAmountUsd,
       originalPriceUsd: originalAmountUsd,
       finalPriceUsdt: finalAmountUsdt,
+      plan: planDef.id,
+      planName: planDef.name,
+      formattedPrice: planDef.formattedPrice,
+      durationDays: planDef.durationDays,
+      billingInterval: planDef.billingInterval,
+      renewalInstructions: 'Subscriptions are renewed manually using Polygon or Aptos USDT payments.',
       discountAmountUsdt: discountAmountUsdt,
       couponCode,
       formattedDiscount,
